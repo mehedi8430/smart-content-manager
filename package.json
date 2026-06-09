@@ -1,0 +1,12 @@
+{
+  "name": "mind-campaign",
+  "private": true,
+  "packageManager": "pnpm@11.5.2",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build"
+  },
+  "devDependencies": {
+    "turbo": "^2.9.16"
+  }
+}

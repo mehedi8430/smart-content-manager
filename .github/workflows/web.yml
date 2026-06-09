@@ -1,0 +1,11 @@
+name: Web CI
+on:
+  push:
+    paths:
+      - 'apps/web/**'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cd web && bun install && bun run build

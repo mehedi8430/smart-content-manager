@@ -1,11 +1,20 @@
-name: Api CI
+name: API CI
+
 on:
   push:
     paths:
-      - 'apps/api/**'
+      - "apps/api/**"
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - run: cd api && bun install && bun test
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install
+
+      - run: bun test
+        working-directory: apps/api

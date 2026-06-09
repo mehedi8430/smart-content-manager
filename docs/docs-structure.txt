@@ -1,0 +1,96 @@
+# DOCS STRUCTURE
+
+docs/
+│
+├── README.md
+│   Documentation index and navigation
+│
+├── project-brief.md
+│   ├── Problem statement
+│   ├── Target users
+│   ├── Core features
+│   ├── Milestones
+│   └── Success criteria
+│
+├── architecture.md
+│   ├── Monorepo structure
+│   ├── Frontend ↔ Backend interaction
+│   ├── High-level diagrams
+│   └── Data flow
+│
+├── tech-stack.md
+│   ├── Next.js
+│   ├── Express
+│   ├── PostgreSQL
+│   ├── Prisma
+│   ├── JWT
+│   ├── OpenAI
+│   ├── Bun
+│   ├── pnpm
+│   └── Turborepo
+│
+├── database-schema.md
+│   ├── Prisma models
+│   ├── Entity relationships
+│   └── ER diagrams
+│
+├── auth-flow.md
+│   ├── Registration flow
+│   ├── Login flow
+│   ├── JWT strategy
+│   ├── Refresh token flow
+│   └── Authorization middleware
+│
+├── ai-layer.md
+│   ├── OpenAI integration
+│   ├── Prompt history
+│   ├── Streaming responses
+│   └── Chat sessions
+│
+├── api-design.md
+│   ├── API conventions
+│   ├── Route structure
+│   ├── Request validation
+│   └── Response format
+│
+├── decisions.md
+│   Technical decisions and changelog
+│
+│   Example:
+│
+│   ## June 9, 2026
+│
+│   ### Monorepo Migration
+│
+│   Migrated from separate frontend and backend repositories to a
+│   single monorepo using pnpm workspaces and Turborepo.
+│
+│   Reason:
+│   - Unified dependency management
+│   - Easier CI/CD
+│   - Future shared packages
+│   - Simplified development workflow
+│
+├── deployment.md
+│   ├── Vercel
+│   ├── Railway
+│   ├── Neon
+│   └── Environment variables
+│
+└── roadmap.md
+│
+├── Phase 1
+│   ├── Authentication
+│   └── Campaign CRUD
+│
+├── Phase 2
+│   ├── AI content generation
+│   └── Prompt history
+│
+├── Phase 3
+│   ├── AI chat assistant
+│   └── PDF export
+│
+└── Phase 4
+├── Stripe billing
+└── Team collaboration

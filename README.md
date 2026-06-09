@@ -10,6 +10,13 @@ AI-powered content and campaign management platform.
 * Prisma
 * TypeScript
 
+## Prerequisites
+
+- Node.js 22+
+- pnpm
+- Bun
+- PostgreSQL
+
 ## Project Structure
 
 ```text
@@ -26,23 +33,32 @@ apps/
 pnpm install
 ```
 
+## Configure environment variables
+
+Create:
+
+- `apps/web/.env`
+- `apps/api/.env`
+
+See `.env.example` files for required variables.
+
+### Run Prisma migrations
+
+```bash
+cd apps/api
+bunx --bun prisma migrate dev
+```
+
 ### Start development servers
 
 ```bash
 pnpm dev
 ```
 
-Frontend:
+Starts both:
 
-```text
-http://localhost:3000
-```
-
-Backend:
-
-```text
-http://localhost:5000
-```
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000
 
 ## Build
 
@@ -50,19 +66,8 @@ http://localhost:5000
 pnpm build
 ```
 
-## Environment Variables
+## Monorepo Tooling
 
-Create `.env` files inside:
-
-```text
-apps/web/
-apps/api/
-```
-
-## Package Manager
-
-This project uses:
-
-* pnpm
-* Turborepo
-* bun
+- **pnpm** manages dependencies across the workspace.
+- **Turborepo** orchestrates and optimizes tasks across applications.
+- **Bun** powers the backend runtime and Prisma commands and package manager for frontend.

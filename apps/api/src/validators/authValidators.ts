@@ -1,15 +1,16 @@
-import { body } from 'express-validator';
+import { z } from 'zod';
 
-export const registerValidation = [
-  body('email').trim().isEmail().withMessage('Valid email is required'),
-  body('password')
-    .notEmpty()
-    .withMessage('Password is required')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters'),
-];
+export const registerSchema = z.object({
+  email: z.string().trim().email('Valid email is required'),
+  password: z
+    .string()
+    .min(6, 'Password must be at least 6 characters'),
+});
 
-export const loginValidation = [
-  body('email').trim().isEmail().withMessage('Valid email is required'),
-  body('password').notEmpty().withMessage('Password is required'),
-];
+export const loginSchema = z.object({
+  email: z.string().trim().email('Valid email is required'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;

@@ -1,23 +1,43 @@
 import { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
+import { z, ZodTypeAny } from 'zod';
 import { sendError } from '@/utils/apiResponse';
 
-export const validateRequest = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const errors = validationResult(req);
+type RequestSource = 'body' | 'query' | 'params';
 
-  if (!errors.isEmpty()) {
-    const errorMessages = errors
-      .array()
-      .map((error) => error.msg)
-      .join(', ');
+type ValidationSchemas = Partial<Record<RequestSource, ZodTypeAny>>;
 
-    sendError(res, 400, 'Validation failed', errorMessages);
-    return;
-  }
+const formatZodErrors = (
+  source: RequestSource,
+  error: z.ZodError
+): string[] =>
+  error.issues.map((issue) => {
+    const path = issue.path.length > 0 ? issue.path.join('.') : source;
+    return `${path}: ${issue.message}`;
+  });
 
-  next();
+export const validate = (schemas: ValidationSchemas) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const errors: string[] = [];
+
+    for (const source of Object.keys(schemas) as RequestSource[]) {
+      const schema = schemas[source];
+      if (!schema) continue;
+
+      const result = schema.safeParse(req[source]);
+
+      if (!result.success) {
+        errors.push(...formatZodErrors(source, result.error));
+        continue;
+      }
+
+      req[source] = result.data;
+    }
+
+    if (errors.length > 0) {
+      sendError(res, 400, 'Validation failed', errors.join(', '));
+      return;
+    }
+
+    next();
+  };
 };

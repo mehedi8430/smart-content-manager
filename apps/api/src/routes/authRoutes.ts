@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router as createRouter, type Router } from 'express';
 import { body } from 'express-validator';
-import { login, logout, register, } from '@/controllers/authController';
+import { login, logout, register } from '@/controllers/authController';
 // import { protect } from '@/middleware/auth';
 import { validate } from '@/middleware/validation';
 
-const router = Router();
+const router: Router = createRouter();
 
 const registerValidation = [
   body('email').trim().isEmail().withMessage('Valid email is required'),

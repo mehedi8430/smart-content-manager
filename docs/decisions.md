@@ -25,9 +25,11 @@ Chose **Express + JWT** over Clerk and Supabase Auth.
 
 **Reason**
 
-* Learn authentication fundamentals.
 * Implement bcrypt password hashing.
-* Implement refresh token rotation.
+* Implement JWT-based authentication.
+* Use short-lived access tokens and refresh token rotation.
+* Store refresh tokens securely in HTTP-only cookies.
+* Gain full control over the authentication flow and session management.
 
 ---
 
@@ -57,6 +59,23 @@ Migrated from separate frontend and backend repositories to a monorepo using **p
 * Easier CI/CD.
 * Future shared packages.
 * Simplified development workflow.
+
+---
+
+## June 11, 2026
+
+### Validation Strategy
+
+Chose **Zod** over express-validator.
+
+**Reason**
+
+* Strong TypeScript integration and type inference.
+* Reusable schemas across the application.
+* Ability to share validation logic with the frontend in the future.
+* Cleaner and more maintainable validation code.
+* Better support for complex and nested data structures.
+* Framework-agnostic approach, not tied to Express.
 
 ---
 

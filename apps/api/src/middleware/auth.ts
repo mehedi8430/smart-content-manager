@@ -1,8 +1,10 @@
-import { findUserById } from '@/repositories/userRepository';
+import { prisma } from '@/config/db';
 import { sendError } from '@/utils/apiResponse';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
+// read the token from the request
+// check if token is valid
 export const protect = async (
   req: Request,
   res: Response,
@@ -16,6 +18,8 @@ export const protect = async (
       req.headers.authorization.startsWith('Bearer')
     ) {
       token = req.headers.authorization.split(' ')[1];
+    } else if (req.cookies?.jwt) {
+      token = req.cookies.jwt;
     }
 
     if (!token) {
@@ -23,24 +27,29 @@ export const protect = async (
       return;
     }
 
+    // verify token and extract the user id
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
       id: string;
-      role?: string;
     };
-    const user = await findUserById(decoded.id);
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+    });
 
     if (!user) {
       sendError(res, 401, 'Token is not valid');
       return;
     }
 
-    req.user = { id: user.id, role: user.role };
+    req.user = { id: user.id };
+
     next();
   } catch {
     sendError(res, 401, 'Token is not valid');
   }
 };
 
+// Middleware to allow access only to users with the specified roles.
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role as string)) {

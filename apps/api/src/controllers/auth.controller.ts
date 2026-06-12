@@ -1,9 +1,10 @@
 import { prisma } from '@/config/db';
 import { sendError, sendResponse } from '@/utils/apiResponse';
 import catchAsync from '@/utils/catchAsync';
-import { Request, Response } from 'express';
+import { CookieOptions, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { generateAccessToken, generateRefreshToken } from '@/utils/generateToken';
+import jwt from 'jsonwebtoken';
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -64,7 +65,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
 
   // generate access and refresh token
   const accesToken = generateAccessToken(user.id, res);
-  const refreshToken = generateRefreshToken(user.id, res);
+  const refreshToken = await generateRefreshToken(user.id, res);
 
   sendResponse(
     res,
@@ -82,23 +83,30 @@ const login = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-  // todo: delete refresh token from db
+  // clear refresh token from user table
+  await prisma.user.update({
+    where: { id: req.user?.id },
+    data: { refreshToken: "" },
+  });
 
   // clear cookies
-  res.cookie("accessToken", "", {
+  const clearOptions: CookieOptions = {
     httpOnly: true,
-    expires: new Date(),
-  })
-  res.cookie("refreshToken", "", {
-    httpOnly: true,
-    expires: new Date(),
-  });
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 0,
+  };
+
+  res.cookie("accessToken", "", clearOptions);
+  res.cookie("refreshToken", "", clearOptions);
 
   sendResponse(res,
     200,
     true,
     "Logged out successfully"
   );
-})
+});
+
+
 
 export { register, login, logout };

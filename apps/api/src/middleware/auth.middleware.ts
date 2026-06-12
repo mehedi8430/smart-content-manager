@@ -22,13 +22,16 @@ export const protect = async (
       token = req.cookies.accessToken;
     }
 
+    console.log("req cookies:", req.cookies?.accessToken);
+    // console.log("access token:", token);
+
     if (!token) {
       sendError(res, 401, 'Access denied. No token provided.');
       return;
     }
 
     // verify token and extract the user id
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as {
       id: string;
     };
 
@@ -44,7 +47,12 @@ export const protect = async (
     req.user = { id: user.id };
 
     next();
-  } catch {
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      sendError(res, 401, 'Token expired. Please refresh your token.');
+      return;
+    }
+
     sendError(res, 401, 'Token is not valid');
   }
 };

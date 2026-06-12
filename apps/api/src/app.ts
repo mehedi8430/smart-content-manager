@@ -5,8 +5,9 @@ import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import routes from './routes';
-import errorHandler from './middleware/errorHandler';
+import errorHandler from './middleware/errorHandler.middleware';
 import logger from './config/logger';
+import cookieParser from 'cookie-parser';
 
 const app: Application = express();
 
@@ -20,6 +21,9 @@ app.use(
     credentials: true,
   })
 );
+
+// Cookie parsing middleware
+app.use(cookieParser());
 
 // Rate limiting
 const limiter = rateLimit({

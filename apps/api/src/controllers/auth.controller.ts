@@ -86,7 +86,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   // clear refresh token from user table
   await prisma.user.update({
     where: { id: req.user?.id },
-    data: { refreshToken: "" },
+    data: { refreshToken: null },
   });
 
   // clear cookies
@@ -107,6 +107,30 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   );
 });
 
+const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
+  const token = req.cookies?.refreshToken;
 
+  if (!token) {
+    sendError(res, 401, 'No refresh token provided.');
+    return;
+  }
 
-export { register, login, logout };
+  const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string) as { id: string };
+
+  const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+
+  if (!user || user.refreshToken !== token) {
+    sendError(res, 401, 'Invalid refresh token.');
+    return;
+  }
+
+  // Issue new access token only
+  generateAccessToken(user.id, res);
+
+  sendResponse(res, 200, true, 'Token refreshed successfully', {
+    id: user.id,
+    email: user.email
+  });
+});
+
+export { register, login, logout, refreshAccessToken };

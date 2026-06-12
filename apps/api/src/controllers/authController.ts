@@ -3,7 +3,7 @@ import { sendError, sendResponse } from '@/utils/apiResponse';
 import catchAsync from '@/utils/catchAsync';
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { generateToken } from '@/utils/generateToken';
+import { generateAccessToken, generateRefreshToken } from '@/utils/generateToken';
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -62,8 +62,9 @@ const login = catchAsync(async (req: Request, res: Response) => {
     return;
   }
 
-  // generate jwt token
-  const token = generateToken(user.id, res);
+  // generate access and refresh token
+  const accesToken = generateAccessToken(user.id, res);
+  const refreshToken = generateRefreshToken(user.id, res);
 
   sendResponse(
     res,
@@ -75,12 +76,20 @@ const login = catchAsync(async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
       },
-      token
+      accesToken,
+      refreshToken
     });
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-  res.cookie("jwt", "", {
+  // todo: delete refresh token from db
+
+  // clear cookies
+  res.cookie("accessToken", "", {
+    httpOnly: true,
+    expires: new Date(),
+  })
+  res.cookie("refreshToken", "", {
     httpOnly: true,
     expires: new Date(),
   });

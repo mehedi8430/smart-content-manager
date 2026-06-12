@@ -21,7 +21,7 @@ bun install
 cp .env.example .env
 ```
 
-Set `DATABASE_URL` and `JWT_SECRET` in `.env`, then apply migrations:
+Set `DATABASE_URL` and others in `.env`, then apply migrations:
 
 ```bash
 bunx prisma migrate deploy

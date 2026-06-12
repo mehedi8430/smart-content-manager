@@ -1,22 +1,50 @@
-import { Response } from 'express';
+import { CookieOptions, Response } from 'express';
 import jwt, { SignOptions } from 'jsonwebtoken';
 
-export const generateToken = (userId: string, res: Response): string => {
-    const secret = process.env.JWT_SECRET;
+export const generateAccessToken = (userId: string, res: Response): string => {
+    const secret = process.env.ACCESS_TOKEN_SECRET;
+
     if (!secret) {
-        throw new Error('JWT_SECRET is not defined');
+        throw new Error('ACCESS_TOKEN_SECRET is not defined');
     }
 
-    const expiresIn = (process.env.JWT_EXPIRES_IN ?? '7d') as SignOptions['expiresIn'];
+    const expiresIn = (process.env.ACCESS_TOKEN_EXPIRES_IN ?? '7d') as SignOptions['expiresIn'];
 
-    const token = jwt.sign({ id: userId }, secret, { expiresIn });
+    const accessToken = jwt.sign({ id: userId }, secret, { expiresIn });
 
-    res.cookie("jwt", token, {
+    // send access token in cookies
+    const options: CookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+    };
 
-    return token;
+    res.cookie("accessToken", accessToken, options);
+
+    return accessToken;
+};
+
+export const generateRefreshToken = (userId: string, res: Response): string => {
+    const secret = process.env.REFRESH_TOKEN_SECRET;
+
+    if (!secret) {
+        throw new Error('REFRESH_TOKEN_SECRET is not defined');
+    }
+
+    const expiresIn = (process.env.REFRESH_TOKEN_EXPIRES_IN ?? '7d') as SignOptions['expiresIn'];
+
+    const refreshToken = jwt.sign({ id: userId }, secret, { expiresIn });
+
+    // send refresh token in cookies
+    const options: CookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+    };
+
+    res.cookie("refreshToken", refreshToken, options);
+
+    return refreshToken;
 };

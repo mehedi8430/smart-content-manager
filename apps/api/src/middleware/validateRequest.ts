@@ -1,15 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { z, ZodTypeAny } from 'zod';
+import { z, ZodSchema } from 'zod';
 import { sendError } from '@/utils/apiResponse';
 
 type RequestSource = 'body' | 'query' | 'params';
 
-type ValidationSchemas = Partial<Record<RequestSource, ZodTypeAny>>;
+type ValidationSchemas = Partial<Record<RequestSource, z.ZodType>>;
 
-const formatZodErrors = (
-  source: RequestSource,
-  error: z.ZodError
-): string[] =>
+const formatZodErrors = (source: RequestSource, error: z.ZodError): string[] =>
   error.issues.map((issue) => {
     const path = issue.path.length > 0 ? issue.path.join('.') : source;
     return `${path}: ${issue.message}`;

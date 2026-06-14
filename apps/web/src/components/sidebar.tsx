@@ -79,7 +79,7 @@ export function Sidebar({
           <Button
             variant="ghost"
             size="icon"
-            className="ml-auto h-8 w-8"
+            className="ml-auto size-8 cursor-pointer hidden md:block"
             onClick={onCollapse}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -126,8 +126,8 @@ export function Sidebar({
       {/* Mobile Sidebar */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="md:hidden mt-2">
+            <Menu className="size-5" />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-64">

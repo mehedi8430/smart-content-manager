@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { ApiResponse } from '@/types';
+import { TApiResponse } from '@/types';
 
 export const sendResponse = <T>(
   res: Response,
@@ -8,7 +8,7 @@ export const sendResponse = <T>(
   message: string,
   data?: T
 ): Response => {
-  const response: ApiResponse<T> = {
+  const response: TApiResponse<T> = {
     success,
     message,
     ...(data && { data }),
@@ -23,7 +23,7 @@ export const sendError = (
   message: string,
   error?: string
 ): Response => {
-  const response: ApiResponse = {
+  const response: TApiResponse = {
     success: false,
     message,
     ...(error && { error }),

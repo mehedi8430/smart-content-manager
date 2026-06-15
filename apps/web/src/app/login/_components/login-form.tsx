@@ -14,8 +14,11 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
 import { loginAction } from "@/actions/auth.action";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginInput } from "@/validations/auth.shema";
 
 export function LoginForm({
   className,
@@ -23,19 +26,22 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError: setFormError,
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+  });
 
+  const onSubmit = (data: LoginInput) => {
     startTransition(async () => {
-      const result = await loginAction({ email, password });
-      
+      const result = await loginAction(data);
+
       if (result.error) {
-        setError(result.error);
+        setFormError("root", { message: result.error });
       } else if (result.success) {
         router.push("/dashboard");
       }
@@ -46,7 +52,7 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8" onSubmit={handleSubmit}>
+          <form className="p-6 md:p-8" onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
@@ -54,9 +60,9 @@ export function LoginForm({
                   Login to your Smart Content Manager account
                 </p>
               </div>
-              {error && (
+              {errors.root && (
                 <div className="text-sm text-destructive text-center">
-                  {error}
+                  {errors.root.message}
                 </div>
               )}
               <Field>
@@ -65,30 +71,36 @@ export function LoginForm({
                   id="email"
                   type="email"
                   placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register("email")}
                   disabled={isPending}
                 />
+                {errors.email && (
+                  <div className="text-sm text-destructive mt-1">
+                    {errors.email.message}
+                  </div>
+                )}
               </Field>
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
+                  <Link
                     href="#"
                     className="ml-auto text-sm underline-offset-2 hover:underline"
                   >
                     Forgot your password?
-                  </a>
+                  </Link>
                 </div>
                 <Input
                   id="password"
                   type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register("password")}
                   disabled={isPending}
                 />
+                {errors.password && (
+                  <div className="text-sm text-destructive mt-1">
+                    {errors.password.message}
+                  </div>
+                )}
               </Field>
               <Field>
                 <Button type="submit" disabled={isPending}>
@@ -133,6 +145,8 @@ export function LoginForm({
 
               <FieldDescription className="text-center">
                 Don&apos;t have an account? <Link href="/signup">Sign up</Link>
+                <br />
+                Demo: demo@smartcontent.test / Password123!
               </FieldDescription>
             </FieldGroup>
           </form>

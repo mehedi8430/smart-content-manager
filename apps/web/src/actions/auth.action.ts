@@ -20,6 +20,7 @@ export async function loginAction(values: TLoginPayload) {
       method: "POST",
       body: JSON.stringify(values),
     });
+    // console.log("login action response", response);
 
     if (!response?.data?.accessToken) {
       return { error: "Login failed - no tokens received" };
@@ -27,15 +28,25 @@ export async function loginAction(values: TLoginPayload) {
 
     // Set cookies (HttpOnly, Secure, etc.)
     const cookieStore = await cookies();
-    cookieStore.set("access_token", response?.data?.accessToken || "", {
+
+    cookieStore.set("accessToken", response?.data?.accessToken || "", {
       httpOnly: true,
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24, // 1 day
+    });
+    cookieStore.set("refreshToken", response?.data?.refreshToken || "", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
     });
 
-    return { message: "Login successful", user: response.data, success: true };
+    return {
+      message: "Login successful",
+      user: response.data,
+      success: true
+    };
   } catch (error) {
     // If error is an object with a message property, use that
     if (error && typeof error === "object" && "message" in error) {
@@ -82,15 +93,15 @@ export async function logoutAction() {
 
     // Clear cookies
     const cookieStore = await cookies();
-    cookieStore.delete("access_token");
-    cookieStore.delete("user_role");
+    cookieStore.delete("accessToken");
+    cookieStore.delete("refreshToken");
 
     return { success: true };
   } catch (error) {
     // Even if API fails, clear local cookies
     const cookieStore = await cookies();
-    cookieStore.delete("access_token");
-    cookieStore.delete("user_role");
+    cookieStore.delete("accessToken");
+    cookieStore.delete("refreshToken");
 
     if (error && typeof error === "object" && "message" in error) {
       return { error: (error as { message: string }).message };

@@ -64,7 +64,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
   }
 
   // generate access and refresh token
-  const accesToken = generateAccessToken(user.id, res);
+  const accessToken = generateAccessToken(user.id, res);
   const refreshToken = await generateRefreshToken(user.id, res);
 
   sendResponse(
@@ -77,7 +77,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
       },
-      accesToken,
+      accessToken,
       refreshToken
     });
 });

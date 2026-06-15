@@ -117,7 +117,7 @@ Content-Type: application/json
       "id": "uuid-here",
       "email": "user@example.com"
     },
-    "accesToken": "jwt-access-token-here",
+    "accessToken": "jwt-access-token-here",
     "refreshToken": "jwt-refresh-token-here"
   }
 }

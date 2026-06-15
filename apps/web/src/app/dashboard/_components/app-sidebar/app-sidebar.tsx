@@ -3,11 +3,9 @@
 import * as React from "react";
 
 import { NavMain } from "@/app/dashboard/_components/app-sidebar/nav-main";
-import { NavUser } from "@/app/dashboard/_components/app-sidebar/nav-user";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -15,15 +13,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Command } from "lucide-react";
-
-// This is sample data.
-const data = {
-  user: {
-    name: "Jhon Doe",
-    email: "jhon.doe@example.com",
-    avatar: "/avatars/jhon-doe.jpg",
-  },
-};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -47,12 +36,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
+      {/* Sidebar menu content */}
       <SidebarContent>
         <NavMain />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

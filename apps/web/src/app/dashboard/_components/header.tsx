@@ -19,6 +19,7 @@ import {
 import { useTheme } from "@/providers/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
+import { NavUser } from "./app-sidebar/nav-user";
 
 export default function Header() {
   const { setTheme } = useTheme();
@@ -45,10 +46,10 @@ export default function Header() {
           </Breadcrumb>
         </div>
 
-        <div className="mr-6">
+        <div className="mr-4 space-x-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="cursor-pointer">
                 <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 <span className="sr-only">Toggle theme</span>
@@ -66,6 +67,8 @@ export default function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <NavUser />
         </div>
       </div>
     </header>

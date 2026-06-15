@@ -15,6 +15,7 @@ import {
   Users,
   Settings,
 } from "lucide-react";
+import Link from "next/link";
 
 const data = {
   navMain: [
@@ -59,10 +60,10 @@ export function NavMain() {
           {data.navMain.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
-                <a href={item.url} className="font-medium">
+                <Link href={item.url} className="font-medium">
                   <item.icon className="h-4 w-4" />
                   <span>{item.title}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}

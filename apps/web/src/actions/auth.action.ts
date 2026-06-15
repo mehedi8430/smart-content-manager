@@ -1,7 +1,14 @@
 "use server";
 
 import fetcher from "@/lib/fetcher";
-import { TLoginPayload, TLoginResponse, TLogoutResponse, TSignupPayload, TSignupResponse } from "@/types/auth.type";
+import {
+  TGetMeResponse,
+  TLoginPayload,
+  TLoginResponse,
+  TLogoutResponse,
+  TSignupPayload,
+  TSignupResponse
+} from "@/types/auth.type";
 import { cookies } from "next/headers";
 
 /**
@@ -9,7 +16,7 @@ import { cookies } from "next/headers";
  */
 export async function loginAction(values: TLoginPayload) {
   try {
-    const response = await fetcher<TLoginResponse>("/v2/auth/login", {
+    const response = await fetcher<TLoginResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify(values),
     });
@@ -68,7 +75,7 @@ export async function signupAction(payload: TSignupPayload) {
  */
 export async function logoutAction() {
   try {
-    const response = await fetcher<TLogoutResponse>("/v2/auth/logout", {
+    const response = await fetcher<TLogoutResponse>("/auth/logout", {
       method: "GET",
     });
     console.log("logout action response", response);
@@ -99,19 +106,19 @@ export async function logoutAction() {
 export async function getLoggedinUserAction() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("access_token")?.value;
+    const token = cookieStore.get("accessToken")?.value;
 
     if (!token) {
       return { success: false, error: "Not authenticated" };
     }
 
-    const response = await fetcher<UserByTokenResponse>("/v2/auth/me", {
+    const response = await fetcher<TGetMeResponse>("/auth/me", {
       method: "GET",
     });
 
     return {
-      success: response.result,
-      data: response.user,
+      success: response.success,
+      data: response.data,
     };
   } catch (error) {
     if (error && typeof error === "object" && "message" in error) {

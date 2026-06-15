@@ -1,12 +1,11 @@
+import { TUser } from ".";
+
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string;
-        role?: string;
-      };
+      user?: TUser;
     }
   }
 }
 
-export {};
+export { };

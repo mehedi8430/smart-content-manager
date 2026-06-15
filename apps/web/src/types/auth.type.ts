@@ -1,4 +1,4 @@
-import { TApiResponse } from "./global.type";
+import { TApiResponse, TUser } from "./global.type";
 
 export type TLoginPayload = {
     email: string;
@@ -6,10 +6,7 @@ export type TLoginPayload = {
 };
 
 export type TLoginResponse = TApiResponse<{
-    user: {
-        id: string;
-        email: string;
-    };
+    user: TUser;
     accessToken: string;
     refreshToken: string;
 }>;
@@ -20,10 +17,11 @@ export type TSignupPayload = {
 };
 
 export type TSignupResponse = TApiResponse<{
-    user: {
-        id: string;
-        email: string;
-    };
+    user: TUser;
 }>;
 
 export type TLogoutResponse = TApiResponse<void>;
+
+export type TGetMeResponse = TApiResponse<{
+    user: TUser;
+}>;

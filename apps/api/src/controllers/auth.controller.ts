@@ -107,6 +107,12 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   );
 });
 
+const getMe = catchAsync(async (req: Request, res: Response) => {
+  sendResponse(res, 200, true, 'User fetched successfully', {
+    user: req.user
+  });
+});
+
 const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
   const token = req.cookies?.refreshToken;
 
@@ -133,4 +139,10 @@ const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export { register, login, logout, refreshAccessToken };
+export {
+  register,
+  login,
+  logout,
+  getMe,
+  refreshAccessToken
+};

@@ -4,3 +4,8 @@ export interface TApiResponse<T> {
     data?: T;
     error?: string;
 }
+
+export interface TUser {
+    id: string;
+    email: string;
+}

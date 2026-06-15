@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,16 +13,49 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
+import { signupAction } from "@/actions/auth.action";
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signupSchema, type SignupInput } from "@/validations/auth.shema";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError: setFormError,
+  } = useForm<SignupInput>({
+    resolver: zodResolver(signupSchema),
+  });
+
+  const onSubmit = (data: SignupInput) => {
+    startTransition(async () => {
+      const result = await signupAction(data);
+
+      if (result.error) {
+        setFormError("root", { message: result.error });
+      } else if (result.success) {
+        router.push("/login");
+      }
+    });
+  };
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+          <form className="p-6 md:p-8" onSubmit={handleSubmit(onSubmit)}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Create your account</h1>
@@ -28,38 +63,107 @@ export function SignupForm({
                   Enter your email below to create your account
                 </p>
               </div>
+              {errors.root && (
+                <div className="text-sm text-destructive text-center">
+                  {errors.root.message}
+                </div>
+              )}
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
                   type="email"
                   placeholder="m@example.com"
-                  required
+                  {...register("email")}
+                  disabled={isPending}
                 />
+                {errors.email && (
+                  <div className="text-sm text-destructive mt-1">
+                    {errors.email.message}
+                  </div>
+                )}
                 <FieldDescription>
                   We&apos;ll use this to contact you. We will not share your
                   email with anyone else.
                 </FieldDescription>
               </Field>
               <Field>
-                <Field className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input id="password" type="password" required />
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        {...register("password")}
+                        disabled={isPending}
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={isPending}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    {errors.password && (
+                      <div className="text-sm text-destructive mt-1">
+                        {errors.password.message}
+                      </div>
+                    )}
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="confirm-password">
+                    <FieldLabel htmlFor="confirmPassword">
                       Confirm Password
                     </FieldLabel>
-                    <Input id="confirm-password" type="password" required />
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        {...register("confirmPassword")}
+                        disabled={isPending}
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        disabled={isPending}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <div className="text-sm text-destructive mt-1">
+                        {errors.confirmPassword.message}
+                      </div>
+                    )}
                   </Field>
-                </Field>
+                </div>
                 <FieldDescription>
                   Must be at least 8 characters long.
                 </FieldDescription>
               </Field>
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Creating account..." : "Create Account"}
+                </Button>
               </Field>
 
               {/* Social Login Buttons */}

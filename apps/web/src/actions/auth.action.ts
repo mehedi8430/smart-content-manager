@@ -62,7 +62,7 @@ export async function loginAction(values: TLoginPayload) {
  */
 export async function signupAction(payload: TSignupPayload) {
   try {
-    const response = await fetcher<TSignupResponse>("/v2/auth/signup", {
+    const response = await fetcher<TSignupResponse>("/auth/register", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -70,7 +70,7 @@ export async function signupAction(payload: TSignupPayload) {
     return {
       success: response.success,
       message: response.message,
-      data: response,
+      data: response.data,
     };
   } catch (error) {
     if (error && typeof error === "object" && "message" in error) {

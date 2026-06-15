@@ -22,7 +22,7 @@ export const protect = async (
       token = req.cookies.accessToken;
     }
 
-    console.log("req cookies:", req.cookies?.accessToken);
+    // console.log("req cookies:", req.cookies?.accessToken);
     // console.log("access token:", token);
 
     if (!token) {
@@ -44,7 +44,7 @@ export const protect = async (
       return;
     }
 
-    req.user = { id: user.id };
+    req.user = { id: user.id, email: user.email };
 
     next();
   } catch (error) {
@@ -58,12 +58,12 @@ export const protect = async (
 };
 
 // Middleware to allow access only to users with the specified roles.
-export const authorize = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user || !roles.includes(req.user.role as string)) {
-      sendError(res, 403, 'Access denied. Insufficient permissions.');
-      return;
-    }
-    next();
-  };
-};
+// export const authorize = (...roles: string[]) => {
+//   return (req: Request, res: Response, next: NextFunction): void => {
+//     if (!req.user || !roles.includes(req.user.role as string)) {
+//       sendError(res, 403, 'Access denied. Insufficient permissions.');
+//       return;
+//     }
+//     next();
+//   };
+// };

@@ -93,7 +93,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   const clearOptions: CookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'none' as const,
     maxAge: 0,
   };
 

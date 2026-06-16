@@ -38,3 +38,11 @@ process.on('SIGTERM', () => {
     logger.info('Process terminated');
   });
 });
+
+// health check 
+app.get("/health", (_, res) => {
+  res.status(200).json({
+    success: true,
+    message: "API is healthy"
+  });
+});

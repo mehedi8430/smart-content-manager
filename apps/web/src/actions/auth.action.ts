@@ -33,13 +33,13 @@ export async function loginAction(values: TLoginPayload) {
     cookieStore.set("accessToken", response?.data?.accessToken || "", {
       httpOnly: true,
       secure: true,
-      sameSite: "lax",
+      sameSite: "none" as const,
       path: "/",
     });
     cookieStore.set("refreshToken", response?.data?.refreshToken || "", {
       httpOnly: true,
       secure: true,
-      sameSite: "lax",
+      sameSite: "none" as const,
       path: "/",
     });
 

@@ -23,7 +23,8 @@ WORKDIR /app
 
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client (with placeholder DATABASE_URL for build)
+ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 RUN pnpm --filter smart-content-manager-backend exec prisma generate
 
 # Build backend

@@ -2,6 +2,7 @@
 
 import { getLoggedinUserAction } from "@/actions/auth.action";
 import { config } from "@/config/env-config";
+import { cookies } from "next/headers";
 
 /**
  * Fetcher function for making API requests with minimal error handling.
@@ -25,12 +26,19 @@ export async function fetcher<T = unknown>(
     // Don't add auth header for auth endpoints
     const isAuthEndpoint = [
         "/auth/login",
-        "/auth/register"
+        "/auth/register",
+        "/auth/logout"
     ].includes(cleanEndpoint);
 
-    const accessToken = !isAuthEndpoint ? await getLoggedinUserAction() : null;
+    let accessToken: string | undefined;
+
+    if (!isAuthEndpoint) {
+        const cookieStore = await cookies();
+        accessToken = cookieStore.get("accessToken")?.value;
+    }
 
     const defaultOptions: RequestInit = {
+        credentials: 'include',
         headers: {
             Accept: "application/json",
             ...(systemKey && {

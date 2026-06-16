@@ -87,16 +87,18 @@ export async function signupAction(payload: TSignupPayload) {
 export async function logoutAction() {
   try {
     const response = await fetcher<TLogoutResponse>("/auth/logout", {
-      method: "GET",
+      method: "POST",
     });
-    console.log("logout action response", response);
 
     // Clear cookies
     const cookieStore = await cookies();
     cookieStore.delete("accessToken");
     cookieStore.delete("refreshToken");
 
-    return { success: true };
+    return {
+      success: response.success,
+      message: response.message
+    };
   } catch (error) {
     // Even if API fails, clear local cookies
     const cookieStore = await cookies();
@@ -107,7 +109,10 @@ export async function logoutAction() {
       return { error: (error as { message: string }).message };
     }
 
-    return { error: "Logout failed. Please try again." };
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Logout failed. Please try again."
+    };
   }
 }
 

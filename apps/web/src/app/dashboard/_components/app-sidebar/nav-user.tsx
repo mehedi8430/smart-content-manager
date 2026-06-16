@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState } from "react";
 import { LogOutIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,39 +11,46 @@ import ReuseableAlertDialog from "@/components/reuseable-alert-dialog";
 
 export function NavUser() {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
-  const handleLogout = () => {
-    startTransition(async () => {
+  const handleLogout = async () => {
+    setIsPending(true);
+
+    try {
       const result = await logoutAction();
 
       if (result.success) {
         toast.success("Logged out successfully");
         router.push("/login");
-      } else {
-        toast.error(result.error);
       }
-    });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Logout failed. Please try again.");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
-    <ReuseableAlertDialog
-      trigger={
-        <Button
-          variant="destructive"
-          className="cursor-pointer"
-          disabled={isPending}
-        >
-          <LogOutIcon />
-          Log out
-        </Button>
-      }
-      title="Log out?"
-      description="You will be signed out of your account and need to log in again to access the dashboard."
-      actionText={isPending ? "Logging out..." : "Log out"}
-      cancelText="Cancel"
-      onConfirm={handleLogout}
-      isLoading={isPending}
-    />
+    <>
+      <ReuseableAlertDialog
+        trigger={
+          <Button
+            variant="destructive"
+            className="cursor-pointer"
+            disabled={isPending}
+          >
+            <LogOutIcon />
+            Log out
+          </Button>
+        }
+        title="Log out?"
+        description="You will be signed out of your account and need to log in again to access the dashboard."
+        actionText={isPending ? "Logging out..." : "Log out"}
+        cancelText="Cancel"
+        onConfirm={handleLogout}
+        isLoading={isPending}
+      />
+    </>
   );
 }

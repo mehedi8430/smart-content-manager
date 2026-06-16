@@ -36,6 +36,10 @@ export function LoginForm({
     setError: setFormError,
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "demo@smartcontent.test",
+      password: "Password123!",
+    },
   });
 
   const onSubmit = (data: LoginInput) => {

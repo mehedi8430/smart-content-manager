@@ -25,3 +25,8 @@ export type TLogoutResponse = TApiResponse<void>;
 export type TGetMeResponse = TApiResponse<{
     user: TUser;
 }>;
+
+export type TRefreshTokenResponse = TApiResponse<{
+    id: string;
+    email: string;
+}>;

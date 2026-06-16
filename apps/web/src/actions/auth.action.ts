@@ -6,6 +6,7 @@ import {
   TLoginPayload,
   TLoginResponse,
   TLogoutResponse,
+  TRefreshTokenResponse,
   TSignupPayload,
   TSignupResponse
 } from "@/types/auth.type";

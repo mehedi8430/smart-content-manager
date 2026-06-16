@@ -1,6 +1,5 @@
 "use server";
 
-import { getLoggedinUserAction } from "@/actions/auth.action";
 import { config } from "@/config/env-config";
 import { cookies } from "next/headers";
 
@@ -27,7 +26,7 @@ export async function fetcher<T = unknown>(
     const isAuthEndpoint = [
         "/auth/login",
         "/auth/register",
-        "/auth/logout"
+        "/auth/refresh-token"
     ].includes(cleanEndpoint);
 
     let accessToken: string | undefined;
@@ -61,7 +60,47 @@ export async function fetcher<T = unknown>(
         },
     };
 
-    const response = await fetch(url, fetchOptions);
+    let response = await fetch(url, fetchOptions);
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401 && !isAuthEndpoint) {
+        console.log("Access token expired. Refreshing...");
+
+        const refreshResponse = await fetch(
+            `${config.baseURL}/auth/refresh-token`,
+            {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    Accept: "application/json",
+                    ...(systemKey && {
+                        "System-Key": systemKey,
+                    }),
+                },
+            }
+        );
+
+        if (refreshResponse.ok) {
+            console.log("Token refreshed successfully");
+
+            // get new access token from cookies
+            const cookieStore = await cookies();
+            const newAccessToken = cookieStore.get("accessToken")?.value;
+
+            // retry original request
+            response = await fetch(url, {
+                ...fetchOptions,
+                headers: {
+                    ...fetchOptions.headers,
+                    ...(newAccessToken && {
+                        Authorization: `Bearer ${newAccessToken}`,
+                    }),
+                },
+            });
+        } else {
+            throw new Error("Session expired. Please login again.");
+        }
+    }
 
     // Check if response has content
     const contentType = response.headers.get("content-type");

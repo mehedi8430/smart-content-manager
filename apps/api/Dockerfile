@@ -49,6 +49,9 @@ COPY apps/api/package.json ./apps/api/package.json
 # install production dependencies only
 RUN pnpm install --prod --filter smart-content-manager-backend
 
+# install prisma CLI for running migrations
+RUN pnpm add -g @prisma/cli
+
 # copy compiled application
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 
@@ -59,5 +62,4 @@ WORKDIR /app/apps/api
 
 EXPOSE 8080
 
-CMD ["node", "dist/server.js"]
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/server.js"]
+CMD ["sh", "-c", "prisma migrate deploy && node dist/server.js"]

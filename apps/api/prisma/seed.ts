@@ -4,10 +4,13 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
-
+const prisma = new PrismaClient({
+  adapter,
+});
 
 // Demo credentials (all users):
 //   Password: Password123!
@@ -26,8 +29,6 @@ const prisma = new PrismaClient({ adapter });
 
 // Sample campaign ID (Summer Launch): d77f0a61-06a5-4397-a4e2-868e2f4aa3ed
 // Sample chat session ID: 35e01068-fac5-4062-afc4-054e054855d1
-
-
 
 const DEMO_PASSWORD = 'Password123!';
 

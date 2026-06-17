@@ -69,5 +69,5 @@ pnpm build
 ## Monorepo Tooling
 
 - **pnpm** manages dependencies across the workspace.
-- **Turborepo** orchestrates and optimizes tasks across applications.
+- **Turborepo** (build system) orchestrates and optimizes tasks across applications.
 - **Bun** powers the backend runtime and Prisma commands and package manager for frontend.

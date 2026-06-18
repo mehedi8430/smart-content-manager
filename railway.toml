@@ -5,6 +5,6 @@ buildCommand = "bun install && bun run db:generate && bun run build"
 [deploy]
 preDeployCommand = ["bun run db:deploy"]
 startCommand = "node dist/server.js"
-healthcheckPath = "/"
+healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "never"

@@ -7,12 +7,15 @@
     "dev": "bun run --watch src/server.ts",
     "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
-    "start:prod": "NODE_ENV=production node dist/server.js",
+    "start:prod": "prisma migrate deploy && node dist/server.js",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "type-check": "tsc --noEmit",
-    "db:seed": "bunx prisma db seed"
+    "db:seed": "bunx prisma db seed",
+    "db:generate": "bunx --bun prisma generate",
+    "db:migrate": "bunx --bun prisma migrate dev",
+    "db:deploy": "bunx --bun prisma migrate deploy"
   },
   "type": "module",
   "dependencies": {

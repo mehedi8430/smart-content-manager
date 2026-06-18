@@ -34,7 +34,7 @@ bunx prisma generate
 bun run dev
 ```
 
-Server runs at `http://localhost:3000`. API base path: `/api/v1`.
+Server runs at `http://localhost:8000`. API base path: `/api/v1`.
 
 ## Scripts
 
@@ -50,9 +50,10 @@ Server runs at `http://localhost:3000`. API base path: `/api/v1`.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/v1/health` | Health check |
+| GET | `/health` | Health check |
 | POST | `/api/v1/auth/register` | Register user |
 | POST | `/api/v1/auth/login` | Login |
+| POST | `/api/v1/auth/logout` | Logout |
 
 ## Docker
 

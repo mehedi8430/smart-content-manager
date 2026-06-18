@@ -43,6 +43,7 @@ process.on('SIGTERM', () => {
 app.get("/health", (_, res) => {
   res.status(200).json({
     success: true,
-    message: "API is healthy"
+    message: 'Api is healthy',
+    timestamp: new Date().toISOString(),
   });
 });

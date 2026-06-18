@@ -1,0 +1,10 @@
+[build]
+builder = "railpack"
+buildCommand = "bun install && bun run build"
+
+[deploy]
+preDeployCommand = ["bun run db:migrate"]
+startCommand = "bun run start"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "never"

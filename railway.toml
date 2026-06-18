@@ -1,10 +1,10 @@
 [build]
 builder = "railpack"
-buildCommand = "bun install && bun run build"
+buildCommand = "bun install && bun run db:generate && bun run build"
 
 [deploy]
-preDeployCommand = ["bun run db:migrate"]
-startCommand = "bun run start"
+preDeployCommand = ["bun run db:deploy"]
+startCommand = "node dist/server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 100
 restartPolicyType = "never"

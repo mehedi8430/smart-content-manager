@@ -43,6 +43,7 @@ Server runs at `http://localhost:8000`. API base path: `/api/v1`.
 | `bun run dev` | Start with hot reload |
 | `bun run build` | Compile TypeScript |
 | `bun run start:prod` | Run production build |
+| `bun run db:seed` | Seed database |
 | `bun run lint` | Lint source |
 | `bun run type-check` | TypeScript check |
 
@@ -54,10 +55,3 @@ Server runs at `http://localhost:8000`. API base path: `/api/v1`.
 | POST | `/api/v1/auth/register` | Register user |
 | POST | `/api/v1/auth/login` | Login |
 | POST | `/api/v1/auth/logout` | Logout |
-
-## Docker
-
-```bash
-docker build -t content-campaign-ai-backend .
-docker run -p 3000:3000 --env-file .env content-campaign-ai-backend
-```

@@ -24,19 +24,26 @@ model User {
 model Campaign {
   id        String   @id @default(uuid())
   name      String
+  description String?
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   posts     Post[]
   outputs   AiOutput[]
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
+// Delete strategy: Cascade delete
+// When a Campaign is deleted, all associated Posts and AiOutputs are automatically deleted.
+// This is acceptable pre-launch for simplicity. If needed later, we can implement a
+// soft-delete pattern or a force-delete endpoint with conflict checking.
 
 model Post {
   id         String   @id @default(uuid())
   title      String
   status     String   @default("todo")  // todo | in_progress | done
   campaignId String
-  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
 
 model AiOutput {
@@ -45,7 +52,7 @@ model AiOutput {
   prompt     String
   content    String   @db.Text
   campaignId String
-  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 }
 

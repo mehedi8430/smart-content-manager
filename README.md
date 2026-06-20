@@ -13,7 +13,6 @@ AI-powered content and campaign management platform.
 ## Prerequisites
 
 - Node.js 22+
-- pnpm
 - Bun
 - PostgreSQL
 
@@ -30,7 +29,7 @@ apps/
 ### Install dependencies
 
 ```bash
-pnpm install
+bun install
 ```
 
 ## Configure environment variables
@@ -52,7 +51,7 @@ bunx --bun prisma migrate dev
 ### Start development servers
 
 ```bash
-pnpm dev
+bun run dev
 ```
 
 Starts both:
@@ -63,11 +62,10 @@ Starts both:
 ## Build
 
 ```bash
-pnpm build
+bun run build
 ```
 
 ## Monorepo Tooling
 
-- **pnpm** manages dependencies across the workspace.
 - **Turborepo** (build system) orchestrates and optimizes tasks across applications.
 - **Bun** powers the backend runtime and Prisma commands and package manager for frontend.

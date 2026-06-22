@@ -7,14 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  LayoutDashboard,
-  FileText,
-  Calendar,
-  BarChart3,
-  Users,
-  Settings,
-} from "lucide-react";
+import { LayoutDashboard, FileText } from "lucide-react";
 import Link from "next/link";
 
 const data = {
@@ -26,28 +19,8 @@ const data = {
     },
     {
       title: "Campaigns",
-      url: "/campaigns",
+      url: "/dashboard/campaigns",
       icon: FileText,
-    },
-    {
-      title: "Calendar",
-      url: "/calendar",
-      icon: Calendar,
-    },
-    {
-      title: "Analytics",
-      url: "/analytics",
-      icon: BarChart3,
-    },
-    {
-      title: "Team",
-      url: "/team",
-      icon: Users,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings,
     },
   ],
 };

@@ -27,7 +27,13 @@ export const validate = (schemas: ValidationSchemas) => {
         continue;
       }
 
-      req[source] = result.data;
+      // Override the request property with validated data
+      Object.defineProperty(req, source, {
+        value: result.data,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
     }
 
     if (errors.length > 0) {

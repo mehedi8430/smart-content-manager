@@ -37,10 +37,11 @@ export const createCampaign = async (userId: string, data: CreateCampaignInput) 
  */
 export const listCampaigns = async (userId: string, query: ListCampaignsQuery) => {
   const { page, limit, search, sortBy, sortOrder } = query;
+  // how many records to skip for pagination
   const skip = (page - 1) * limit;
 
   try {
-    // Build where clause for search
+    // Build where clause for search by name if have and filter by userid
     const where = {
       userId,
       ...(search && {
@@ -51,7 +52,7 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
       }),
     };
 
-    // Get total count for pagination
+    // Counts how many campaigns match the filter
     const total = await prisma.campaign.count({ where });
 
     // Get campaigns with counts
@@ -62,6 +63,7 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
       orderBy: {
         [sortBy]: sortOrder,
       },
+      // Prisma feature that adds counts of related records without fetching the actual records.
       include: {
         _count: {
           select: {
@@ -149,9 +151,11 @@ export const updateCampaign = async (
 
     // Build update data with only provided fields
     const updateData: { name?: string; description?: string | null } = {};
+
     if (data.name !== undefined) {
       updateData.name = data.name;
     }
+    
     if (data.description !== undefined) {
       updateData.description = data.description;
     }

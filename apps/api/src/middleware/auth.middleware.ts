@@ -1,5 +1,5 @@
 import { prisma } from '@/config/db';
-import { sendError } from '@/utils/apiResponse';
+import { ApiError } from '@/utils/apiResponse';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
@@ -26,8 +26,7 @@ export const protect = async (
     // console.log("access token:", token);
 
     if (!token) {
-      sendError(res, 401, 'Access denied. No token provided.');
-      return;
+      throw new ApiError(401, 'Access denied. No token provided.');
     }
 
     // verify token and extract the user id
@@ -40,8 +39,7 @@ export const protect = async (
     });
 
     if (!user) {
-      sendError(res, 401, 'Token is not valid');
-      return;
+      throw new ApiError(401, 'Token is not valid');
     }
 
     req.user = { id: user.id, email: user.email };
@@ -49,11 +47,14 @@ export const protect = async (
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      sendError(res, 401, 'Token expired. Please refresh your token.');
-      return;
+      throw new ApiError(401, 'Token expired. Please refresh your token.');
     }
 
-    sendError(res, 401, 'Token is not valid');
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    throw new ApiError(401, 'Token is not valid');
   }
 };
 

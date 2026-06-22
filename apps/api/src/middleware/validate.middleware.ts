@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { z, ZodSchema } from 'zod';
-import { sendError } from '@/utils/apiResponse';
+import { ApiError } from '@/utils/apiResponse';
 
 type RequestSource = 'body' | 'query' | 'params';
 
@@ -31,8 +31,7 @@ export const validate = (schemas: ValidationSchemas) => {
     }
 
     if (errors.length > 0) {
-      sendError(res, 400, 'Validation failed', errors.join(', '));
-      return;
+      throw new ApiError(400, 'Validation failed', errors.join(', '));
     }
 
     next();

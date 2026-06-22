@@ -1,7 +1,7 @@
 import { prisma } from '@/config/db';
 import { CookieOptions, Response } from 'express';
 import jwt, { SignOptions } from 'jsonwebtoken';
-import { sendError } from './apiResponse';
+import { ApiError } from './apiResponse';
 
 export const generateAccessToken = (userId: string, res: Response): string => {
     const secret = process.env.ACCESS_TOKEN_SECRET;
@@ -61,8 +61,7 @@ export const generateRefreshToken = async (
 
         return refreshToken;
     } catch (error) {
-        sendError(res, 500, 'Internal server error');
         console.error(error);
-        return '';
+        throw new ApiError(500, 'Failed to generate refresh token');
     }
 };

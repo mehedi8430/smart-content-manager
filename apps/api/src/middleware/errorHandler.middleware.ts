@@ -1,10 +1,11 @@
 import logger from '@/config/logger';
-import { sendError } from '@/utils/apiResponse';
+import { sendError, ApiError } from '@/utils/apiResponse';
 import { Request, Response, NextFunction } from 'express';
 
 interface CustomError extends Error {
   statusCode?: number;
   code?: string;
+  details?: string;
 }
 
 const errorHandler = (
@@ -18,6 +19,7 @@ const errorHandler = (
 
   logger.error(err);
 
+  // Handle Prisma errors
   if (err.code === '22P02') {
     error = { ...error, statusCode: 404, message: 'Resource not found' };
   }
@@ -30,7 +32,10 @@ const errorHandler = (
     };
   }
 
-  sendError(res, error.statusCode || 500, error.message || 'Server Error');
+  // Handle ApiError details if present
+  const details = err.details ? err.details : undefined;
+
+  sendError(res, error.statusCode || 500, error.message || 'Server Error', details);
 };
 
 export default errorHandler;

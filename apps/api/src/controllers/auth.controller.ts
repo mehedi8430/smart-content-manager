@@ -1,32 +1,26 @@
-import { prisma } from '@/config/db';
-import { sendError, sendResponse } from '@/utils/apiResponse';
+import { sendResponse } from '@/utils/apiResponse';
+import { generateAccessToken, generateRefreshToken } from '@/utils/generateToken';
 import catchAsync from '@/utils/catchAsync';
 import { CookieOptions, Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import { generateAccessToken, generateRefreshToken } from '@/utils/generateToken';
-import jwt from 'jsonwebtoken';
+import {
+  register as registerService,
+  login as loginService,
+  logout as logoutService,
+  refreshAccessToken as refreshAccessTokenService,
+} from '@/services/auth.service';
 
+/**
+ * Auth Controller
+ * Handles HTTP requests for authentication operations
+ */
+
+/**
+ * Register a new user
+ * @route POST /api/v1/auth/register
+ * @returns Created user object
+ */
 const register = catchAsync(async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
-  // user exists check
-  const userExists = await prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (userExists) {
-    sendError(res, 400, 'User already exists with this email');
-    return;
-  }
-
-  // hash password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  // create user
-  const user = await prisma.user.create({
-    data: { email, passwordHash: hashedPassword },
-  });
+  const user = await registerService(req.body);
 
   sendResponse(
     res,
@@ -42,28 +36,15 @@ const register = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+/**
+ * Login user
+ * @route POST /api/v1/auth/login
+ * @returns User object with tokens
+ */
 const login = catchAsync(async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const user = await loginService(req.body);
 
-  // check user exist in table
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (!user) {
-    sendError(res, 400, 'Invalid email or password');
-    return;
-  }
-
-  // verify password
-  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-
-  if (!isPasswordValid) {
-    sendError(res, 400, 'Invalid email or password');
-    return;
-  }
-
-  // generate access and refresh token
+  // Generate access and refresh tokens
   const accessToken = generateAccessToken(user.id, res);
   const refreshToken = await generateRefreshToken(user.id, res);
 
@@ -82,14 +63,16 @@ const login = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+/**
+ * Logout user
+ * @route POST /api/v1/auth/logout
+ * @auth Requires valid JWT token
+ * @returns Success message
+ */
 const logout = catchAsync(async (req: Request, res: Response) => {
-  // clear refresh token from user table
-  await prisma.user.update({
-    where: { id: req.user?.id },
-    data: { refreshToken: null },
-  });
+  await logoutService(req.user!.id);
 
-  // clear cookies
+  // Clear cookies
   const clearOptions: CookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -107,30 +90,28 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   );
 });
 
+/**
+ * Get current user
+ * @route GET /api/v1/auth/me
+ * @auth Requires valid JWT token
+ * @returns Current user object
+ */
 const getMe = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, 200, true, 'User fetched successfully', {
     user: req.user
   });
 });
 
+/**
+ * Refresh access token
+ * @route POST /api/v1/auth/refresh-token
+ * @returns New access token
+ */
 const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
   const token = req.cookies?.refreshToken;
+  const user = await refreshAccessTokenService(token);
 
-  if (!token) {
-    sendError(res, 401, 'No refresh token provided.');
-    return;
-  }
-
-  const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string) as { id: string };
-
-  const user = await prisma.user.findUnique({ where: { id: decoded.id } });
-
-  if (!user || user.refreshToken !== token) {
-    sendError(res, 401, 'Invalid refresh token.');
-    return;
-  }
-
-  // Issue new access token only
+  // Issue new access token
   generateAccessToken(user.id, res);
 
   sendResponse(res, 200, true, 'Token refreshed successfully', {

@@ -1,5 +1,5 @@
 import { prisma } from '@/config/db';
-import { ApiError } from '@/utils/ApiError';
+import { ApiError } from '@/utils/apiResponse';
 import logger from '@/config/logger';
 import type {
   CreateCampaignInput,

@@ -1,68 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CampaignsHeader } from "./_components/campaigns-header";
 import { CampaignsTable } from "./_components/campaigns-table";
 import { CreateCampaignModal } from "./_components/create-campaign-modal";
 import { EditCampaignModal } from "./_components/edit-campaign-modal";
 import { DeleteCampaignDialog } from "./_components/delete-campaign-dialog";
-
-// Mock data type
-interface Campaign {
-  id: string;
-  name: string;
-  description: string | null;
-  createdAt: string;
-  postsCount: number;
-  outputsCount: number;
-}
-
-// Mock data
-const mockCampaigns: Campaign[] = [
-  {
-    id: "1",
-    name: "Summer Sale Campaign",
-    description: "Promotional campaign for summer sale events",
-    createdAt: "2024-06-15T10:30:00Z",
-    postsCount: 12,
-    outputsCount: 45,
-  },
-  {
-    id: "2",
-    name: "Product Launch",
-    description: "New product introduction campaign",
-    createdAt: "2024-06-10T14:20:00Z",
-    postsCount: 8,
-    outputsCount: 32,
-  },
-  {
-    id: "3",
-    name: "Brand Awareness",
-    description: null,
-    createdAt: "2024-06-05T09:15:00Z",
-    postsCount: 15,
-    outputsCount: 60,
-  },
-  {
-    id: "4",
-    name: "Holiday Special",
-    description: "Holiday season promotional content",
-    createdAt: "2024-05-28T16:45:00Z",
-    postsCount: 20,
-    outputsCount: 78,
-  },
-  {
-    id: "5",
-    name: "Customer Testimonials",
-    description: "Campaign featuring customer success stories",
-    createdAt: "2024-05-20T11:00:00Z",
-    postsCount: 6,
-    outputsCount: 24,
-  },
-];
+import { Campaign } from "@/types/campaign.type";
+import {
+  createCampaignAction,
+  listCampaignsAction,
+  updateCampaignAction,
+  deleteCampaignAction,
+} from "@/actions/campaign.action";
+import { useSearchParams } from "next/navigation";
 
 export default function CampaignsPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const searchParams = useSearchParams();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+  });
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -71,12 +34,45 @@ export default function CampaignsPage() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null,
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({
     name: "",
     description: "",
   });
+
+  // Fetch campaigns
+  const fetchCampaigns = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const query = {
+        page: Number(searchParams.get("page")) || 1,
+        limit: Number(searchParams.get("limit")) || 10,
+        search: searchParams.get("search") || undefined,
+        sortBy:
+          (searchParams.get("sortBy") as "createdAt" | "name") || "createdAt",
+        sortOrder: (searchParams.get("sortOrder") as "asc" | "desc") || "desc",
+      };
+
+      const result = await listCampaignsAction(query);
+      if (result.error) {
+        setError(result.error);
+      } else if (result.data) {
+        setCampaigns(result.data.data);
+        setPagination(result.data.pagination);
+      }
+    } catch {
+      setError("Failed to fetch campaigns");
+    } finally {
+      setLoading(false);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, [fetchCampaigns]);
 
   // Handlers
   const handleCreate = () => {
@@ -99,56 +95,80 @@ export default function CampaignsPage() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newCampaign: Campaign = {
-      id: Date.now().toString(),
-      name: formData.name,
-      description: formData.description || null,
-      createdAt: new Date().toISOString(),
-      postsCount: 0,
-      outputsCount: 0,
-    };
-    setCampaigns([newCampaign, ...campaigns]);
-    setIsCreateModalOpen(false);
-    setFormData({ name: "", description: "" });
+    setIsSubmitting(true);
+    try {
+      const result = await createCampaignAction(formData);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setIsCreateModalOpen(false);
+      setFormData({ name: "", description: "" });
+      await fetchCampaigns();
+    } catch {
+      setError("Failed to create campaign");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCampaign) return;
-
-    setCampaigns(
-      campaigns.map((c) =>
-        c.id === selectedCampaign.id
-          ? {
-              ...c,
-              name: formData.name,
-              description: formData.description || null,
-            }
-          : c,
-      ),
-    );
-    setIsEditModalOpen(false);
-    setSelectedCampaign(null);
-    setFormData({ name: "", description: "" });
+    setIsSubmitting(true);
+    try {
+      const result = await updateCampaignAction(selectedCampaign.id, formData);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setIsEditModalOpen(false);
+      setSelectedCampaign(null);
+      setFormData({ name: "", description: "" });
+      await fetchCampaigns();
+    } catch {
+      setError("Failed to update campaign");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!selectedCampaign) return;
-    setCampaigns(campaigns.filter((c) => c.id !== selectedCampaign.id));
-    setIsDeleteDialogOpen(false);
-    setSelectedCampaign(null);
+    setIsSubmitting(true);
+    try {
+      const result = await deleteCampaignAction(selectedCampaign.id);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setIsDeleteDialogOpen(false);
+      setSelectedCampaign(null);
+      await fetchCampaigns();
+    } catch {
+      setError("Failed to delete campaign");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+        </div>
+      )}
       <CampaignsHeader onCreate={handleCreate} />
 
       <CampaignsTable
         campaigns={campaigns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        loading={loading}
+        pagination={pagination}
       />
 
       <CreateCampaignModal
@@ -157,6 +177,7 @@ export default function CampaignsPage() {
         onSubmit={handleCreateSubmit}
         formData={formData}
         onFormDataChange={setFormData}
+        isSubmitting={isSubmitting}
       />
 
       <EditCampaignModal
@@ -165,6 +186,7 @@ export default function CampaignsPage() {
         onSubmit={handleEditSubmit}
         formData={formData}
         onFormDataChange={setFormData}
+        isSubmitting={isSubmitting}
       />
 
       <DeleteCampaignDialog
@@ -172,6 +194,7 @@ export default function CampaignsPage() {
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
         campaignName={selectedCampaign?.name || ""}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

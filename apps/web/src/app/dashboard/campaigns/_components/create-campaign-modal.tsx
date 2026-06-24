@@ -17,6 +17,7 @@ interface CreateCampaignModalProps {
     description: string;
   };
   onFormDataChange: (data: { name: string; description: string }) => void;
+  isSubmitting?: boolean;
 }
 
 export function CreateCampaignModal({
@@ -25,6 +26,7 @@ export function CreateCampaignModal({
   onSubmit,
   formData,
   onFormDataChange,
+  isSubmitting = false,
 }: CreateCampaignModalProps) {
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -68,14 +70,15 @@ export function CreateCampaignModal({
             </FieldContent>
           </Field>
           <div className="flex gap-2 pt-4">
-            <Button type="submit" className="flex-1">
-              Create Campaign
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Campaign"}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               className="flex-1"
+              disabled={isSubmitting}
             >
               Cancel
             </Button>

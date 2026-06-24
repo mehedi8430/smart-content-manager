@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { SearchInput } from "@/components/search-input";
+import { Campaign } from "@/types/campaign.type";
 import {
   Card,
   CardContent,
@@ -28,34 +28,30 @@ import {
   Trash2,
 } from "lucide-react";
 
-interface Campaign {
-  id: string;
-  name: string;
-  description: string | null;
-  createdAt: string;
-  postsCount: number;
-  outputsCount: number;
-}
-
 interface CampaignsTableProps {
   campaigns: Campaign[];
   onEdit: (campaign: Campaign) => void;
   onDelete: (campaign: Campaign) => void;
+  loading?: boolean;
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 export function CampaignsTable({
   campaigns,
   onEdit,
   onDelete,
+  loading = false,
+  pagination,
 }: CampaignsTableProps) {
   const searchParams = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
-
-  // Table state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [sortBy, setSortBy] = useState<"createdAt" | "name">("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const router = useRouter();
+  const currentPage = pagination?.page || 1;
+  const totalPages = pagination?.totalPages || 1;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -65,35 +61,25 @@ export function CampaignsTable({
     });
   };
 
-  // Filter and sort campaigns
-  const filteredCampaigns = campaigns
-    .filter((campaign) =>
-      campaign.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-    .sort((a, b) => {
-      const comparison = a[sortBy].localeCompare(b[sortBy]);
-      return sortOrder === "asc" ? comparison : -comparison;
-    });
-
-  // Pagination
-  const totalPages = Math.ceil(filteredCampaigns.length / itemsPerPage);
-  const paginatedCampaigns = filteredCampaigns.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
-
   // Handlers
   const handleSort = (field: "createdAt" | "name") => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortOrder("asc");
-    }
+    const currentSort = searchParams.get("sortBy") || "createdAt";
+    const currentOrder = searchParams.get("sortOrder") || "desc";
+
+    const newSort = currentSort === field ? field : "createdAt";
+    const newOrder =
+      currentSort === field && currentOrder === "asc" ? "desc" : "asc";
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("sortBy", newSort);
+    params.set("sortOrder", newOrder);
+    router.push(`?${params.toString()}`);
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", page.toString());
+    router.push(`?${params.toString()}`);
   };
 
   return (
@@ -143,7 +129,7 @@ export function CampaignsTable({
               </tr>
             </thead>
             <tbody>
-              {filteredCampaigns.length === 0 ? (
+              {campaigns.length === 0 ? (
                 <tr>
                   <td
                     colSpan={6}
@@ -154,7 +140,7 @@ export function CampaignsTable({
                   </td>
                 </tr>
               ) : (
-                paginatedCampaigns.map((campaign) => (
+                campaigns.map((campaign) => (
                   <tr key={campaign.id} className="border-b hover:bg-muted/50">
                     <td className="py-4">
                       <div className="font-medium">{campaign.name}</div>
@@ -169,12 +155,12 @@ export function CampaignsTable({
                     </td>
                     <td className="py-4 text-center">
                       <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                        {campaign.postsCount}
+                        {campaign._count.posts}
                       </span>
                     </td>
                     <td className="py-4 text-center">
                       <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                        {campaign.outputsCount}
+                        {campaign._count.outputs}
                       </span>
                     </td>
                     <td className="py-4 text-right">
@@ -215,14 +201,15 @@ export function CampaignsTable({
         {totalPages > 1 && (
           <div className="mt-4 flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
+              Page {currentPage} of {totalPages} ({pagination?.total || 0}{" "}
+              total)
             </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
+                disabled={currentPage === 1 || loading}
               >
                 <ChevronLeft className="h-4 w-4" />
                 Previous
@@ -231,7 +218,7 @@ export function CampaignsTable({
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || loading}
               >
                 Next
                 <ChevronRight className="h-4 w-4" />

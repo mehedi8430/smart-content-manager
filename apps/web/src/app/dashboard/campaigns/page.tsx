@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { CampaignsHeader } from "./_components/campaigns-header";
-import { CampaignsSearch } from "./_components/campaigns-search";
 import { CampaignsTable } from "./_components/campaigns-table";
 import { CreateCampaignModal } from "./_components/create-campaign-modal";
 import { EditCampaignModal } from "./_components/edit-campaign-modal";
@@ -64,11 +63,6 @@ const mockCampaigns: Campaign[] = [
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [sortBy, setSortBy] = useState<"createdAt" | "name">("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -83,23 +77,6 @@ export default function CampaignsPage() {
     name: "",
     description: "",
   });
-
-  // Filter and sort campaigns
-  const filteredCampaigns = campaigns
-    .filter((campaign) =>
-      campaign.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-    .sort((a, b) => {
-      const comparison = a[sortBy].localeCompare(b[sortBy]);
-      return sortOrder === "asc" ? comparison : -comparison;
-    });
-
-  // Pagination
-  const totalPages = Math.ceil(filteredCampaigns.length / itemsPerPage);
-  const paginatedCampaigns = filteredCampaigns.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
 
   // Handlers
   const handleCreate = () => {
@@ -164,37 +141,14 @@ export default function CampaignsPage() {
     setSelectedCampaign(null);
   };
 
-  const handleSort = (field: "createdAt" | "name") => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortOrder("asc");
-    }
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   return (
     <div className="space-y-6">
       <CampaignsHeader onCreate={handleCreate} />
 
-      <CampaignsSearch
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        totalCount={filteredCampaigns.length}
-      />
-
       <CampaignsTable
-        campaigns={paginatedCampaigns}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onSort={handleSort}
+        campaigns={campaigns}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onPageChange={handlePageChange}
       />
 
       <CreateCampaignModal

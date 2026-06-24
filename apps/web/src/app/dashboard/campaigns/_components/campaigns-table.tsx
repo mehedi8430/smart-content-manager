@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,12 +17,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   MoreVertical,
   Pencil,
+  Search,
   Trash2,
 } from "lucide-react";
 
@@ -34,23 +39,22 @@ interface Campaign {
 
 interface CampaignsTableProps {
   campaigns: Campaign[];
-  currentPage: number;
-  totalPages: number;
-  onSort: (field: "createdAt" | "name") => void;
   onEdit: (campaign: Campaign) => void;
   onDelete: (campaign: Campaign) => void;
-  onPageChange: (page: number) => void;
 }
 
 export function CampaignsTable({
   campaigns,
-  currentPage,
-  totalPages,
-  onSort,
   onEdit,
   onDelete,
-  onPageChange,
 }: CampaignsTableProps) {
+  // Table state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [sortBy, setSortBy] = useState<"createdAt" | "name">("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -59,14 +63,57 @@ export function CampaignsTable({
     });
   };
 
+  // Filter and sort campaigns
+  const filteredCampaigns = campaigns
+    .filter((campaign) =>
+      campaign.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    )
+    .sort((a, b) => {
+      const comparison = a[sortBy].localeCompare(b[sortBy]);
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredCampaigns.length / itemsPerPage);
+  const paginatedCampaigns = filteredCampaigns.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
+  // Handlers
+  const handleSort = (field: "createdAt" | "name") => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>All Campaigns</CardTitle>
-        <CardDescription>
-          A list of all your campaigns with their post and output counts
-        </CardDescription>
-      </CardHeader>
+      <div className="flex items-center justify-between mb-2">
+        <CardHeader className="w-full">
+          <CardTitle>All Campaigns</CardTitle>
+          <CardDescription>
+            A list of all your campaigns with their post and output counts
+          </CardDescription>
+        </CardHeader>
+
+        <div className="relative max-w-s">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search campaigns..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
       <CardContent>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -76,7 +123,7 @@ export function CampaignsTable({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onSort("name")}
+                    onClick={() => handleSort("name")}
                     className="gap-1 font-medium"
                   >
                     Name
@@ -88,7 +135,7 @@ export function CampaignsTable({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onSort("createdAt")}
+                    onClick={() => handleSort("createdAt")}
                     className="gap-1 font-medium"
                   >
                     Created
@@ -101,7 +148,7 @@ export function CampaignsTable({
               </tr>
             </thead>
             <tbody>
-              {campaigns.length === 0 ? (
+              {filteredCampaigns.length === 0 ? (
                 <tr>
                   <td
                     colSpan={6}
@@ -112,7 +159,7 @@ export function CampaignsTable({
                   </td>
                 </tr>
               ) : (
-                campaigns.map((campaign) => (
+                paginatedCampaigns.map((campaign) => (
                   <tr key={campaign.id} className="border-b hover:bg-muted/50">
                     <td className="py-4">
                       <div className="font-medium">{campaign.name}</div>
@@ -179,7 +226,7 @@ export function CampaignsTable({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onPageChange(currentPage - 1)}
+                onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -188,7 +235,7 @@ export function CampaignsTable({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onPageChange(currentPage + 1)}
+                onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
                 Next

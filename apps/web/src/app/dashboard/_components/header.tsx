@@ -20,9 +20,43 @@ import { useTheme } from "@/providers/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import { NavUser } from "./app-sidebar/nav-user";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const { setTheme } = useTheme();
+  const pathname = usePathname();
+
+  // Generate breadcrumb items from pathname
+  const getBreadcrumbs = () => {
+    const segments = pathname.split("/").filter(Boolean);
+    const breadcrumbs = [];
+
+    if (segments.length === 0) {
+      return [{ label: "Dashboard", href: "/dashboard", isLast: true }];
+    }
+
+    // Always add Dashboard as first item
+    breadcrumbs.push({
+      label: "Dashboard",
+      href: "/dashboard",
+      isLast: segments.length === 1 && segments[0] === "dashboard",
+    });
+
+    // Add additional segments
+    let accumulatedPath = "";
+    for (let i = 1; i < segments.length; i++) {
+      accumulatedPath += `/${segments[i]}`;
+      breadcrumbs.push({
+        label: segments[i].charAt(0).toUpperCase() + segments[i].slice(1),
+        href: accumulatedPath,
+        isLast: i === segments.length - 1,
+      });
+    }
+
+    return breadcrumbs;
+  };
+
+  const breadcrumbs = getBreadcrumbs();
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
@@ -35,13 +69,25 @@ export default function Header() {
           />
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Dashboard</BreadcrumbPage>
-              </BreadcrumbItem>
+              {breadcrumbs.map((crumb, index) => (
+                <>
+                  <BreadcrumbItem key={crumb.href} className="hidden md:block">
+                    {crumb.isLast ? (
+                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink href={crumb.href}>
+                        {crumb.label}
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                  {!crumb.isLast && (
+                    <BreadcrumbSeparator
+                      key={`sep-${index}`}
+                      className="hidden md:block"
+                    />
+                  )}
+                </>
+              ))}
             </BreadcrumbList>
           </Breadcrumb>
         </div>

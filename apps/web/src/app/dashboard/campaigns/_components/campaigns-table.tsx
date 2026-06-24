@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
+import { SearchInput } from "@/components/search-input";
 import {
   Card,
   CardContent,
@@ -17,14 +19,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   MoreVertical,
   Pencil,
-  Search,
   Trash2,
 } from "lucide-react";
 
@@ -48,8 +48,10 @@ export function CampaignsTable({
   onEdit,
   onDelete,
 }: CampaignsTableProps) {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
+
   // Table state
-  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState<"createdAt" | "name">("createdAt");
@@ -104,15 +106,8 @@ export function CampaignsTable({
           </CardDescription>
         </CardHeader>
 
-        <div className="relative max-w-s">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search campaigns..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        {/* Search Input */}
+        <SearchInput placeholder="Search campaigns..." queryParam="search" />
       </div>
       <CardContent>
         <div className="overflow-x-auto">

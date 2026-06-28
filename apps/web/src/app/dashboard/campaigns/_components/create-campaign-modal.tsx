@@ -37,7 +37,8 @@ export function CreateCampaignModal({
             Create a new campaign to organize your content
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+
+        <form onSubmit={onSubmit} className="mt-6 space-y-4 px-4">
           <Field>
             <FieldLabel>Name *</FieldLabel>
             <FieldContent>

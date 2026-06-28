@@ -14,7 +14,11 @@ export function CampaignsHeader({ onCreate }: CampaignsHeaderProps) {
           Manage your content campaigns and track their performance
         </p>
       </div>
-      <Button onClick={onCreate} className="gap-2">
+      <Button
+        variant="outline"
+        className="border-sidebar-primary/50! text-sidebar-primary hover:text-sidebar-primary/80 cursor-pointer"
+        onClick={onCreate}
+      >
         <Plus className="h-4 w-4" />
         Create Campaign
       </Button>

@@ -35,7 +35,8 @@ export function EditCampaignModal({
           <SheetTitle>Edit Campaign</SheetTitle>
           <SheetDescription>Update campaign details</SheetDescription>
         </SheetHeader>
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+
+        <form onSubmit={onSubmit} className="mt-6 space-y-4 px-4">
           <Field>
             <FieldLabel>Name *</FieldLabel>
             <FieldContent>

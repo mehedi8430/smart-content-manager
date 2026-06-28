@@ -101,7 +101,7 @@ export function CampaignsTable({
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="pb-3 text-left font-medium">
+                <th className="pb-3 text-left font-medium min-w-40">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -113,7 +113,7 @@ export function CampaignsTable({
                   </Button>
                 </th>
                 <th className="pb-3 text-left font-medium">Description</th>
-                <th className="pb-3 text-left font-medium">
+                <th className="pb-3 text-left font-medium px-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -124,9 +124,9 @@ export function CampaignsTable({
                     <ArrowUpDown className="h-3 w-3" />
                   </Button>
                 </th>
-                <th className="pb-3 text-center font-medium">Posts</th>
-                <th className="pb-3 text-center font-medium">Outputs</th>
-                <th className="pb-3 text-right font-medium">Actions</th>
+                <th className="pb-3 text-center font-medium px-2">Posts</th>
+                <th className="pb-3 text-center font-medium px-2">Outputs</th>
+                <th className="pb-3 text-right font-medium px-2">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -140,7 +140,7 @@ export function CampaignsTable({
                     <td className="py-4">
                       <Skeleton className="h-4 max-w-xs" />
                     </td>
-                    <td className="py-4">
+                    <td className="py-4 px-4">
                       <Skeleton className="h-4 w-24" />
                     </td>
                     <td className="py-4 text-center">
@@ -175,7 +175,7 @@ export function CampaignsTable({
                         {campaign.description || "-"}
                       </div>
                     </td>
-                    <td className="py-4 text-sm text-muted-foreground">
+                    <td className="py-4 text-sm text-muted-foreground px-2">
                       {formatDate(campaign.createdAt)}
                     </td>
                     <td className="py-4 text-center">

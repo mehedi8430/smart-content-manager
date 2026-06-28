@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
+import { CAMPAIGN_POOL, pick, pickMany, randomStatus } from './data-utils';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -37,6 +38,52 @@ async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, salt);
 }
 
+/**
+ * Generate and persist `count` random campaigns for the given `userId`.
+ * Each campaign is drawn from CAMPAIGN_POOL (with repetition allowed when
+ * count > pool size). Posts get randomised statuses; all outputs from the
+ * template are included so the data feels realistic.
+ *
+ * @example
+ *   await generateRandomCampaigns(demoUser.id, 12);
+ */
+async function generateRandomCampaigns(userId: string, count: number) {
+  console.log(`  → Generating ${count} random campaigns for user ${userId}…`);
+ 
+  const created: string[] = [];
+ 
+  for (let i = 0; i < count; i++) {
+    const template = pick(CAMPAIGN_POOL);
+ 
+    // Pick 3–5 posts and assign random statuses
+    const selectedPosts = pickMany(template.posts, 3, 5).map((title) => ({
+      title,
+      status: randomStatus(),
+    }));
+ 
+    const campaign = await prisma.campaign.create({
+      data: {
+        name: template.name,
+        description: template.description ?? null,
+        userId,
+        posts: { create: selectedPosts },
+        outputs: {
+          create: template.outputs.map((o) => ({
+            type: o.type,
+            prompt: o.prompt,
+            content: o.content,
+          })),
+        },
+      },
+    });
+ 
+    created.push(campaign.name);
+  }
+ 
+  console.log(`  ✓ Created: ${created.join(', ')}`);
+  return created;
+}
+
 async function clearDatabase() {
   await prisma.chatMessage.deleteMany();
   await prisma.chatSession.deleteMany();
@@ -67,6 +114,7 @@ async function main() {
     },
   });
 
+  // demo user campaigns
   const summerLaunch = await prisma.campaign.create({
     data: {
       name: 'Summer Product Launch',
@@ -167,6 +215,9 @@ async function main() {
     },
   });
 
+  await generateRandomCampaigns(demoUser.id, 10);
+
+  // freelancer campaigns
   await prisma.campaign.create({
     data: {
       name: "Client: Baker's Delight Rebrand",
@@ -237,6 +288,7 @@ async function main() {
     },
   });
 
+  // demo user chat session
   const demoChatSession = await prisma.chatSession.create({
     data: {
       userId: demoUser.id,
@@ -300,6 +352,7 @@ async function main() {
     },
   });
 
+  // freelancer user chatsession
   await prisma.chatSession.create({
     data: {
       userId: freelancer.id,

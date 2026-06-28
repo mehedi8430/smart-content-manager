@@ -1,7 +1,7 @@
 "use server";
 
 import { config } from "@/config/env-config";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 /**
  * Fetcher function for making API requests with minimal error handling.
@@ -26,28 +26,31 @@ export async function fetcher<T = unknown>(
     const isAuthEndpoint = [
         "/auth/login",
         "/auth/register",
-        "/auth/refresh-token"
+        "/auth/refresh-token",
     ].includes(cleanEndpoint);
 
     let accessToken: string | undefined;
+    const cookieStore = await cookies();
+    const incomingHeaders = await headers();
+    const incomingCookieHeader = incomingHeaders.get("cookie");
 
     if (!isAuthEndpoint) {
-        const cookieStore = await cookies();
         accessToken = cookieStore.get("accessToken")?.value;
     }
 
     const defaultOptions: RequestInit = {
-        credentials: 'include',
+        credentials: "include",
         headers: {
             Accept: "application/json",
             ...(systemKey && {
-                "System-Key": systemKey
+                "System-Key": systemKey,
             }),
             // Only set Content-Type for non-FormData requests
             ...(!(options?.body instanceof FormData) && {
                 "Content-Type": "application/json",
             }),
             ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+            ...(incomingCookieHeader && { Cookie: incomingCookieHeader }),
         },
     };
 
@@ -77,27 +80,48 @@ export async function fetcher<T = unknown>(
                         "System-Key": systemKey,
                     }),
                 },
-            }
+            },
         );
 
         if (refreshResponse.ok) {
             console.log("Token refreshed successfully");
 
-            // get new access token from cookies
-            const cookieStore = await cookies();
-            const newAccessToken = cookieStore.get("accessToken")?.value;
+            const refreshContentType = refreshResponse.headers.get('content-type');
+            const refreshText = await refreshResponse.text();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let refreshData: any = null;
 
-            // retry original request
+            if (refreshText && refreshContentType?.includes('application/json')) {
+                try {
+                    refreshData = JSON.parse(refreshText);
+                } catch {
+                    refreshData = null;
+                }
+            }
+
+            if (refreshData?.data?.accessToken) {
+                cookieStore.set('accessToken', refreshData.data.accessToken, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'none',
+                    path: '/',
+                });
+            }
+
+            // retry original request without Authorization header so the refreshed cookie is used
+            const retryHeaders = {
+                ...fetchOptions.headers,
+            } as Record<string, string>;
+            delete retryHeaders.Authorization;
+
             response = await fetch(url, {
                 ...fetchOptions,
-                headers: {
-                    ...fetchOptions.headers,
-                    ...(newAccessToken && {
-                        Authorization: `Bearer ${newAccessToken}`,
-                    }),
-                },
+                headers: retryHeaders,
+                credentials: 'include',
             });
         } else {
+            cookieStore.delete('accessToken');
+            cookieStore.delete('refreshToken');
             throw new Error("Session expired. Please login again.");
         }
     }

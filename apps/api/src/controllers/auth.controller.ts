@@ -69,19 +69,23 @@ const login = catchAsync(async (req: Request, res: Response) => {
  * @auth Requires valid JWT token
  * @returns Success message
  */
-const logout = catchAsync(async (req: Request, res: Response) => {
-  await logoutService(req.user!.id);
-
-  // Clear cookies
+const clearAuthCookies = (res: Response) => {
   const clearOptions: CookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'none' as const,
+    path: '/',
     maxAge: 0,
   };
 
-  res.cookie("accessToken", "", clearOptions);
-  res.cookie("refreshToken", "", clearOptions);
+  res.cookie('accessToken', '', clearOptions);
+  res.cookie('refreshToken', '', clearOptions);
+};
+
+const logout = catchAsync(async (req: Request, res: Response) => {
+  await logoutService(req.user!.id);
+
+  clearAuthCookies(res);
 
   sendResponse(res,
     200,
@@ -109,15 +113,22 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
  */
 const refreshAccessToken = catchAsync(async (req: Request, res: Response) => {
   const token = req.cookies?.refreshToken;
-  const user = await refreshAccessTokenService(token);
 
-  // Issue new access token
-  generateAccessToken(user.id, res);
+  try {
+    const user = await refreshAccessTokenService(token);
 
-  sendResponse(res, 200, true, 'Token refreshed successfully', {
-    id: user.id,
-    email: user.email
-  });
+    // Issue new access token
+    const accessToken = generateAccessToken(user.id, res);
+
+    sendResponse(res, 200, true, 'Token refreshed successfully', {
+      id: user.id,
+      email: user.email,
+      accessToken,
+    });
+  } catch (error) {
+    clearAuthCookies(res);
+    throw error;
+  }
 });
 
 export {

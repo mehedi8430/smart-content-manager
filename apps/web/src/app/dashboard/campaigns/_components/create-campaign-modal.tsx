@@ -17,6 +17,7 @@ interface CreateCampaignModalProps {
     description: string;
   };
   onFormDataChange: (data: { name: string; description: string }) => void;
+  isSubmitting?: boolean;
 }
 
 export function CreateCampaignModal({
@@ -25,6 +26,7 @@ export function CreateCampaignModal({
   onSubmit,
   formData,
   onFormDataChange,
+  isSubmitting = false,
 }: CreateCampaignModalProps) {
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -35,7 +37,8 @@ export function CreateCampaignModal({
             Create a new campaign to organize your content
           </SheetDescription>
         </SheetHeader>
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+
+        <form onSubmit={onSubmit} className="mt-6 space-y-4 px-4">
           <Field>
             <FieldLabel>Name *</FieldLabel>
             <FieldContent>
@@ -68,14 +71,15 @@ export function CreateCampaignModal({
             </FieldContent>
           </Field>
           <div className="flex gap-2 pt-4">
-            <Button type="submit" className="flex-1">
-              Create Campaign
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Campaign"}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               className="flex-1"
+              disabled={isSubmitting}
             >
               Cancel
             </Button>

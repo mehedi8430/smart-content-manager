@@ -166,7 +166,7 @@ export function LoginForm({
                 </Button>
               </Field> */}
 
-              <FieldDescription className="text-center">
+              <FieldDescription className="text-center text-highlighted mt-2">
                 Don&apos;t have an account? <Link href="/signup">Sign up</Link>
                 <br />
                 Demo: demo@smartcontent.test / Password123!

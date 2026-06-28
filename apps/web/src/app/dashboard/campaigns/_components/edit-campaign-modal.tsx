@@ -17,6 +17,7 @@ interface EditCampaignModalProps {
     description: string;
   };
   onFormDataChange: (data: { name: string; description: string }) => void;
+  isSubmitting?: boolean;
 }
 
 export function EditCampaignModal({
@@ -25,6 +26,7 @@ export function EditCampaignModal({
   onSubmit,
   formData,
   onFormDataChange,
+  isSubmitting = false,
 }: EditCampaignModalProps) {
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -33,7 +35,8 @@ export function EditCampaignModal({
           <SheetTitle>Edit Campaign</SheetTitle>
           <SheetDescription>Update campaign details</SheetDescription>
         </SheetHeader>
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+
+        <form onSubmit={onSubmit} className="mt-6 space-y-4 px-4">
           <Field>
             <FieldLabel>Name *</FieldLabel>
             <FieldContent>
@@ -66,14 +69,15 @@ export function EditCampaignModal({
             </FieldContent>
           </Field>
           <div className="flex gap-2 pt-4">
-            <Button type="submit" className="flex-1">
-              Save Changes
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               className="flex-1"
+              disabled={isSubmitting}
             >
               Cancel
             </Button>

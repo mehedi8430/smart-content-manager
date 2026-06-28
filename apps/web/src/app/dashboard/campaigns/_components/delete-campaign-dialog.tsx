@@ -14,6 +14,7 @@ interface DeleteCampaignDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   campaignName: string;
+  isSubmitting?: boolean;
 }
 
 export function DeleteCampaignDialog({
@@ -21,6 +22,7 @@ export function DeleteCampaignDialog({
   onClose,
   onConfirm,
   campaignName,
+  isSubmitting = false,
 }: DeleteCampaignDialogProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
@@ -38,8 +40,9 @@ export function DeleteCampaignDialog({
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={isSubmitting}
           >
-            Delete
+            {isSubmitting ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

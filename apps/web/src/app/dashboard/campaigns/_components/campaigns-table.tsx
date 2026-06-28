@@ -27,6 +27,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CampaignsTableProps {
   campaigns: Campaign[];
@@ -129,7 +130,31 @@ export function CampaignsTable({
               </tr>
             </thead>
             <tbody>
-              {campaigns.length === 0 ? (
+              {loading ? (
+                // show 5 skeleton rows while loading
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={`skeleton-${i}`} className="border-b">
+                    <td className="py-4">
+                      <Skeleton className="h-4 w-48" />
+                    </td>
+                    <td className="py-4">
+                      <Skeleton className="h-4 max-w-xs" />
+                    </td>
+                    <td className="py-4">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="py-4 text-center">
+                      <Skeleton className="h-5 w-8 rounded-full" />
+                    </td>
+                    <td className="py-4 text-center">
+                      <Skeleton className="h-5 w-8 rounded-full" />
+                    </td>
+                    <td className="py-4 text-right">
+                      <Skeleton className="h-6 w-20" />
+                    </td>
+                  </tr>
+                ))
+              ) : campaigns.length === 0 ? (
                 <tr>
                   <td
                     colSpan={6}

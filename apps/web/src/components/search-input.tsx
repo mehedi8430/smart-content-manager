@@ -35,13 +35,13 @@ export function SearchInput({
   };
 
   return (
-    <div className="relative max-w-s">
+    <div className="relative max-w-s mr-2">
       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         placeholder={placeholder}
         value={inputValue}
         onChange={handleChange}
-        className="pl-9"
+        className="pl-8"
       />
     </div>
   );

@@ -23,6 +23,7 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  Eye,
   MoreVertical,
   Pencil,
   Trash2,
@@ -166,7 +167,13 @@ export function CampaignsTable({
                 </tr>
               ) : (
                 campaigns.map((campaign) => (
-                  <tr key={campaign.id} className="border-b hover:bg-muted/50">
+                  <tr
+                    key={campaign.id}
+                    className="border-b hover:bg-muted/50 cursor-pointer"
+                    onClick={() => {
+                      router.push(`/dashboard/campaigns/${campaign.id}/board`);
+                    }}
+                  >
                     <td className="py-4">
                       <div className="font-medium">{campaign.name}</div>
                     </td>
@@ -198,6 +205,17 @@ export function CampaignsTable({
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/campaigns/${campaign.id}/board`,
+                              )
+                            }
+                            className="gap-2"
+                          >
+                            <Eye className="h-4 w-4" />
+                            View Board
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => onEdit(campaign)}
                             className="gap-2"

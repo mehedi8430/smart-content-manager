@@ -5,6 +5,7 @@ import { Post, PostStatus, useBoard } from "../_context/BoardContext";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -19,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface PostSheetProps {
   isOpen: boolean;
@@ -81,9 +83,12 @@ export function PostSheet({
       <SheetContent side="right" className="w-full sm:w-120 overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{post ? "Edit Post" : "Create New Post"}</SheetTitle>
+          <SheetDescription>
+            Create a new post for this campaign
+          </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4 px-4">
           <div className="space-y-2">
             <Label htmlFor="title">
               Title <span className="text-red-500">*</span>
@@ -98,13 +103,13 @@ export function PostSheet({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <textarea
-              id="description"
+            <Label htmlFor="post_description">Description</Label>
+            <Textarea
+              id="post_description"
               placeholder="Add optional description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-30 resize-none"
+              style={{ height: "12rem" }}
             />
           </div>
 

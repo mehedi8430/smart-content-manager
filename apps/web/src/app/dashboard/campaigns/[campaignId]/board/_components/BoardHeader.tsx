@@ -45,7 +45,7 @@ export function BoardHeader({
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            className="border-sidebar-primary/50 text-sidebar-primary hover:text-sidebar-primary/80 cursor-pointer"
+            className="border-sidebar-primary/50! text-sidebar-primary hover:text-sidebar-primary/80 cursor-pointer"
             onClick={onNewPost}
           >
             <Plus className="h-4 w-4" />

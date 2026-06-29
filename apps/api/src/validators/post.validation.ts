@@ -34,6 +34,10 @@ export const updatePostStatusSchema = z.object({
   status: postStatusEnum,
 });
 
+export const listPostsQuerySchema = z.object({
+  status: postStatusEnum.optional(),
+});
+
 export const bulkUpdatePostsSchema = z.object({
   posts: z
     .array(

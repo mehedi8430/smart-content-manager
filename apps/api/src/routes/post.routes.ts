@@ -16,6 +16,7 @@ import {
   bulkUpdatePostsSchema,
   campaignIdParamSchema,
   postIdParamSchema,
+  listPostsQuerySchema,
 } from '@/validators/post.validation';
 
 const router: Router = createRouter();
@@ -24,12 +25,12 @@ const router: Router = createRouter();
 router.use(protect);
 
 // GET /campaigns/:campaignId/posts
-router.get('/:campaignId/posts', validate({ params: campaignIdParamSchema, query: updatePostStatusSchema.optional() }), listPostsHandler);
+router.get('/:campaignId/posts', validate({ params: campaignIdParamSchema, query: listPostsQuerySchema }), listPostsHandler);
 
 // POST /campaigns/:campaignId/posts
 router.post('/:campaignId/posts', validate({ params: campaignIdParamSchema, body: createPostSchema }), createPostHandler);
 
-// Bulk update should come BEFORE routes that match :postId to avoid matching 'bulk-update' as a postId
+// PATCH /campaigns/:campaignId/posts/bulk-update
 router.patch('/:campaignId/posts/bulk-update', validate({ params: campaignIdParamSchema, body: bulkUpdatePostsSchema }), bulkUpdatePostsHandler);
 
 // PATCH /campaigns/:campaignId/posts/:postId

@@ -5,6 +5,10 @@ import type { CreatePostInput, UpdatePostInput } from '@/validators/post.validat
 
 /**
  * List posts for a campaign (optionally filtered by status)
+ * @param campaignId - The ID of the campaign
+ * @param userId - The ID of the user
+ * @param status - The status to filter by
+ * @returns The list of posts
  */
 export const listPosts = async (
   campaignId: string,
@@ -25,10 +29,10 @@ export const listPosts = async (
     const where: any = { campaignId };
     if (status) where.status = status;
 
-      const posts = await prisma.post.findMany({
-        where,
-        orderBy: { order: 'asc' },
-      });
+    const posts = await prisma.post.findMany({
+      where,
+      orderBy: { order: 'asc' },
+    });
 
     return posts;
   } catch (error) {
@@ -38,6 +42,13 @@ export const listPosts = async (
   }
 };
 
+/**
+ * Create a new post for a campaign
+ * @param campaignId - The ID of the campaign
+ * @param userId - The ID of the user
+ * @param data - The data to create
+ * @returns The created post
+ */
 export const createPost = async (campaignId: string, userId: string, data: CreatePostInput) => {
   try {
     const campaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
@@ -70,6 +81,14 @@ export const createPost = async (campaignId: string, userId: string, data: Creat
   }
 };
 
+/**
+ * Update a post for a campaign
+ * @param postId - The ID of the post
+ * @param campaignId - The ID of the campaign
+ * @param userId - The ID of the user
+ * @param data - The data to update
+ * @returns The updated post
+ */
 export const updatePost = async (
   postId: string,
   campaignId: string,
@@ -77,7 +96,10 @@ export const updatePost = async (
   data: UpdatePostInput
 ) => {
   try {
-    const post = await prisma.post.findUnique({ where: { id: postId }, include: { campaign: true } });
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: { campaign: true }
+    });
 
     if (!post) throw new ApiError(404, 'Post not found');
 
@@ -92,7 +114,10 @@ export const updatePost = async (
     if (data.dueDate !== undefined) updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
     if (data.order !== undefined) updateData.order = data.order;
 
-    const updated = await prisma.post.update({ where: { id: postId }, data: updateData });
+    const updated = await prisma.post.update({
+      where: { id: postId },
+      data: updateData
+    });
 
     logger.info(`Post updated: ${postId}`);
     return updated;
@@ -103,9 +128,23 @@ export const updatePost = async (
   }
 };
 
-export const deletePost = async (postId: string, campaignId: string, userId: string) => {
+/**
+ * Delete a post for a campaign
+ * @param postId - The ID of the post
+ * @param campaignId - The ID of the campaign
+ * @param userId - The ID of the user
+ * @returns Success object
+ */
+export const deletePost = async (
+  postId: string,
+  campaignId: string,
+  userId: string
+) => {
   try {
-    const post = await prisma.post.findUnique({ where: { id: postId }, include: { campaign: true } });
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: { campaign: true }
+    });
 
     if (!post) throw new ApiError(404, 'Post not found');
 
@@ -113,7 +152,9 @@ export const deletePost = async (postId: string, campaignId: string, userId: str
 
     if (post.campaign.userId !== userId) throw new ApiError(404, 'Post not found');
 
-    await prisma.post.delete({ where: { id: postId } });
+    await prisma.post.delete({
+      where: { id: postId }
+    });
 
     logger.info(`Post deleted: ${postId}`);
     return { success: true };
@@ -124,6 +165,14 @@ export const deletePost = async (postId: string, campaignId: string, userId: str
   }
 };
 
+/**
+ * Update post status
+ * @param postId - The ID of the post
+ * @param campaignId - The ID of the campaign
+ * @param userId - The ID of the user
+ * @param status - The new status of the post
+ * @returns The updated post
+ */
 export const updatePostStatus = async (
   postId: string,
   campaignId: string,
@@ -131,7 +180,10 @@ export const updatePostStatus = async (
   status: string
 ) => {
   try {
-    const post = await prisma.post.findUnique({ where: { id: postId }, include: { campaign: true } });
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: { campaign: true }
+    });
 
     if (!post) throw new ApiError(404, 'Post not found');
 
@@ -150,13 +202,22 @@ export const updatePostStatus = async (
   }
 };
 
+/**
+ * Bulk update posts for a campaign
+ * @param campaignId - The ID of the campaign
+ * @param userId - The ID of the user
+ * @param posts - Array of post updates with id, status, and order
+ * @returns Array of updated posts
+ */
 export const bulkUpdatePosts = async (
   campaignId: string,
   userId: string,
   posts: { id: string; status?: string; order?: number }[]
 ) => {
   try {
-    const campaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
+    const campaign = await prisma.campaign.findUnique({
+      where: { id: campaignId }
+    });
 
     if (!campaign) throw new ApiError(404, 'Campaign not found');
     if (campaign.userId !== userId) throw new ApiError(404, 'Campaign not found');
@@ -177,6 +238,7 @@ export const bulkUpdatePosts = async (
       return prisma.post.update({ where: { id: p.id }, data });
     });
 
+    // Execute all updates in a transaction
     const results = await prisma.$transaction(updates);
 
     return results;

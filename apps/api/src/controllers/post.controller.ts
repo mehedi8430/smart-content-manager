@@ -7,6 +7,7 @@ import {
   updatePost,
   deletePost,
   updatePostStatus,
+  bulkUpdatePosts,
 } from '@/services/post.service';
 import type { CreatePostInput, UpdatePostInput, UpdatePostStatusInput } from '@/validators/post.validation';
 
@@ -18,6 +19,16 @@ const listPostsHandler = catchAsync(async (req: Request, res: Response) => {
   const posts = await listPosts(campaignId, userId, status);
 
   sendResponse(res, 200, true, 'Posts retrieved successfully', posts);
+});
+
+const bulkUpdatePostsHandler = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const { campaignId } = req.params as { campaignId: string };
+  const body = req.body as { posts: { id: string; status?: string; order?: number }[] };
+
+  const updated = await bulkUpdatePosts(campaignId, userId, body.posts);
+
+  sendResponse(res, 200, true, 'Posts bulk-updated successfully', updated);
 });
 
 const createPostHandler = catchAsync(async (req: Request, res: Response) => {
@@ -65,4 +76,5 @@ export {
   updatePostHandler,
   deletePostHandler,
   updatePostStatusHandler,
+  bulkUpdatePostsHandler,
 };

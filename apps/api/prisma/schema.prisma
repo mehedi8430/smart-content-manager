@@ -13,24 +13,24 @@ datasource db {
 
 // Define Prisma schema (User, Campaign, Post, AiOutput, ChatSession, ChatMessage)  
 model User {
-  id           String      @id @default(uuid())
-  email        String      @unique
+  id           String     @id @default(uuid())
+  email        String     @unique
   passwordHash String
   refreshToken String?
   campaigns    Campaign[]
-  createdAt    DateTime    @default(now())
+  createdAt    DateTime   @default(now())
 }
 
 model Campaign {
-  id        String   @id @default(uuid())
-  name      String
+  id          String     @id @default(uuid())
+  name        String
   description String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  posts     Post[]
-  outputs   AiOutput[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  posts       Post[]
+  outputs     AiOutput[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 // Delete strategy: Cascade delete
@@ -39,16 +39,19 @@ model Campaign {
 // soft-delete pattern or a force-delete endpoint with conflict checking.
 
 model Post {
-  id         String   @id @default(uuid())
-  title      String
-  status     String   @default("todo")  // todo | in_progress | done
-  campaignId String
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  id          String    @id @default(uuid())
+  title       String
+  description String?   @db.Text
+  status      String    @default("todo") // todo | in_progress | done
+  order       Int       @default(0)
+  dueDate     DateTime?
+  campaignId  String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 }
 
 model AiOutput {
   id         String   @id @default(uuid())
-  type       String   // ad | caption | email
+  type       String // ad | caption | email
   prompt     String
   content    String   @db.Text
   campaignId String
@@ -65,7 +68,7 @@ model ChatSession {
 
 model ChatMessage {
   id        String      @id @default(uuid())
-  role      String      // user | assistant
+  role      String // user | assistant
   content   String      @db.Text
   sessionId String
   session   ChatSession @relation(fields: [sessionId], references: [id])

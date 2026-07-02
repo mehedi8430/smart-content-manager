@@ -44,8 +44,21 @@ export default function Header() {
 
     // Add additional segments
     let accumulatedPath = "";
+
     for (let i = 1; i < segments.length; i++) {
-      accumulatedPath += `/${segments[i]}`;
+      // Check if segment is a UUID (skip it entirely)
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          segments[i],
+        );
+
+      if (isUuid) {
+        accumulatedPath += `/dashboard/${segments[i]}`;
+        continue; // Skip UUID segments
+      }
+
+      accumulatedPath += `/dashboard/${segments[i]}`;
+
       breadcrumbs.push({
         label: segments[i].charAt(0).toUpperCase() + segments[i].slice(1),
         href: accumulatedPath,
@@ -67,6 +80,8 @@ export default function Header() {
             orientation="vertical"
             className="mr-2 data-vertical:h-4 data-vertical:self-auto"
           />
+
+          {/* Breadcrumb */}
           <Breadcrumb>
             <BreadcrumbList>
               {breadcrumbs.map((crumb, index) => (

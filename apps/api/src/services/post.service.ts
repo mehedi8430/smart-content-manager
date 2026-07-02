@@ -225,7 +225,12 @@ export const bulkUpdatePosts = async (
     const ids = posts.map((p) => p.id);
 
     // Fetch posts that match the ids and campaign
-    const existing = await prisma.post.findMany({ where: { id: { in: ids }, campaignId } });
+    const existing = await prisma.post.findMany({
+      where: {
+        id: { in: ids },
+        campaignId
+      }
+    });
 
     if (existing.length !== ids.length) {
       throw new ApiError(400, 'One or more posts are invalid for this campaign');
@@ -233,9 +238,14 @@ export const bulkUpdatePosts = async (
 
     const updates = posts.map((p) => {
       const data: any = {};
+
       if (p.status !== undefined) data.status = p.status;
       if (p.order !== undefined) data.order = p.order;
-      return prisma.post.update({ where: { id: p.id }, data });
+
+      return prisma.post.update({
+        where: { id: p.id },
+        data
+      });
     });
 
     // Execute all updates in a transaction

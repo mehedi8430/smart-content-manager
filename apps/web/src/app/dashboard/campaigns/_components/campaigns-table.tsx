@@ -217,14 +217,20 @@ export function CampaignsTable({
                             View Board
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => onEdit(campaign)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(campaign);
+                            }}
                             className="gap-2"
                           >
                             <Pencil className="h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => onDelete(campaign)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(campaign);
+                            }}
                             className="gap-2 text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />

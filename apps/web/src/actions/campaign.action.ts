@@ -54,6 +54,8 @@ export async function listCampaignsAction(query: ListCampaignsQuery = {}) {
 
     const response = await fetcher<CampaignListResponse>(endpoint, {
       method: "GET",
+      cache: "force-cache",
+      next: { tags: ["campaigns"] },
     });
 
     return {

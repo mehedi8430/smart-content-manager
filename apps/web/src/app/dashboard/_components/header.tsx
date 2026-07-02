@@ -1,9 +1,9 @@
 "use client";
 
+import React from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import { NavUser } from "./app-sidebar/nav-user";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function Header() {
   const { setTheme } = useTheme();
@@ -84,24 +85,22 @@ export default function Header() {
           {/* Breadcrumb */}
           <Breadcrumb>
             <BreadcrumbList>
-              {breadcrumbs.map((crumb, index) => (
-                <>
-                  <BreadcrumbItem key={crumb.href} className="hidden md:block">
+              {breadcrumbs.map((crumb) => (
+                <React.Fragment key={crumb.href}>
+                  <BreadcrumbItem className="hidden md:block">
                     {crumb.isLast ? (
                       <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
                     ) : (
-                      <BreadcrumbLink href={crumb.href}>
-                        {crumb.label}
-                      </BreadcrumbLink>
+                      <Link href={crumb.href}>{crumb.label}</Link>
                     )}
                   </BreadcrumbItem>
                   {!crumb.isLast && (
                     <BreadcrumbSeparator
-                      key={`sep-${index}`}
+                      key={`${crumb.href}-sep`}
                       className="hidden md:block"
                     />
                   )}
-                </>
+                </React.Fragment>
               ))}
             </BreadcrumbList>
           </Breadcrumb>

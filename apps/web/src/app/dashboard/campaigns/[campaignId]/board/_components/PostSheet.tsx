@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Post, PostStatus, useBoard } from "../_context/BoardContext";
 import {
   Sheet,
@@ -21,6 +21,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const postFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  dueDate: z.string().optional(),
+  status: z.enum(["todo", "in_progress", "done"]),
+});
+
+type PostFormValues = z.infer<typeof postFormSchema>;
+
+const generateId = () => {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
 
 interface PostSheetProps {
   isOpen: boolean;
@@ -36,47 +52,62 @@ export function PostSheet({
   defaultStatus = "todo",
 }: PostSheetProps) {
   const { addPost, updatePost } = useBoard();
-  const [title, setTitle] = useState(post?.title || "");
-  const [description, setDescription] = useState(post?.description || "");
-  const [dueDate, setDueDate] = useState(
-    post?.dueDate ? post.dueDate.split("T")[0] : "",
-  );
-  const [status, setStatus] = useState<PostStatus>(
-    post?.status || defaultStatus,
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<PostFormValues>({
+    resolver: zodResolver(postFormSchema),
+    defaultValues: {
+      title: post?.title || "",
+      description: post?.description || "",
+      dueDate: post?.dueDate ? post.dueDate.split("T")[0] : "",
+      status: post?.status || defaultStatus,
+    },
+  });
 
+  const onSubmit = async (values: PostFormValues) => {
     try {
       if (post) {
         // Update existing post
         updatePost(post.id, {
-          title,
-          description: description || null,
-          dueDate: dueDate ? `${dueDate}T00:00:00.000Z` : null,
-          status,
+          title: values.title,
+          description: values.description || null,
+          dueDate: values.dueDate ? `${values.dueDate}T00:00:00.000Z` : null,
+          status: values.status,
         });
       } else {
         // Create new post
         const newPost: Post = {
-          id: Date.now().toString(),
-          title,
-          description: description || null,
-          status,
+          id: generateId(),
+          title: values.title,
+          description: values.description || null,
+          status: values.status,
           order: 0,
-          dueDate: dueDate ? `${dueDate}T00:00:00.000Z` : null,
+          dueDate: values.dueDate ? `${values.dueDate}T00:00:00.000Z` : null,
         };
         addPost(newPost);
       }
 
       onOpenChange(false);
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error("Failed to save post:", error);
     }
   };
+
+  React.useEffect(() => {
+    if (isOpen) {
+      reset({
+        title: post?.title || "",
+        description: post?.description || "",
+        dueDate: post?.dueDate ? post.dueDate.split("T")[0] : "",
+        status: post?.status || defaultStatus,
+      });
+    }
+  }, [isOpen, post, defaultStatus, reset]);
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange} key={post?.id || "new"}>
@@ -88,7 +119,7 @@ export function PostSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4 px-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4 px-4">
           <div className="space-y-2">
             <Label htmlFor="title">
               Title <span className="text-red-500">*</span>
@@ -96,49 +127,64 @@ export function PostSheet({
             <Input
               id="title"
               placeholder="Enter post title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
+              {...register("title")}
             />
+            {errors.title && (
+              <p className="text-sm font-medium text-destructive">
+                {errors.title.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="post_description">Description</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
-              id="post_description"
+              id="description"
               placeholder="Add optional description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
               style={{ height: "12rem" }}
+              {...register("description")}
             />
+            {errors.description && (
+              <p className="text-sm font-medium text-destructive">
+                {errors.description.message}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select
-                value={status}
-                onValueChange={(value) => setStatus(value as PostStatus)}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger id="status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todo">To Do</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="done">Done</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.status && (
+                <p className="text-sm font-medium text-destructive">
+                  {errors.status.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="dueDate">Due Date</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
+              <Input id="dueDate" type="date" {...register("dueDate")} />
+              {errors.dueDate && (
+                <p className="text-sm font-medium text-destructive">
+                  {errors.dueDate.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -152,7 +198,7 @@ export function PostSheet({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={!title || isSubmitting}>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Saving..." : post ? "Update" : "Create"}
             </Button>
           </div>

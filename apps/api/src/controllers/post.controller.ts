@@ -30,9 +30,9 @@ import type {
 const listPostsHandler = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user!.id;
   const { campaignId } = req.params as { campaignId: string };
-  const { status } = req.query as { status?: string };
+  const { status, search } = req.query as { status?: string; search?: string };
 
-  const posts = await listPosts(campaignId, userId, status);
+  const posts = await listPosts(campaignId, userId, status, search);
 
   sendResponse(
     res,

@@ -8,12 +8,14 @@ import type { CreatePostInput, UpdatePostInput } from '@/validators/post.validat
  * @param campaignId - The ID of the campaign
  * @param userId - The ID of the user
  * @param status - The status to filter by
+ * @param search - The search query
  * @returns The list of posts
  */
 export const listPosts = async (
   campaignId: string,
   userId: string,
-  status?: string
+  status?: string,
+  search?: string
 ) => {
   try {
     const campaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
@@ -28,6 +30,7 @@ export const listPosts = async (
 
     const where: any = { campaignId };
     if (status) where.status = status;
+    if (search) where.title = { contains: search, mode: 'insensitive' };
 
     const posts = await prisma.post.findMany({
       where,
@@ -225,7 +228,12 @@ export const bulkUpdatePosts = async (
     const ids = posts.map((p) => p.id);
 
     // Fetch posts that match the ids and campaign
-    const existing = await prisma.post.findMany({ where: { id: { in: ids }, campaignId } });
+    const existing = await prisma.post.findMany({
+      where: {
+        id: { in: ids },
+        campaignId
+      }
+    });
 
     if (existing.length !== ids.length) {
       throw new ApiError(400, 'One or more posts are invalid for this campaign');
@@ -233,9 +241,14 @@ export const bulkUpdatePosts = async (
 
     const updates = posts.map((p) => {
       const data: any = {};
+
       if (p.status !== undefined) data.status = p.status;
       if (p.order !== undefined) data.order = p.order;
-      return prisma.post.update({ where: { id: p.id }, data });
+
+      return prisma.post.update({
+        where: { id: p.id },
+        data
+      });
     });
 
     // Execute all updates in a transaction

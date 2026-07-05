@@ -1,36 +1,42 @@
 "use client";
 
-import { useBoard } from "../_context/BoardContext";
+import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search, X } from "lucide-react";
+import { PostStatus } from "@/types/post.type";
+import { Plus } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useBoard } from "../../../../../../providers/board-provider";
 
 interface BoardHeaderProps {
   campaignName: string;
-  onNewPost: () => void;
-  onSearchChange: (query: string) => void;
-  onFilterChange: (filter: "all" | "todo" | "in_progress" | "done") => void;
-  currentFilter: "all" | "todo" | "in_progress" | "done";
-  searchQuery: string;
+  totalPosts: number;
 }
 
-export function BoardHeader({
-  campaignName,
-  onNewPost,
-  onSearchChange,
-  onFilterChange,
-  currentFilter,
-  searchQuery,
-}: BoardHeaderProps) {
-  const { posts } = useBoard();
-  const totalPosts = posts.length;
+export function BoardHeader({ campaignName, totalPosts }: BoardHeaderProps) {
+  const { handleAddPost } = useBoard();
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const filterOptions = [
-    { value: "all" as const, label: "All" },
+    { value: "" as const, label: "All" },
     { value: "todo" as const, label: "To Do" },
     { value: "in_progress" as const, label: "In Progress" },
     { value: "done" as const, label: "Done" },
   ];
+
+  const handleClick = (filter: PostStatus | "") => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (filter) {
+      params.set("status", filter);
+    } else {
+      params.delete("status");
+    }
+
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -43,10 +49,11 @@ export function BoardHeader({
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {/* open add post sheet */}
           <Button
             variant="outline"
             className="border-sidebar-primary/50! text-sidebar-primary hover:text-sidebar-primary/80 cursor-pointer"
-            onClick={onNewPost}
+            onClick={() => handleAddPost("todo")}
           >
             <Plus className="h-4 w-4" />
             New Post
@@ -63,32 +70,28 @@ export function BoardHeader({
       {/* Search & Filter Bar */}
       <div className="space-y-4">
         {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search posts by title..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 pr-8"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+        <SearchInput
+          queryParam="search"
+          placeholder="Search posts by title..."
+        />
 
         {/* Filter Tabs */}
         <div className="flex gap-2 flex-wrap">
           {filterOptions.map((option) => (
             <Button
               key={option.value}
-              variant={currentFilter === option.value ? "default" : "outline"}
+              variant={
+                option.value === ""
+                  ? !searchParams.get("status")
+                    ? "default"
+                    : "outline"
+                  : searchParams.get("status") === option.value
+                    ? "default"
+                    : "outline"
+              }
               size="sm"
-              onClick={() => onFilterChange(option.value)}
+              onClick={() => handleClick(option.value)}
+              className="cursor-pointer"
             >
               {option.label}
             </Button>

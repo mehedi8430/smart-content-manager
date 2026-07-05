@@ -42,7 +42,7 @@ export async function createCampaignAction(payload: CreateCampaignPayload) {
 export async function listCampaignsAction(query: ListCampaignsQuery = {}) {
   try {
     const queryParams = new URLSearchParams();
-    
+
     if (query.page) queryParams.append("page", query.page.toString());
     if (query.limit) queryParams.append("limit", query.limit.toString());
     if (query.search) queryParams.append("search", query.search);
@@ -54,6 +54,8 @@ export async function listCampaignsAction(query: ListCampaignsQuery = {}) {
 
     const response = await fetcher<CampaignListResponse>(endpoint, {
       method: "GET",
+      cache: "force-cache",
+      next: { tags: ["campaigns"] },
     });
 
     return {

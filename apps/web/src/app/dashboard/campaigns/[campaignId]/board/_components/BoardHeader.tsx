@@ -1,26 +1,22 @@
 "use client";
 
+import { SearchInput } from "@/components/search-input";
 import { useBoard } from "../_context/BoardContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search, X } from "lucide-react";
+import { Plus } from "lucide-react";
 
 interface BoardHeaderProps {
   campaignName: string;
   onNewPost: () => void;
-  onSearchChange: (query: string) => void;
   onFilterChange: (filter: "all" | "todo" | "in_progress" | "done") => void;
   currentFilter: "all" | "todo" | "in_progress" | "done";
-  searchQuery: string;
 }
 
 export function BoardHeader({
   campaignName,
   onNewPost,
-  onSearchChange,
   onFilterChange,
   currentFilter,
-  searchQuery,
 }: BoardHeaderProps) {
   const { posts } = useBoard();
   const totalPosts = posts.length;
@@ -63,23 +59,10 @@ export function BoardHeader({
       {/* Search & Filter Bar */}
       <div className="space-y-4">
         {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search posts by title..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 pr-8"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+        <SearchInput
+          queryParam="search"
+          placeholder="Search posts by title..."
+        />
 
         {/* Filter Tabs */}
         <div className="flex gap-2 flex-wrap">

@@ -83,7 +83,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
 
   const updatePost = (id: string, updates: Partial<Post>) => {
     setPosts((prev) =>
-      prev.map((post) => (post.id === id ? { ...post, ...updates } : post))
+      prev.map((post) => (post.id === id ? { ...post, ...updates } : post)),
     );
   };
 
@@ -94,8 +94,8 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   const movePost = (id: string, newStatus: PostStatus) => {
     setPosts((prev) =>
       prev.map((post) =>
-        post.id === id ? { ...post, status: newStatus } : post
-      )
+        post.id === id ? { ...post, status: newStatus } : post,
+      ),
     );
   };
 

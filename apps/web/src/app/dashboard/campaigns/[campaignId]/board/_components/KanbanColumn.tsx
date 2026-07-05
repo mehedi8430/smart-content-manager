@@ -1,19 +1,16 @@
-"use client";
-
-import React from "react";
-import { Post, PostStatus } from "../_context/BoardContext";
 import { PostCard } from "./PostCard";
 import { Button } from "@/components/ui/button";
 import { Plus, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Post, PostStatus } from "@/types/post.type";
 
 interface KanbanColumnProps {
   status: PostStatus;
-  posts: Post[];
   onAddClick: () => void;
   onEditClick: (post: Post) => void;
   onDeleteClick: (post: Post) => void;
   onMoveClick: (id: string, status: PostStatus) => void;
+  posts: Post[];
 }
 
 const getColumnConfig = (
@@ -43,11 +40,11 @@ const getColumnConfig = (
 
 export function KanbanColumn({
   status,
-  posts,
   onAddClick,
   onEditClick,
   onDeleteClick,
   onMoveClick,
+  posts,
 }: KanbanColumnProps) {
   const config = getColumnConfig(status);
 
@@ -58,14 +55,14 @@ export function KanbanColumn({
         className={cn(
           "p-4 rounded-t-lg border-l-4",
           config.accent,
-          "bg-background border-b border-border",
+          "bg-border/40 border-b border-border",
         )}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold">{config.label}</h2>
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-semibold">
-              {posts.length}
+              {posts?.length || 0}
             </span>
           </div>
         </div>
@@ -78,7 +75,7 @@ export function KanbanColumn({
           config.color,
         )}
       >
-        {posts.length === 0 ? (
+        {posts?.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-8 text-center">
             <Inbox className="w-12 h-12 text-muted-foreground/50 mb-3" />
             <p className="text-sm text-muted-foreground font-medium">
@@ -90,7 +87,7 @@ export function KanbanColumn({
           </div>
         ) : (
           <>
-            {posts.map((post) => (
+            {posts?.map((post) => (
               <PostCard
                 key={post.id}
                 post={post}

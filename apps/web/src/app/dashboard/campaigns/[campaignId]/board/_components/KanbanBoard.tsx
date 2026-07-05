@@ -1,20 +1,21 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Post, PostStatus, useBoard } from "../_context/BoardContext";
+import { useState } from "react";
+import { PostStatus, useBoard } from "../_context/BoardContext";
 import { KanbanColumn } from "./KanbanColumn";
 import { PostSheet } from "./PostSheet";
 import { DeletePostDialog } from "./DeletePostDialog";
 import { BoardHeader } from "./BoardHeader";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Post } from "@/types/post.type";
 
 interface KanbanBoardProps {
   campaignName: string;
+  posts: Post[];
 }
 
-export function KanbanBoard({ campaignName }: KanbanBoardProps) {
-  const { posts, deletePost, movePost } = useBoard();
-  const [searchQuery, setSearchQuery] = useState("");
+export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
+  const { deletePost, movePost } = useBoard();
   const [filterStatus, setFilterStatus] = useState<
     "all" | "todo" | "in_progress" | "done"
   >("all");
@@ -24,27 +25,6 @@ export function KanbanBoard({ campaignName }: KanbanBoardProps) {
     useState<PostStatus>("todo");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<Post | undefined>(undefined);
-
-  // Filter posts based on search and status
-  const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      const matchesSearch = post.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesFilter =
-        filterStatus === "all" || post.status === filterStatus;
-      return matchesSearch && matchesFilter;
-    });
-  }, [posts, searchQuery, filterStatus]);
-
-  // Group posts by status
-  const postsByStatus = useMemo(() => {
-    return {
-      todo: filteredPosts.filter((p) => p.status === "todo"),
-      in_progress: filteredPosts.filter((p) => p.status === "in_progress"),
-      done: filteredPosts.filter((p) => p.status === "done"),
-    };
-  }, [filteredPosts]);
 
   const handleAddPost = (status: PostStatus) => {
     setEditingPost(undefined);
@@ -79,38 +59,36 @@ export function KanbanBoard({ campaignName }: KanbanBoardProps) {
       <BoardHeader
         campaignName={campaignName}
         onNewPost={() => handleAddPost("todo")}
-        onSearchChange={setSearchQuery}
         onFilterChange={setFilterStatus}
         currentFilter={filterStatus}
-        searchQuery={searchQuery}
       />
 
       {/* Kanban Columns */}
-      <ScrollArea className="w-full rounded-lg border border-slate-200 dark:border-slate-700">
-        <div className="flex gap-4 p-4 w-full">
+      <ScrollArea className="w-full">
+        <div className="flex gap-4 py-4 w-full">
           <KanbanColumn
             status="todo"
-            posts={postsByStatus.todo}
             onAddClick={() => handleAddPost("todo")}
             onEditClick={handleEditPost}
             onDeleteClick={handleDeletePost}
             onMoveClick={handleMovePost}
+            posts={posts}
           />
           <KanbanColumn
             status="in_progress"
-            posts={postsByStatus.in_progress}
             onAddClick={() => handleAddPost("in_progress")}
             onEditClick={handleEditPost}
             onDeleteClick={handleDeletePost}
             onMoveClick={handleMovePost}
+            posts={posts}
           />
           <KanbanColumn
             status="done"
-            posts={postsByStatus.done}
             onAddClick={() => handleAddPost("done")}
             onEditClick={handleEditPost}
             onDeleteClick={handleDeletePost}
             onMoveClick={handleMovePost}
+            posts={posts}
           />
         </div>
       </ScrollArea>

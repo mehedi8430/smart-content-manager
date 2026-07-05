@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-import { Post } from "../_context/BoardContext";
 import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -23,6 +21,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Post } from "@/types/post.type";
 
 interface PostCardProps {
   post: Post;

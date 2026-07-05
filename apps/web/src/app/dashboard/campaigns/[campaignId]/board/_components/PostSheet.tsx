@@ -69,7 +69,7 @@ export function PostSheet() {
         // Update existing post
         const result = await updatePostAction(campaignId, post.id, {
           title: values.title,
-          description: values.description,
+          description: values.description || undefined,
           dueDate: values.dueDate
             ? `${values.dueDate}T00:00:00.000Z`
             : undefined,
@@ -78,17 +78,15 @@ export function PostSheet() {
 
         if (result.success) {
           toast.success(result.message || "Post updated successfully");
-        }
-
-        if (result.error) {
-          console.error("Failed to update post:", result.error);
+          router.refresh();
+          onOpenChange(false);
           return;
         }
       } else {
         // Create new post
         const result = await createPostAction(campaignId, {
           title: values.title,
-          description: values.description,
+          description: values.description || undefined,
           dueDate: values.dueDate
             ? `${values.dueDate}T00:00:00.000Z`
             : undefined,

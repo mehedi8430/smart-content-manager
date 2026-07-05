@@ -16,10 +16,11 @@ export default async function BoardPage({
   const { campaignId } = await params;
   const campaign = await getCampaignAction(campaignId);
   const campaignName = campaign.data?.name || "N/A";
+
   const { search, status } = await searchParams;
   const posts = await listPostsAction(campaignId, {
-    search: search || " ",
-    status: status,
+    search,
+    status,
   });
 
   return (

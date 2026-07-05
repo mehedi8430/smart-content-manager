@@ -40,6 +40,7 @@ export async function fetcher<T = unknown>(
 
     const defaultOptions: RequestInit = {
         credentials: "include",
+        cache: "no-store",
         headers: {
             Accept: "application/json",
             ...(systemKey && {
@@ -118,6 +119,7 @@ export async function fetcher<T = unknown>(
                 ...fetchOptions,
                 headers: retryHeaders,
                 credentials: 'include',
+                cache: 'no-store',
             });
         } else {
             cookieStore.delete('accessToken');

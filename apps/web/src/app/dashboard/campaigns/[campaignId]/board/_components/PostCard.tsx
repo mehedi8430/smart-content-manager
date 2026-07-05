@@ -62,9 +62,12 @@ export function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <Card className="group mb-3 cursor-grab active:cursor-grabbing overflow-hidden border-l-4 border-l-muted hover:shadow-md transition-shadow p-3">
+    <Card
+      onClick={() => handleEditPost(post)}
+      className="group mb-3 overflow-hidden cursor-pointer border-l-4 border-l-muted hover:shadow-md transition-shadow p-3"
+    >
       <div className="flex gap-2">
-        <GripVertical className="w-4 h-4 text-muted-foreground mt-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <GripVertical className="w-4 h-4 cursor-grab active:cursor-grabbing text-muted-foreground mt-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-2">

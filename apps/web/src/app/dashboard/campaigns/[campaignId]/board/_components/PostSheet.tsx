@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Post, PostStatus, useBoard } from "../_context/BoardContext";
+import { useBoard } from "../../../../../../providers/board-provider";
 import {
   Sheet,
   SheetContent,
@@ -24,6 +24,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { createPostAction, updatePostAction } from "@/actions/post.action";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const postFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -34,24 +37,15 @@ const postFormSchema = z.object({
 
 type PostFormValues = z.infer<typeof postFormSchema>;
 
-const generateId = () => {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-};
-
-interface PostSheetProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  post?: Post;
-  defaultStatus?: PostStatus;
-}
-
-export function PostSheet({
-  isOpen,
-  onOpenChange,
-  post,
-  defaultStatus = "todo",
-}: PostSheetProps) {
-  const { addPost, updatePost } = useBoard();
+export function PostSheet() {
+  const {
+    editingPost: post,
+    isSheetOpen: isOpen,
+    setIsSheetOpen: onOpenChange,
+    defaultStatusForNew: defaultStatus,
+    campaignId,
+  } = useBoard();
+  const router = useRouter();
 
   const {
     register,
@@ -73,26 +67,46 @@ export function PostSheet({
     try {
       if (post) {
         // Update existing post
-        updatePost(post.id, {
+        const result = await updatePostAction(campaignId, post.id, {
           title: values.title,
-          description: values.description || null,
-          dueDate: values.dueDate ? `${values.dueDate}T00:00:00.000Z` : null,
+          description: values.description,
+          dueDate: values.dueDate
+            ? `${values.dueDate}T00:00:00.000Z`
+            : undefined,
           status: values.status,
         });
+
+        if (result.success) {
+          toast.success(result.message || "Post updated successfully");
+        }
+
+        if (result.error) {
+          console.error("Failed to update post:", result.error);
+          return;
+        }
       } else {
         // Create new post
-        const newPost: Post = {
-          id: generateId(),
+        const result = await createPostAction(campaignId, {
           title: values.title,
-          description: values.description || null,
+          description: values.description,
+          dueDate: values.dueDate
+            ? `${values.dueDate}T00:00:00.000Z`
+            : undefined,
           status: values.status,
-          order: 0,
-          dueDate: values.dueDate ? `${values.dueDate}T00:00:00.000Z` : null,
-        };
-        addPost(newPost);
+        });
+
+        if (result.success) {
+          toast.success(result.message || "Post created successfully");
+        }
+
+        if (result.error) {
+          console.error("Failed to create post:", result.error);
+          return;
+        }
       }
 
       onOpenChange(false);
+      router.refresh();
     } catch (error) {
       console.error("Failed to save post:", error);
     }

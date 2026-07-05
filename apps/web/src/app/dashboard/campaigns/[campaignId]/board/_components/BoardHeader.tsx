@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PostStatus } from "@/types/post.type";
 import { Plus } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useBoard } from "../_context/BoardContext";
+import { useBoard } from "../../../../../../providers/board-provider";
 
 interface BoardHeaderProps {
   campaignName: string;
@@ -49,6 +49,7 @@ export function BoardHeader({ campaignName, totalPosts }: BoardHeaderProps) {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {/* open add post sheet */}
           <Button
             variant="outline"
             className="border-sidebar-primary/50! text-sidebar-primary hover:text-sidebar-primary/80 cursor-pointer"

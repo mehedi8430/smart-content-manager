@@ -4,8 +4,7 @@ import { createContext, useContext, useState, ReactNode } from "react";
 import { Post, PostStatus } from "@/types/post.type";
 
 interface BoardContextType {
-  addPost: (post: Post) => void;
-  updatePost: (id: string, post: Partial<Post>) => void;
+  campaignId: string;
   deletePost: (id: string) => void;
   movePost: (id: string, newStatus: PostStatus) => void;
   // UI State
@@ -26,15 +25,13 @@ interface BoardContextType {
 
 const BoardContext = createContext<BoardContextType | undefined>(undefined);
 
-export function BoardProvider({ children }: { children: ReactNode }) {
-  const addPost = (post: Post) => {
-    console.log(post);
-  };
-
-  const updatePost = (id: string, updates: Partial<Post>) => {
-    console.log(id, updates);
-  };
-
+export function BoardProvider({
+  children,
+  campaignId,
+}: {
+  children: ReactNode;
+  campaignId: string;
+}) {
   const deletePost = (id: string) => {
     console.log(id);
   };
@@ -83,8 +80,7 @@ export function BoardProvider({ children }: { children: ReactNode }) {
   return (
     <BoardContext.Provider
       value={{
-        addPost,
-        updatePost,
+        campaignId,
         deletePost,
         movePost,
         editingPost,

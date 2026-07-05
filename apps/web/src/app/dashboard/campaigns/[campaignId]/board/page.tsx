@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { BoardProvider } from "./_context/BoardContext";
+import { BoardProvider } from "../../../../../providers/board-provider";
 import { KanbanBoard } from "./_components/KanbanBoard";
 import { SkeletonBoard } from "./_components/SkeletonBoard";
 import { getCampaignAction } from "@/actions/campaign.action";
@@ -24,7 +24,7 @@ export default async function BoardPage({
 
   return (
     <div className="container mx-auto p-6">
-      <BoardProvider>
+      <BoardProvider campaignId={campaignId}>
         <Suspense fallback={<SkeletonBoard />}>
           <KanbanBoard campaignName={campaignName} posts={posts?.data || []} />
         </Suspense>

@@ -22,7 +22,7 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Post } from "@/types/post.type";
-import { useBoard } from "../_context/BoardContext";
+import { useBoard } from "../../../../../../providers/board-provider";
 
 interface PostCardProps {
   post: Post;

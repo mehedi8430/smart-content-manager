@@ -1,6 +1,6 @@
 "use client";
 
-import { useBoard } from "../_context/BoardContext";
+import { useBoard } from "../../../../../../providers/board-provider";
 import { KanbanColumn } from "./KanbanColumn";
 import { PostSheet } from "./PostSheet";
 import { DeletePostDialog } from "./DeletePostDialog";
@@ -17,12 +17,8 @@ export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
   const {
     handleAddPost,
     confirmDelete,
-    editingPost,
-    isSheetOpen,
-    defaultStatusForNew,
     deleteDialogOpen,
     postToDelete,
-    setIsSheetOpen,
     setDeleteDialogOpen,
   } = useBoard();
 
@@ -52,12 +48,7 @@ export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
       </ScrollArea>
 
       {/* Post Sheet */}
-      <PostSheet
-        isOpen={isSheetOpen}
-        onOpenChange={setIsSheetOpen}
-        post={editingPost}
-        defaultStatus={defaultStatusForNew}
-      />
+      <PostSheet />
 
       {/* Delete Dialog */}
       <DeletePostDialog

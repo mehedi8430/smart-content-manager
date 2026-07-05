@@ -97,18 +97,14 @@ export function PostSheet() {
 
         if (result.success) {
           toast.success(result.message || "Post created successfully");
-        }
-
-        if (result.error) {
-          console.error("Failed to create post:", result.error);
+          router.refresh();
+          onOpenChange(false);
           return;
         }
       }
-
-      onOpenChange(false);
-      router.refresh();
     } catch (error) {
       console.error("Failed to save post:", error);
+      toast.error("Failed to save post");
     }
   };
 

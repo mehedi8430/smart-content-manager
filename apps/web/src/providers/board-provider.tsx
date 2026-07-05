@@ -5,20 +5,17 @@ import { Post, PostStatus } from "@/types/post.type";
 
 interface BoardContextType {
   campaignId: string;
-  deletePost: (id: string) => void;
-  movePost: (id: string, newStatus: PostStatus) => void;
   // UI State
   editingPost: Post | undefined;
   isSheetOpen: boolean;
   defaultStatusForNew: PostStatus;
   deleteDialogOpen: boolean;
   postToDelete: Post | undefined;
+  setPostToDelete: (post: Post | undefined) => void;
   // Handlers
   handleAddPost: (status: PostStatus) => void;
   handleEditPost: (post: Post) => void;
   handleDeletePost: (post: Post) => void;
-  confirmDelete: () => void;
-  handleMovePost: (id: string, newStatus: PostStatus) => void;
   setIsSheetOpen: (open: boolean) => void;
   setDeleteDialogOpen: (open: boolean) => void;
 }
@@ -32,14 +29,6 @@ export function BoardProvider({
   children: ReactNode;
   campaignId: string;
 }) {
-  const deletePost = (id: string) => {
-    console.log(id);
-  };
-
-  const movePost = (id: string, newStatus: PostStatus) => {
-    console.log(id, newStatus);
-  };
-
   // UI State
   const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -65,34 +54,19 @@ export function BoardProvider({
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (postToDelete) {
-      deletePost(postToDelete.id);
-      setDeleteDialogOpen(false);
-      setPostToDelete(undefined);
-    }
-  };
-
-  const handleMovePost = (id: string, newStatus: PostStatus) => {
-    movePost(id, newStatus);
-  };
-
   return (
     <BoardContext.Provider
       value={{
         campaignId,
-        deletePost,
-        movePost,
         editingPost,
         isSheetOpen,
         defaultStatusForNew,
         deleteDialogOpen,
         postToDelete,
+        setPostToDelete,
         handleAddPost,
         handleEditPost,
         handleDeletePost,
-        confirmDelete,
-        handleMovePost,
         setIsSheetOpen,
         setDeleteDialogOpen,
       }}

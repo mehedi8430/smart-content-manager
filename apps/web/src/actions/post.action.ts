@@ -9,6 +9,7 @@ import {
     DeletePostResponse,
     ListPostsQuery,
     PostListResponse,
+    PostStatus,
     UpdatePostInput,
     UpdatePostResponse,
     UpdatePostStatusResponse,
@@ -133,7 +134,7 @@ export async function deletePostAction(campaignId: string, postId: string) {
 export async function updatePostStatusAction(
     campaignId: string,
     postId: string,
-    status: "todo" | "in_progress" | "done"
+    status: PostStatus
 ) {
     try {
         const response = await fetcher<UpdatePostStatusResponse>(

@@ -14,13 +14,8 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
-  const {
-    handleAddPost,
-    confirmDelete,
-    deleteDialogOpen,
-    postToDelete,
-    setDeleteDialogOpen,
-  } = useBoard();
+  const { handleAddPost, deleteDialogOpen, postToDelete, setDeleteDialogOpen } =
+    useBoard();
 
   return (
     <div className="space-y-8">
@@ -54,7 +49,6 @@ export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
       <DeletePostDialog
         isOpen={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onConfirm={confirmDelete}
         postTitle={postToDelete?.title || ""}
       />
     </div>

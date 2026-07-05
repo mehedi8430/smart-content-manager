@@ -3,37 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Plus, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Post, PostStatus } from "@/types/post.type";
+import { getColumnConfig } from "./board.utils";
 
 interface KanbanColumnProps {
   status: PostStatus;
   onAddClick: (status: PostStatus) => void;
   posts: Post[];
 }
-
-const getColumnConfig = (
-  status: PostStatus,
-): { label: string; color: string; accent: string } => {
-  switch (status) {
-    case "todo":
-      return {
-        label: "To Do",
-        color: "bg-muted/50",
-        accent: "border-l-slate-400 dark:border-l-slate-600",
-      };
-    case "in_progress":
-      return {
-        label: "In Progress",
-        color: "bg-blue-50/50 dark:bg-blue-950/20",
-        accent: "border-l-blue-400 dark:border-l-blue-600",
-      };
-    case "done":
-      return {
-        label: "Done",
-        color: "bg-green-50/50 dark:bg-green-950/20",
-        accent: "border-l-green-400 dark:border-l-green-600",
-      };
-  }
-};
 
 export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
   const config = getColumnConfig(status);

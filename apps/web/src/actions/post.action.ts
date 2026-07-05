@@ -22,6 +22,7 @@ export async function listPostsAction(campaignId: string, query: ListPostsQuery 
         const queryParams = new URLSearchParams();
 
         if (query.status) queryParams.append("status", query.status);
+        if (query.search) queryParams.append("search", query.search);
 
         const queryString = queryParams.toString();
         const endpoint = queryString

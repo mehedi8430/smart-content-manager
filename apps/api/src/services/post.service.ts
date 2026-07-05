@@ -8,12 +8,14 @@ import type { CreatePostInput, UpdatePostInput } from '@/validators/post.validat
  * @param campaignId - The ID of the campaign
  * @param userId - The ID of the user
  * @param status - The status to filter by
+ * @param search - The search query
  * @returns The list of posts
  */
 export const listPosts = async (
   campaignId: string,
   userId: string,
-  status?: string
+  status?: string,
+  search?: string
 ) => {
   try {
     const campaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
@@ -28,6 +30,7 @@ export const listPosts = async (
 
     const where: any = { campaignId };
     if (status) where.status = status;
+    if (search) where.title = { contains: search, mode: 'insensitive' };
 
     const posts = await prisma.post.findMany({
       where,

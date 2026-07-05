@@ -34,6 +34,7 @@ export interface BulkUpdateItem {
 
 export interface ListPostsQuery {
   status?: PostStatus;
+  search?: string;
 }
 
 export interface PostListResponse {

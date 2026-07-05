@@ -1,112 +1,104 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
-
-export interface Post {
-  id: string;
-  title: string;
-  description?: string | null;
-  status: "todo" | "in_progress" | "done";
-  order: number;
-  dueDate?: string | null;
-}
-
-export type PostStatus = "todo" | "in_progress" | "done";
+import { Post, PostStatus } from "@/types/post.type";
 
 interface BoardContextType {
-  posts: Post[];
   addPost: (post: Post) => void;
   updatePost: (id: string, post: Partial<Post>) => void;
   deletePost: (id: string) => void;
   movePost: (id: string, newStatus: PostStatus) => void;
+  // UI State
+  editingPost: Post | undefined;
+  isSheetOpen: boolean;
+  defaultStatusForNew: PostStatus;
+  deleteDialogOpen: boolean;
+  postToDelete: Post | undefined;
+  // Handlers
+  handleAddPost: (status: PostStatus) => void;
+  handleEditPost: (post: Post) => void;
+  handleDeletePost: (post: Post) => void;
+  confirmDelete: () => void;
+  handleMovePost: (id: string, newStatus: PostStatus) => void;
+  setIsSheetOpen: (open: boolean) => void;
+  setDeleteDialogOpen: (open: boolean) => void;
 }
 
 const BoardContext = createContext<BoardContextType | undefined>(undefined);
 
 export function BoardProvider({ children }: { children: ReactNode }) {
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "1",
-      title: "Write Facebook Ad Copy",
-      description:
-        "Draft 3 variations for the summer sale campaign targeting 25-34 age group.",
-      status: "todo",
-      order: 0,
-      dueDate: "2026-08-10T00:00:00.000Z",
-    },
-    {
-      id: "2",
-      title: "Design Instagram Carousel",
-      description: null,
-      status: "todo",
-      order: 1,
-      dueDate: "2026-08-15T00:00:00.000Z",
-    },
-    {
-      id: "3",
-      title: "Schedule Email Newsletter",
-      description:
-        "Monthly digest for subscribers. Include product highlights and blog links.",
-      status: "in_progress",
-      order: 0,
-      dueDate: "2026-07-30T00:00:00.000Z",
-    },
-    {
-      id: "4",
-      title: "Create TikTok Script",
-      description: null,
-      status: "in_progress",
-      order: 1,
-      dueDate: null,
-    },
-    {
-      id: "5",
-      title: "Publish Landing Page Copy",
-      description: "Hero section, features, CTA, and FAQ.",
-      status: "done",
-      order: 0,
-      dueDate: "2026-07-01T00:00:00.000Z",
-    },
-    {
-      id: "6",
-      title: "A/B Test Subject Lines",
-      description: null,
-      status: "done",
-      order: 1,
-      dueDate: "2026-07-05T00:00:00.000Z",
-    },
-  ]);
-
   const addPost = (post: Post) => {
-    setPosts((prev) => [...prev, post]);
+    console.log(post);
   };
 
   const updatePost = (id: string, updates: Partial<Post>) => {
-    setPosts((prev) =>
-      prev.map((post) => (post.id === id ? { ...post, ...updates } : post)),
-    );
+    console.log(id, updates);
   };
 
   const deletePost = (id: string) => {
-    setPosts((prev) => prev.filter((post) => post.id !== id));
+    console.log(id);
   };
 
   const movePost = (id: string, newStatus: PostStatus) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === id ? { ...post, status: newStatus } : post,
-      ),
-    );
+    console.log(id, newStatus);
+  };
+
+  // UI State
+  const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [defaultStatusForNew, setDefaultStatusForNew] =
+    useState<PostStatus>("todo");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<Post | undefined>(undefined);
+
+  // Handlers
+  const handleAddPost = (status: PostStatus) => {
+    setEditingPost(undefined);
+    setDefaultStatusForNew(status);
+    setIsSheetOpen(true);
+  };
+
+  const handleEditPost = (post: Post) => {
+    setEditingPost(post);
+    setIsSheetOpen(true);
+  };
+
+  const handleDeletePost = (post: Post) => {
+    setPostToDelete(post);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (postToDelete) {
+      deletePost(postToDelete.id);
+      setDeleteDialogOpen(false);
+      setPostToDelete(undefined);
+    }
+  };
+
+  const handleMovePost = (id: string, newStatus: PostStatus) => {
+    movePost(id, newStatus);
   };
 
   return (
     <BoardContext.Provider
       value={{
-        posts,
         addPost,
         updatePost,
         deletePost,
         movePost,
+        editingPost,
+        isSheetOpen,
+        defaultStatusForNew,
+        deleteDialogOpen,
+        postToDelete,
+        handleAddPost,
+        handleEditPost,
+        handleDeletePost,
+        confirmDelete,
+        handleMovePost,
+        setIsSheetOpen,
+        setDeleteDialogOpen,
       }}
     >
       {children}

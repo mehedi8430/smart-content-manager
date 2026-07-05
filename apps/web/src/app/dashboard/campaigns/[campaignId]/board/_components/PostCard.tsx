@@ -22,12 +22,10 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Post } from "@/types/post.type";
+import { useBoard } from "../_context/BoardContext";
 
 interface PostCardProps {
   post: Post;
-  onEdit: (post: Post) => void;
-  onDelete: (id: string) => void;
-  onMove: (id: string, status: "todo" | "in_progress" | "done") => void;
 }
 
 const getDueDateStatus = (
@@ -51,7 +49,9 @@ const getDueDateStatus = (
   return "none";
 };
 
-export function PostCard({ post, onEdit, onDelete, onMove }: PostCardProps) {
+export function PostCard({ post }: PostCardProps) {
+  const { handleEditPost, handleDeletePost, handleMovePost } = useBoard();
+
   const dueDateStatus = getDueDateStatus(post.dueDate);
   const formattedDate = post.dueDate
     ? format(new Date(post.dueDate), "MMM d")
@@ -115,7 +115,7 @@ export function PostCard({ post, onEdit, onDelete, onMove }: PostCardProps) {
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
-                    onEdit(post);
+                    handleEditPost(post);
                   }}
                 >
                   <Edit2 className="w-4 h-4 mr-2" />
@@ -129,19 +129,23 @@ export function PostCard({ post, onEdit, onDelete, onMove }: PostCardProps) {
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {post.status !== "todo" && (
-                      <DropdownMenuItem onClick={() => onMove(post.id, "todo")}>
+                      <DropdownMenuItem
+                        onClick={() => handleMovePost(post.id, "todo")}
+                      >
                         To Do
                       </DropdownMenuItem>
                     )}
                     {post.status !== "in_progress" && (
                       <DropdownMenuItem
-                        onClick={() => onMove(post.id, "in_progress")}
+                        onClick={() => handleMovePost(post.id, "in_progress")}
                       >
                         In Progress
                       </DropdownMenuItem>
                     )}
                     {post.status !== "done" && (
-                      <DropdownMenuItem onClick={() => onMove(post.id, "done")}>
+                      <DropdownMenuItem
+                        onClick={() => handleMovePost(post.id, "done")}
+                      >
                         Done
                       </DropdownMenuItem>
                     )}
@@ -154,7 +158,7 @@ export function PostCard({ post, onEdit, onDelete, onMove }: PostCardProps) {
                   className="text-destructive focus:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDelete(post.id);
+                    handleDeletePost(post);
                   }}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />

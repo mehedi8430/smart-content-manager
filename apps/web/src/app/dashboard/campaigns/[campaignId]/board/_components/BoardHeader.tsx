@@ -5,18 +5,16 @@ import { Button } from "@/components/ui/button";
 import { PostStatus } from "@/types/post.type";
 import { Plus } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useBoard } from "../_context/BoardContext";
 
 interface BoardHeaderProps {
   campaignName: string;
-  onNewPost: () => void;
   totalPosts: number;
 }
 
-export function BoardHeader({
-  campaignName,
-  onNewPost,
-  totalPosts,
-}: BoardHeaderProps) {
+export function BoardHeader({ campaignName, totalPosts }: BoardHeaderProps) {
+  const { handleAddPost } = useBoard();
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -54,7 +52,7 @@ export function BoardHeader({
           <Button
             variant="outline"
             className="border-sidebar-primary/50! text-sidebar-primary hover:text-sidebar-primary/80 cursor-pointer"
-            onClick={onNewPost}
+            onClick={() => handleAddPost("todo")}
           >
             <Plus className="h-4 w-4" />
             New Post

@@ -6,10 +6,7 @@ import { Post, PostStatus } from "@/types/post.type";
 
 interface KanbanColumnProps {
   status: PostStatus;
-  onAddClick: () => void;
-  onEditClick: (post: Post) => void;
-  onDeleteClick: (post: Post) => void;
-  onMoveClick: (id: string, status: PostStatus) => void;
+  onAddClick: (status: PostStatus) => void;
   posts: Post[];
 }
 
@@ -38,15 +35,9 @@ const getColumnConfig = (
   }
 };
 
-export function KanbanColumn({
-  status,
-  onAddClick,
-  onEditClick,
-  onDeleteClick,
-  onMoveClick,
-  posts,
-}: KanbanColumnProps) {
+export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
   const config = getColumnConfig(status);
+  const postsByStatus = posts?.filter((post) => post.status === status) || [];
 
   return (
     <div className={cn("rounded-lg flex flex-col min-w-87.5 max-w-100")}>
@@ -62,7 +53,7 @@ export function KanbanColumn({
           <div className="flex items-center gap-2">
             <h2 className="font-semibold">{config.label}</h2>
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-semibold">
-              {posts?.length || 0}
+              {postsByStatus.length}
             </span>
           </div>
         </div>
@@ -75,35 +66,34 @@ export function KanbanColumn({
           config.color,
         )}
       >
-        {posts?.length === 0 ? (
+        {postsByStatus.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-8 text-center">
             <Inbox className="w-12 h-12 text-muted-foreground/50 mb-3" />
             <p className="text-sm text-muted-foreground font-medium">
               No posts yet
             </p>
             <p className="text-xs text-muted-foreground/70 mt-1">
-              Click &quot;+ Add post&quot; to get started
+              Click &quot;
+              <span
+                onClick={() => onAddClick(status)}
+                className="cursor-pointer underline underline-offset-2"
+              >
+                + Add post
+              </span>
+              &quot; to get started
             </p>
           </div>
         ) : (
           <>
-            {posts?.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onEdit={onEditClick}
-                onDelete={(id) =>
-                  onDeleteClick(posts.find((p) => p.id === id)!)
-                }
-                onMove={onMoveClick}
-              />
+            {postsByStatus.map((post) => (
+              <PostCard key={post.id} post={post} />
             ))}
           </>
         )}
 
         {/* Add Post Button */}
         <Button
-          onClick={onAddClick}
+          onClick={() => onAddClick(status)}
           variant="ghost"
           className="w-full justify-start text-muted-foreground hover:text-foreground mt-3 h-auto py-2"
         >

@@ -19,7 +19,7 @@ export default async function BoardPage({
   const { search, status } = await searchParams;
   const posts = await listPostsAction(campaignId, {
     search: search || " ",
-    status: status
+    status: status,
   });
 
   return (

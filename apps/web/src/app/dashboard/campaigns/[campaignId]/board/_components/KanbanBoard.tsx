@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { PostStatus, useBoard } from "../_context/BoardContext";
+import { useBoard } from "../_context/BoardContext";
 import { KanbanColumn } from "./KanbanColumn";
 import { PostSheet } from "./PostSheet";
 import { DeletePostDialog } from "./DeletePostDialog";
@@ -15,49 +14,21 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
-  const { deletePost, movePost } = useBoard();
-  const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [defaultStatusForNew, setDefaultStatusForNew] =
-    useState<PostStatus>("todo");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<Post | undefined>(undefined);
-
-  const handleAddPost = (status: PostStatus) => {
-    setEditingPost(undefined);
-    setDefaultStatusForNew(status);
-    setIsSheetOpen(true);
-  };
-
-  const handleEditPost = (post: Post) => {
-    setEditingPost(post);
-    setIsSheetOpen(true);
-  };
-
-  const handleDeletePost = (post: Post) => {
-    setPostToDelete(post);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (postToDelete) {
-      deletePost(postToDelete.id);
-      setDeleteDialogOpen(false);
-      setPostToDelete(undefined);
-    }
-  };
-
-  const handleMovePost = (id: string, newStatus: PostStatus) => {
-    movePost(id, newStatus);
-  };
+  const {
+    handleAddPost,
+    confirmDelete,
+    editingPost,
+    isSheetOpen,
+    defaultStatusForNew,
+    deleteDialogOpen,
+    postToDelete,
+    setIsSheetOpen,
+    setDeleteDialogOpen,
+  } = useBoard();
 
   return (
     <div className="space-y-8">
-      <BoardHeader
-        campaignName={campaignName}
-        onNewPost={() => handleAddPost("todo")}
-        totalPosts={posts.length}
-      />
+      <BoardHeader campaignName={campaignName} totalPosts={posts.length} />
 
       {/* Kanban Columns */}
       <ScrollArea className="w-full">
@@ -65,25 +36,16 @@ export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
           <KanbanColumn
             status="todo"
             onAddClick={() => handleAddPost("todo")}
-            onEditClick={handleEditPost}
-            onDeleteClick={handleDeletePost}
-            onMoveClick={handleMovePost}
             posts={posts}
           />
           <KanbanColumn
             status="in_progress"
             onAddClick={() => handleAddPost("in_progress")}
-            onEditClick={handleEditPost}
-            onDeleteClick={handleDeletePost}
-            onMoveClick={handleMovePost}
             posts={posts}
           />
           <KanbanColumn
             status="done"
             onAddClick={() => handleAddPost("done")}
-            onEditClick={handleEditPost}
-            onDeleteClick={handleDeletePost}
-            onMoveClick={handleMovePost}
             posts={posts}
           />
         </div>

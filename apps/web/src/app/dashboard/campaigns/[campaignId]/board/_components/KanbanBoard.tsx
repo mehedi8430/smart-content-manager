@@ -16,9 +16,6 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
   const { deletePost, movePost } = useBoard();
-  const [filterStatus, setFilterStatus] = useState<
-    "all" | "todo" | "in_progress" | "done"
-  >("all");
   const [editingPost, setEditingPost] = useState<Post | undefined>(undefined);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [defaultStatusForNew, setDefaultStatusForNew] =
@@ -59,8 +56,7 @@ export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
       <BoardHeader
         campaignName={campaignName}
         onNewPost={() => handleAddPost("todo")}
-        onFilterChange={setFilterStatus}
-        currentFilter={filterStatus}
+        totalPosts={posts.length}
       />
 
       {/* Kanban Columns */}

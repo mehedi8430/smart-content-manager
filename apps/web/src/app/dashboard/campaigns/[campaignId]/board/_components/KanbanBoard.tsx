@@ -49,7 +49,7 @@ export function KanbanBoard({ campaignName, posts: initialPosts }: KanbanBoardPr
 
   const handleDragStart = (event: DragEndEvent) => {
     const { active } = event;
-    setActiveId(active.id as string);
+    setActiveId(active.id as string); // "Which card am I dragging?"
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -76,7 +76,7 @@ export function KanbanBoard({ campaignName, posts: initialPosts }: KanbanBoardPr
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveId(null);
+    setActiveId(null); // Hide the overlay
 
     if (!over) return;
 
@@ -112,7 +112,7 @@ export function KanbanBoard({ campaignName, posts: initialPosts }: KanbanBoardPr
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={closestCorners} // Calculate if hovering over a droppable
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}

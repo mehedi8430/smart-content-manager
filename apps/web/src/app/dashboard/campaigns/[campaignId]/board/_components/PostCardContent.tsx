@@ -43,8 +43,8 @@ interface PostCardContentProps {
 
 export function PostCardContent({
   post,
-  dragAttributes,
-  dragListeners,
+  dragAttributes, // Pointer events for the grip icon
+  dragListeners, // Same events
   isDragging,
 }: PostCardContentProps) {
   const router = useRouter();
@@ -82,7 +82,7 @@ export function PostCardContent({
     >
       <div className="flex gap-2">
         <div
-          {...dragAttributes}
+          {...dragAttributes} // Attach listeners to grip icon
           {...dragListeners}
           className="cursor-grab active:cursor-grabbing"
         >
@@ -94,6 +94,7 @@ export function PostCardContent({
             <h3 className="text-sm font-semibold line-clamp-2 flex-1">
               {post.title}
             </h3>
+            {/* Actions Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button

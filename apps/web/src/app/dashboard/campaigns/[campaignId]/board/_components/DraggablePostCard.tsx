@@ -3,8 +3,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Post } from "@/types/post.type";
-import { PostCardContent } from "./PostCardContent";
 import { cn } from "@/lib/utils";
+import { PostCardContent } from "./PostCardContent";
 
 interface DraggablePostCardProps {
   post: Post;
@@ -19,7 +19,7 @@ export function DraggablePostCard({ post }: DraggablePostCardProps) {
     transition,
     isDragging,
     isOver,
-  } = useSortable({ id: post.id });
+  } = useSortable({ id: post.id }); // Makes this card draggable AND sortable within the column
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -34,7 +34,7 @@ export function DraggablePostCard({ post }: DraggablePostCardProps) {
       className={cn(
         "relative",
         isDragging && "z-50",
-        isOver && "ring-2 ring-primary"
+        isOver && "ring-2 ring-primary" // Highlight if hovering over this card
       )}
     >
       <PostCardContent 

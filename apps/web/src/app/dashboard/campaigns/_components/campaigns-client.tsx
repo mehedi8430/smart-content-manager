@@ -57,6 +57,7 @@ export default function CampaignsClient() {
       };
 
       const result = await listCampaignsAction(query);
+      
       if (result.error) {
         setError(result.error);
       } else if (result.data) {

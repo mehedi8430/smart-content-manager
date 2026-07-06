@@ -31,10 +31,10 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setNodeRef} // Register this div as a drop zone
       className={cn(
         "rounded-lg flex flex-col min-w-87.5 max-w-100 transition-all",
-        isOver && "ring-2 ring-primary ring-offset-2"
+        isOver && "ring-2 ring-primary ring-offset-2" // Highlight when hovering
       )}
     >
       {/* Column Header */}
@@ -60,7 +60,7 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
         className={cn(
           "flex-1 p-3 space-y-2 rounded-b-lg overflow-y-auto min-h-125",
           config.color,
-          isOver && "bg-primary/5"
+          isOver && "bg-primary/5" // Subtle background highlight
         )}
       >
         {postsByStatus.length === 0 ? (

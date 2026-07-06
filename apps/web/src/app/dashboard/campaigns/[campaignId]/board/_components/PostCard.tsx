@@ -104,27 +104,30 @@ export function PostCard({ post }: PostCardProps) {
                   <DropdownMenuSubContent>
                     {post.status !== "todo" && (
                       <DropdownMenuItem
-                        onClick={async () =>
-                          await handleMovePost(post.id, "todo")
-                        }
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await handleMovePost(post.id, "todo");
+                        }}
                       >
                         To Do
                       </DropdownMenuItem>
                     )}
                     {post.status !== "in_progress" && (
                       <DropdownMenuItem
-                        onClick={async () =>
-                          await handleMovePost(post.id, "in_progress")
-                        }
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await handleMovePost(post.id, "in_progress");
+                        }}
                       >
                         In Progress
                       </DropdownMenuItem>
                     )}
                     {post.status !== "done" && (
                       <DropdownMenuItem
-                        onClick={async () =>
-                          await handleMovePost(post.id, "done")
-                        }
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await handleMovePost(post.id, "done");
+                        }}
                       >
                         Done
                       </DropdownMenuItem>

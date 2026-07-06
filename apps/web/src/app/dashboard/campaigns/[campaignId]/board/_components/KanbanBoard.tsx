@@ -22,7 +22,7 @@ export function KanbanBoard({ campaignName, posts }: KanbanBoardProps) {
 
       {/* Kanban Columns */}
       <ScrollArea className="w-full">
-        <div className="flex gap-4 py-4 w-full">
+        <div className="flex flex-col md:flex-row gap-4 py-4 w-full">
           <KanbanColumn
             status="todo"
             onAddClick={() => handleAddPost("todo")}

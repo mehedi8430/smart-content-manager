@@ -24,7 +24,7 @@ export default async function BoardPage({
   });
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto md:p-6">
       <BoardProvider campaignId={campaignId}>
         <Suspense fallback={<SkeletonBoard />}>
           <KanbanBoard campaignName={campaignName} posts={posts?.data || []} />

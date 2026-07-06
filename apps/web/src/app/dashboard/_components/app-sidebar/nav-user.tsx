@@ -25,9 +25,10 @@ export function NavUser() {
       }
     } catch (error) {
       console.error("Logout error:", error);
-      toast.error("Logout failed. Please try again.");
+      // toast.error("Logout failed. Please try again.");
     } finally {
       setIsPending(false);
+      router.push("/login");
     }
   };
 

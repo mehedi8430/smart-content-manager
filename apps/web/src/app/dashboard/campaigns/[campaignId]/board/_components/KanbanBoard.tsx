@@ -1,16 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
-  DragOverEvent,
   DragOverlay,
   closestCorners,
   PointerSensor,
   useSensor,
   useSensors,
   DragStartEvent,
+  TouchSensor,
+  KeyboardSensor,
 } from "@dnd-kit/core";
 import { useBoard } from "../../../../../../providers/board-provider";
 import { KanbanColumn } from "./KanbanColumn";
@@ -19,10 +20,9 @@ import { DeletePostDialog } from "./DeletePostDialog";
 import { BoardHeader } from "./BoardHeader";
 import { PostCardContent } from "./PostCardContent";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Post, PostStatus } from "@/types/post.type";
-import { updatePostStatusAction } from "@/actions/post.action";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { Post } from "@/types/post.type";
+import { bulkUpdatePostsAction } from "@/actions/post.action";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 interface KanbanBoardProps {
   campaignName: string;
@@ -34,103 +34,65 @@ export function KanbanBoard({
   posts: initialPosts,
 }: KanbanBoardProps) {
   const { handleAddPost, campaignId } = useBoard();
-  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  // Get the dragging post for the overlay
+  useEffect(() => {
+    setPosts(initialPosts);
+  }, [initialPosts]);
+
   const activeDragPost = useMemo(
     () => posts.find((p) => p.id === activeId),
     [activeId, posts],
   );
 
-  // Configure sensors for drag detection
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      distance: 8,
-    } as Parameters<typeof useSensor>[1]),
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    setActiveId(active.id as string); // "Which card am I dragging?"
+    setActiveId(active.id as string);
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
+  async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    // console.log({ over, active });
+    setActiveId(null);
 
-    if (!over) return;
+    if (!over || active.id === over.id) return;
 
-    const activePost = posts.find((p) => p.id === active.id);
-    if (!activePost) return;
+    const oldIndex = posts.findIndex((p) => p.id === active.id);
+    const newIndex = posts.findIndex((p) => p.id === over.id);
+    const reorderedPosts = arrayMove(posts, oldIndex, newIndex);
 
-    // If dragging over a column (status), move the post to that column
-    const validStatuses: PostStatus[] = ["todo", "in_progress", "done"];
+    // optimistic update
+    setPosts(reorderedPosts);
 
-    if (validStatuses.includes(over.id as PostStatus)) {
-      const newStatus = over.id as PostStatus;
-      console.log({ newStatus });
+    // build bulk update from the reordered array (same source of truth)
+    const bulkUpdateItems = reorderedPosts.map((post, index) => ({
+      id: post.id,
+      order: index,
+    }));
 
-      if (activePost.status !== newStatus) {
-        setPosts((prevPosts) =>
-          prevPosts.map((p) =>
-            p.id === activePost.id ? { ...p, status: newStatus } : p,
-          ),
-        );
-      }
-    }
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    console.log({ over, active });
-    setActiveId(null); // Hide the overlay
-
-    if (!over) return;
-
-    const activePost = posts.find((p) => p.id === active.id);
-    console.log({ activePost });
-    if (!activePost) return;
-
-    const validStatuses: PostStatus[] = ["todo", "in_progress", "done"];
-    const newStatus = validStatuses.includes(over.id as PostStatus)
-      ? (over.id as PostStatus)
-      : activePost.status;
-    // console.log({ newStatus });
-
-    // If status changed, update on the server
-    if (newStatus !== activePost.status) {
-      try {
-        const result = await updatePostStatusAction(
-          campaignId,
-          activePost.id,
-          newStatus,
-        );
-
-        if (!result.success) {
-          toast.error(result.message || "Failed to move post");
-          // Revert the local state
-          setPosts(initialPosts);
-        } else {
-          toast.success(result.message || "Post moved successfully");
-          router.refresh();
+    bulkUpdatePostsAction(campaignId, bulkUpdateItems)
+      .then((result) => {
+        if (result.error) {
+          console.error("Failed to update post order:", result.error);
+          setPosts(posts);
         }
-      } catch (error) {
-        console.error("Failed to move post:", error);
-        toast.error("Failed to move post");
-        // Revert the local state
-        setPosts(initialPosts);
-      }
-    }
-  };
+      })
+      .catch(() => setPosts(posts));
+  }
 
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners} // Calculate if hovering over a droppable
+      collisionDetection={closestCorners}
       onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-8">
@@ -142,19 +104,16 @@ export function KanbanBoard({
             <KanbanColumn
               status="todo"
               onAddClick={() => handleAddPost("todo")}
-              // posts={initialPosts}
               posts={posts}
             />
             <KanbanColumn
               status="in_progress"
               onAddClick={() => handleAddPost("in_progress")}
-              // posts={initialPosts}
               posts={posts}
             />
             <KanbanColumn
               status="done"
               onAddClick={() => handleAddPost("done")}
-              // posts={initialPosts}
               posts={posts}
             />
           </div>

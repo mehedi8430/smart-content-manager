@@ -55,13 +55,14 @@ const bulkUpdatePostsHandler = catchAsync(async (req: Request, res: Response) =>
   const body = req.body as { posts: { id: string; status?: string; order?: number }[] };
 
   const updated = await bulkUpdatePosts(campaignId, userId, body.posts);
+  const sorted = updated.sort((a, b) => a.order - b.order);
 
   sendResponse(
     res,
     200,
     true,
     'Posts bulk-updated successfully',
-    updated
+    sorted
   );
 });
 

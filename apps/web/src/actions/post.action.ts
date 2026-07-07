@@ -171,7 +171,7 @@ export async function bulkUpdatePostsAction(
             `/campaigns/${campaignId}/posts/bulk-update`,
             {
                 method: "PATCH",
-                body: JSON.stringify({ items }),
+                body: JSON.stringify({ posts: items }),
             }
         );
 

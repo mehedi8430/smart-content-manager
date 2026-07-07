@@ -1,6 +1,3 @@
-"use client";
-
-import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function SkeletonBoard() {
@@ -31,7 +28,7 @@ export function SkeletonBoard() {
         {[1, 2, 3].map((col) => (
           <div
             key={col}
-            className="min-w-[350px] space-y-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-900"
+            className="min-w-87.5 space-y-3 rounded-lg border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-900"
           >
             {/* Column Header */}
             <Skeleton className="h-8 w-32 mb-4" />

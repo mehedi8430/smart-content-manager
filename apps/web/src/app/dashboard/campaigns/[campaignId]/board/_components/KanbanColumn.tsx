@@ -1,4 +1,11 @@
-import { PostCard } from "./PostCard";
+"use client";
+
+import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { DraggablePostCard } from "./DraggablePostCard";
 import { Button } from "@/components/ui/button";
 import { Plus, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,8 +22,21 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
   const config = getColumnConfig(status);
   const postsByStatus = posts?.filter((post) => post.status === status) || [];
 
+  const { setNodeRef, isOver } = useDroppable({
+    id: status,
+  });
+
+  // Create array of post IDs for SortableContext
+  const allPostIds = posts.map((p) => p.id);
+
   return (
-    <div className={cn("rounded-lg flex flex-col min-w-87.5 max-w-100")}>
+    <div
+      ref={setNodeRef} // Register this div as a drop zone
+      className={cn(
+        "rounded-lg flex flex-col min-w-87.5 max-w-100 transition-all",
+        isOver && "ring-2 ring-primary ring-offset-2", // Highlight when hovering
+      )}
+    >
       {/* Column Header */}
       <div
         className={cn(
@@ -40,6 +60,7 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
         className={cn(
           "flex-1 p-3 space-y-2 rounded-b-lg overflow-y-auto min-h-125",
           config.color,
+          isOver && "bg-primary/5", // Subtle background highlight
         )}
       >
         {postsByStatus.length === 0 ? (
@@ -60,11 +81,14 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
             </p>
           </div>
         ) : (
-          <>
+          <SortableContext
+            items={allPostIds}
+            strategy={verticalListSortingStrategy}
+          >
             {postsByStatus.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <DraggablePostCard key={post.id} post={post} />
             ))}
-          </>
+          </SortableContext>
         )}
 
         {/* Add Post Button */}

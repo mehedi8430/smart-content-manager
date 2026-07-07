@@ -34,10 +34,10 @@ export function DraggablePostCard({ post }: DraggablePostCardProps) {
       className={cn(
         "relative",
         isDragging && "z-50",
-        isOver && "ring-2 ring-primary" // Highlight if hovering over this card
+        isOver && "ring-1 rounded-2xl ring-border", // Highlight if hovering over this card
       )}
     >
-      <PostCardContent 
+      <PostCardContent
         post={post}
         dragAttributes={attributes}
         dragListeners={listeners}

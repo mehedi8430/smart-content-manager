@@ -11,6 +11,8 @@ import {
   useSensor,
   useSensors,
   DragStartEvent,
+  TouchSensor,
+  KeyboardSensor,
 } from "@dnd-kit/core";
 import { useBoard } from "../../../../../../providers/board-provider";
 import { KanbanColumn } from "./KanbanColumn";
@@ -23,13 +25,14 @@ import { Post, PostStatus } from "@/types/post.type";
 import { updatePostStatusAction } from "@/actions/post.action";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 interface KanbanBoardProps {
   campaignName: string;
   posts: Post[];
 }
 
-export function KanbanBoard({
+export function KanbanBoardTest({
   campaignName,
   posts: initialPosts,
 }: KanbanBoardProps) {
@@ -44,93 +47,43 @@ export function KanbanBoard({
     [activeId, posts],
   );
 
-  // Configure sensors for drag detection
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      distance: 8,
-    } as Parameters<typeof useSensor>[1]),
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    setActiveId(active.id as string); // "Which card am I dragging?"
+    setActiveId(active.id as string);
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    // console.log({ over, active });
+    setActiveId(null);
 
-    if (!over) return;
-
-    const activePost = posts.find((p) => p.id === active.id);
-    if (!activePost) return;
-
-    // If dragging over a column (status), move the post to that column
-    const validStatuses: PostStatus[] = ["todo", "in_progress", "done"];
-
-    if (validStatuses.includes(over.id as PostStatus)) {
-      const newStatus = over.id as PostStatus;
-      console.log({ newStatus });
-
-      if (activePost.status !== newStatus) {
-        setPosts((prevPosts) =>
-          prevPosts.map((p) =>
-            p.id === activePost.id ? { ...p, status: newStatus } : p,
-          ),
-        );
-      }
+    //Handle item replacing itself
+    if (active.id === over?.id) {
+      return;
     }
-  };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    console.log({ over, active });
-    setActiveId(null); // Hide the overlay
-
-    if (!over) return;
-
-    const activePost = posts.find((p) => p.id === active.id);
-    console.log({ activePost });
-    if (!activePost) return;
-
-    const validStatuses: PostStatus[] = ["todo", "in_progress", "done"];
-    const newStatus = validStatuses.includes(over.id as PostStatus)
-      ? (over.id as PostStatus)
-      : activePost.status;
-    // console.log({ newStatus });
-
-    // If status changed, update on the server
-    if (newStatus !== activePost.status) {
-      try {
-        const result = await updatePostStatusAction(
-          campaignId,
-          activePost.id,
-          newStatus,
-        );
-
-        if (!result.success) {
-          toast.error(result.message || "Failed to move post");
-          // Revert the local state
-          setPosts(initialPosts);
-        } else {
-          toast.success(result.message || "Post moved successfully");
-          router.refresh();
-        }
-      } catch (error) {
-        console.error("Failed to move post:", error);
-        toast.error("Failed to move post");
-        // Revert the local state
-        setPosts(initialPosts);
-      }
-    }
-  };
+    setPosts((posts) => {
+      // Postion of the item being dragged
+      const itemOriginalPos = posts.findIndex((item) => item.id === active.id);
+      const itemNewPos = posts.findIndex((item) => item.id === over?.id);
+      //Postion of the item being replace
+      //Swap the and generate a new list
+      return arrayMove(posts, itemOriginalPos, itemNewPos);
+    });
+  }
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners} // Calculate if hovering over a droppable
       onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-8">

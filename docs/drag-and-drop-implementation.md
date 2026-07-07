@@ -593,9 +593,8 @@ Toast notification (success or error)
 
 ## Resources
 
-- [Official `@dnd-kit` Docs](https://docs.dnd-kit.com/)
-- [API Reference](https://docs.dnd-kit.com/api-reference)
-- [Examples](https://github.com/clauderic/dnd-kit/tree/master/packages/react/examples)
+- [Official `@dnd-kit` Docs(legacy)](https://dndkit.com/legacy/introduction/installation/)
+- [Official `@dnd-kit` Docs](https://dndkit.com/)
 
 ---
 

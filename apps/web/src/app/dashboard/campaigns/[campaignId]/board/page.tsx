@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 import { BoardProvider } from "../../../../../providers/board-provider";
-import { KanbanBoard } from "./_components/KanbanBoard";
 import { SkeletonBoard } from "./_components/SkeletonBoard";
 import { getCampaignAction } from "@/actions/campaign.action";
 import { listPostsAction } from "@/actions/post.action";
 import { PostStatus } from "@/types/post.type";
+import { KanbanBoardTest } from "./_components/KanbanBoardTest";
 
 export default async function BoardPage({
   params,
@@ -27,7 +27,8 @@ export default async function BoardPage({
     <div className="container mx-auto md:p-6">
       <BoardProvider campaignId={campaignId}>
         <Suspense fallback={<SkeletonBoard />}>
-          <KanbanBoard campaignName={campaignName} posts={posts?.data || []} />
+          <KanbanBoardTest campaignName={campaignName} posts={posts?.data || []} />
+          {/* <KanbanBoard campaignName={campaignName} posts={posts?.data || []} /> */}
         </Suspense>
       </BoardProvider>
     </div>

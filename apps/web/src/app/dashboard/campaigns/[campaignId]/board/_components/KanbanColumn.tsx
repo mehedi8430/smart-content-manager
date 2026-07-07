@@ -21,7 +21,7 @@ interface KanbanColumnProps {
 export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
   const config = getColumnConfig(status);
   const postsByStatus = posts?.filter((post) => post.status === status) || [];
-  
+
   const { setNodeRef, isOver } = useDroppable({
     id: status,
   });
@@ -34,7 +34,7 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
       ref={setNodeRef} // Register this div as a drop zone
       className={cn(
         "rounded-lg flex flex-col min-w-87.5 max-w-100 transition-all",
-        isOver && "ring-2 ring-primary ring-offset-2" // Highlight when hovering
+        isOver && "ring-2 ring-primary ring-offset-2", // Highlight when hovering
       )}
     >
       {/* Column Header */}
@@ -42,7 +42,7 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
         className={cn(
           "p-4 rounded-t-lg border-l-4",
           config.accent,
-          "bg-border/40 border-b border-border"
+          "bg-border/40 border-b border-border",
         )}
       >
         <div className="flex items-center justify-between">
@@ -60,7 +60,7 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
         className={cn(
           "flex-1 p-3 space-y-2 rounded-b-lg overflow-y-auto min-h-125",
           config.color,
-          isOver && "bg-primary/5" // Subtle background highlight
+          isOver && "bg-primary/5", // Subtle background highlight
         )}
       >
         {postsByStatus.length === 0 ? (
@@ -104,4 +104,3 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
     </div>
   );
 }
-

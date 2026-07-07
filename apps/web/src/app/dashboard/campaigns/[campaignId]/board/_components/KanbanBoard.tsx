@@ -12,6 +12,7 @@ import {
   DragStartEvent,
   TouchSensor,
   KeyboardSensor,
+  DragOverEvent,
 } from "@dnd-kit/core";
 import { useBoard } from "../../../../../../providers/board-provider";
 import { KanbanColumn } from "./KanbanColumn";
@@ -20,7 +21,7 @@ import { DeletePostDialog } from "./DeletePostDialog";
 import { BoardHeader } from "./BoardHeader";
 import { PostCardContent } from "./PostCardContent";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Post } from "@/types/post.type";
+import { Post, PostStatus } from "@/types/post.type";
 import { bulkUpdatePostsAction } from "@/actions/post.action";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
@@ -54,31 +55,65 @@ export function KanbanBoard({
     }),
   );
 
-  const handleDragStart = (event: DragStartEvent) => {
+  function handleDragStart(event: DragStartEvent) {
     const { active } = event;
     setActiveId(active.id as string);
-  };
+  }
 
+  // onDragOver does the column switching
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activePost = posts.find((p) => p.id === active.id);
+    if (!activePost) return;
+
+    // over.id is either a postId or a column status ("todo" | "in_progress" | "done")
+    const overPost = posts.find((p) => p.id === over.id);
+    const newStatus = overPost ? overPost.status : (over.id as PostStatus);
+
+    if (activePost.status === newStatus) return;
+
+    // Optimistically move the card to the new column
+    setPosts((prev) =>
+      prev.map((p) => (p.id === active.id ? { ...p, status: newStatus } : p)),
+    );
+  }
+
+  // onDragEnd does the ordering and API sync.
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setActiveId(null);
+    if (!over) return;
 
-    if (!over || active.id === over.id) return;
+    const activePost = posts.find((p) => p.id === active.id);
+    const overPost = posts.find((p) => p.id === over.id);
+    const targetStatus = overPost ? overPost.status : (over.id as PostStatus);
 
-    const oldIndex = posts.findIndex((p) => p.id === active.id);
-    const newIndex = posts.findIndex((p) => p.id === over.id);
-    const reorderedPosts = arrayMove(posts, oldIndex, newIndex);
+    // Get final column posts after dragOver already mutated state
+    const columnPosts = posts.filter((p) => p.status === targetStatus);
 
-    // optimistic update
-    setPosts(reorderedPosts);
+    const oldIndex = columnPosts.findIndex((p) => p.id === active.id);
+    const newIndex = columnPosts.findIndex((p) => p.id === over.id);
+    const reordered = arrayMove(columnPosts, oldIndex, newIndex);
 
-    // build bulk update from the reordered array (same source of truth)
-    const bulkUpdateItems = reorderedPosts.map((post, index) => ({
+    // Optimistically reorder within same column if needed
+    if (active.id !== over.id && activePost?.status === targetStatus) {
+      setPosts((prev) => [
+        ...prev.filter((p) => p.status !== targetStatus),
+        ...reordered,
+      ]);
+    }
+    
+    // build bulk update from the reordered array
+    const bulkItems = reordered.map((post, index) => ({
       id: post.id,
+      status: post.status,
       order: index,
     }));
 
-    bulkUpdatePostsAction(campaignId, bulkUpdateItems)
+    // Sync to API — send entire board state
+    bulkUpdatePostsAction(campaignId, bulkItems)
       .then((result) => {
         if (result.error) {
           console.error("Failed to update post order:", result.error);
@@ -93,6 +128,7 @@ export function KanbanBoard({
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-8">

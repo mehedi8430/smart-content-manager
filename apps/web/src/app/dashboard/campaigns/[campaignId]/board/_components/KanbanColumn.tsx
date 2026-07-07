@@ -27,7 +27,7 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
   });
 
   // Create array of post IDs for SortableContext
-  const postIds = postsByStatus.map((post) => post.id);
+  const allPostIds = posts.map((p) => p.id);
 
   return (
     <div
@@ -82,7 +82,7 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
           </div>
         ) : (
           <SortableContext
-            items={postIds}
+            items={allPostIds}
             strategy={verticalListSortingStrategy}
           >
             {postsByStatus.map((post) => (

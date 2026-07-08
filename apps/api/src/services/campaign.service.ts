@@ -1,6 +1,6 @@
-import { prisma } from '@/config/db';
+import { prisma } from '@/config/db.config';
 import { ApiError } from '@/utils/apiResponse';
-import logger from '@/config/logger';
+import logger from '@/config/logger.config';
 import type {
   CreateCampaignInput,
   UpdateCampaignInput,
@@ -155,7 +155,7 @@ export const updateCampaign = async (
     if (data.name !== undefined) {
       updateData.name = data.name;
     }
-    
+
     if (data.description !== undefined) {
       updateData.description = data.description;
     }

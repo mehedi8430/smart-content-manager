@@ -1,6 +1,6 @@
-import { prisma } from '@/config/db';
+import { prisma } from '@/config/db.config';
 import { ApiError } from '@/utils/apiResponse';
-import logger from '@/config/logger';
+import logger from '@/config/logger.config';
 import type { CreatePostInput, UpdatePostInput } from '@/validators/post.validation';
 
 /**

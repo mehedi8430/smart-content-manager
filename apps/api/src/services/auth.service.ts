@@ -1,6 +1,6 @@
-import { prisma } from '@/config/db';
+import { prisma } from '@/config/db.config';
 import { ApiError } from '@/utils/apiResponse';
-import logger from '@/config/logger';
+import logger from '@/config/logger.config';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { RegisterInput, LoginInput } from '@/validators/auth.validator';

@@ -1,4 +1,4 @@
-import { prisma } from '@/config/db';
+import { prisma } from '@/config/db.config';
 import { CookieOptions, Response } from 'express';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { ApiError } from './apiResponse';

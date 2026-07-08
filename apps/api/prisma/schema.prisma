@@ -50,13 +50,19 @@ model Post {
 }
 
 model AiOutput {
-  id         String   @id @default(uuid())
-  type       String // ad | caption | email
-  prompt     String
-  content    String   @db.Text
-  campaignId String
-  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
+  id          String   @id @default(uuid())
+  type        String   // ad | caption | email
+  title       String?
+  prompt      String
+  tone        String?
+  content     String   @db.Text
+  status      String   @default("completed") // pending | completed | failed
+  model       String?
+  tokensUsed  Int?
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model ChatSession {

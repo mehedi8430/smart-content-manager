@@ -18,6 +18,7 @@
     "db:deploy": "bunx --bun prisma migrate deploy"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.2",

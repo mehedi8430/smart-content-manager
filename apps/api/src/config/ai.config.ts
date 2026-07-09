@@ -1,7 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error('ANTHROPIC_API_KEY is required but not set in environment variables');
+export const AI_MOCK_MODE = process.env.AI_MOCK_MODE === 'true' || !process.env.ANTHROPIC_API_KEY;
+
+if (!AI_MOCK_MODE && !process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY is required unless AI_MOCK_MODE=true');
 }
 
 export const anthropic = new Anthropic({

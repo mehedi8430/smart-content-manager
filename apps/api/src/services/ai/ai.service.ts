@@ -1,7 +1,8 @@
-import { anthropic, AI_MODEL, AI_MAX_TOKENS } from '../../config/ai.config';
+import { anthropic, AI_MODEL, AI_MAX_TOKENS, AI_MOCK_MODE } from '../../config/ai.config';
 import { GenerateContentInput, GenerationResult, AiGenerationError } from '../../types/ai.types';
 import { getPromptBuilder } from './prompts';
 import logger from '../../config/logger.config';
+import { mockStreamGenerateContent } from './ai.mock.service';
 
 export async function generateContent(
     input: GenerateContentInput,
@@ -41,6 +42,11 @@ export async function* streamGenerateContent(
     input: GenerateContentInput,
     campaignContext: { name: string; description: string | null }
 ): AsyncGenerator<string, GenerationResult> {
+    if (AI_MOCK_MODE) {
+        const result = yield* mockStreamGenerateContent(input);
+        return result;
+    }
+
     let fullContent = '';
     let inputTokens = 0;
     let outputTokens = 0;
@@ -84,7 +90,10 @@ export async function* streamGenerateContent(
             model: AI_MODEL,
         };
     } catch (error) {
-        logger.error('AI streaming error', { error });
+        logger.error('AI streaming error', {
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+        });
         throw new AiGenerationError('Failed to generate content. Please try again.');
     }
 }

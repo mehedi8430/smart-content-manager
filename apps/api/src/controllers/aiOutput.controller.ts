@@ -95,11 +95,11 @@ const generateStream = async (req: Request, res: Response) => {
 
         // Stream generation
         const generator = streamGenerateContent(data, campaignContext);
-        let result: { content: string; tokensUsed: number; model: string } | null = null;
 
         for await (const chunk of generator) {
             if (isDisconnected) {
                 logger.info('Client disconnected during generation');
+                await generator.return(undefined as any); // let the generator clean up
                 break;
             }
 
@@ -107,7 +107,6 @@ const generateStream = async (req: Request, res: Response) => {
             res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
         }
 
-        // Get the final result from the generator
         const finalResult = await generator.next();
 
         if (finalResult.value && typeof finalResult.value !== 'string') {
@@ -115,6 +114,31 @@ const generateStream = async (req: Request, res: Response) => {
             model = finalResult.value.model;
             fullContent = finalResult.value.content;
         }
+
+        // Drive the generator manually so we can capture BOTH
+        // the yielded chunks AND the final return value.
+        // while (true) {
+        //     const step = await generator.next();
+
+        //     if (step.done) {
+        //         // step.value here is the GenerationResult returned by the generator
+        //         if (step.value) {
+        //             fullContent = step.value.content;
+        //             tokensUsed = step.value.tokensUsed;
+        //             model = step.value.model;
+        //         }
+        //         break;
+        //     }
+
+        //     if (isDisconnected) {
+        //         logger.info('Client disconnected during generation');
+        //         await generator.return(undefined as any); // let the generator clean up
+        //         break;
+        //     }
+
+        //     fullContent += step.value;
+        //     res.write(`data: ${JSON.stringify({ type: 'chunk', content: step.value })}\n\n`);
+        // }
 
         if (isDisconnected) {
             res.end();
@@ -139,7 +163,10 @@ const generateStream = async (req: Request, res: Response) => {
         res.write(`data: ${JSON.stringify({ type: 'done', output: savedRecord })}\n\n`);
         res.end();
     } catch (error) {
-        logger.error('AI generation error', { error });
+        logger.error('AI generation error', {
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+        });
         res.write(`data: ${JSON.stringify({ type: 'error', message: 'Generation failed, please try again.' })}\n\n`);
         res.end();
     }
@@ -286,7 +313,10 @@ const remove = async (req: Request, res: Response) => {
 
     await deleteAiOutput(id, campaignId, userId);
 
-    res.status(204).send();
+    res.status(200).json({
+        success: true,
+        message: 'AI output deleted successfully',
+    });
 };
 
 export {

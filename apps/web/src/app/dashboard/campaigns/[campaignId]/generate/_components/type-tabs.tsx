@@ -5,10 +5,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAiGenerator, ContentType } from "@/providers/ai-generator-provider";
 
 export function TypeTabs() {
-  const { state, setField } = useAiGenerator();
+  const { state, setActiveType } = useAiGenerator();
 
   const handleTypeChange = (value: string) => {
-    setField("activeType", value as ContentType);
+    setActiveType(value as ContentType);
   };
 
   return (

@@ -104,7 +104,7 @@ export function KanbanBoard({
         ...reordered,
       ]);
     }
-    
+
     // build bulk update from the reordered array
     const bulkItems = reordered.map((post, index) => ({
       id: post.id,
@@ -132,7 +132,11 @@ export function KanbanBoard({
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-8">
-        <BoardHeader campaignName={campaignName} totalPosts={posts.length} />
+        <BoardHeader
+          campaignName={campaignName}
+          totalPosts={posts.length}
+          campaignId={campaignId}
+        />
 
         {/* Kanban Columns */}
         <ScrollArea className="w-full">

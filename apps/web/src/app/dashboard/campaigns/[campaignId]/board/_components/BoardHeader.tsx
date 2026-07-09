@@ -1,16 +1,21 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { useBoard } from "../../../../../../providers/board-provider";
-import BoardSearchFilter from "./BoardSearchFilter";
+import Link from "next/link";
 
 interface BoardHeaderProps {
   campaignName: string;
   totalPosts: number;
+  campaignId: string;
 }
 
-export function BoardHeader({ campaignName, totalPosts }: BoardHeaderProps) {
+export function BoardHeader({
+  campaignName,
+  totalPosts,
+  campaignId,
+}: BoardHeaderProps) {
   const { handleAddPost } = useBoard();
 
   return (
@@ -33,6 +38,15 @@ export function BoardHeader({ campaignName, totalPosts }: BoardHeaderProps) {
             <Plus className="h-4 w-4" />
             New Post
           </Button>
+          <Link href={`/dashboard/campaigns/${campaignId}/generate`}>
+            <Button
+              variant="outline"
+              className="border-sidebar-primary/50! text-sidebar-primary hover:text-sidebar-primary/80 cursor-pointer"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Generate AI Content
+            </Button>
+          </Link>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted">
             <span className="text-sm font-semibold">{totalPosts}</span>
             <span className="text-xs text-muted-foreground">

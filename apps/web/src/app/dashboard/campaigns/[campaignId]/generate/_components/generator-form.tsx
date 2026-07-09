@@ -20,7 +20,8 @@ import {
 } from "@/providers/ai-generator-provider";
 
 export function GeneratorForm() {
-  const { state, setField, startGeneration } = useAiGenerator();
+  const { state, setPrompt, setTone, setLength, setKeywords, startGeneration } =
+    useAiGenerator();
 
   const handleGenerate = () => {
     // Convert keywords from comma-separated string to string[]
@@ -46,7 +47,7 @@ export function GeneratorForm() {
           id="prompt"
           placeholder="Describe what you want to generate..."
           value={state.prompt}
-          onChange={(e) => setField("prompt", e.target.value)}
+          onChange={(e) => setPrompt(e.target.value)}
           className="min-h-32"
         />
       </div>
@@ -55,7 +56,7 @@ export function GeneratorForm() {
         <Label htmlFor="tone">Tone</Label>
         <Select
           value={state.tone}
-          onValueChange={(value) => setField("tone", value as ToneType)}
+          onValueChange={(value) => setTone(value as ToneType)}
         >
           <SelectTrigger id="tone">
             <SelectValue />
@@ -93,7 +94,7 @@ export function GeneratorForm() {
           id="keywords"
           placeholder="keyword1, keyword2, keyword3"
           value={state.keywords}
-          onChange={(e) => setField("keywords", e.target.value)}
+          onChange={(e) => setKeywords(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
           Separate multiple keywords with commas

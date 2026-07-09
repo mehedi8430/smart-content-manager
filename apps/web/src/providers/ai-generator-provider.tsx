@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useReducer, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 
 export type ContentType = "Ad" | "Caption" | "Email";
 export type ToneType =
@@ -23,75 +23,13 @@ interface GeneratorState {
   savedOutputs: string[];
 }
 
-type GeneratorAction =
-  | { type: "SET_FIELD"; field: keyof GeneratorState; value: any }
-  | { type: "START_GENERATION" }
-  | { type: "APPEND_CHUNK"; chunk: string }
-  | { type: "COMPLETE_GENERATION" }
-  | { type: "SET_ERROR"; error: string }
-  | { type: "RESET" };
-
-const initialState: GeneratorState = {
-  activeType: "Ad",
-  prompt: "",
-  tone: "Professional",
-  length: "Medium",
-  keywords: "",
-  isGenerating: false,
-  streamedContent: "",
-  error: null,
-  savedOutputs: [],
-};
-
-function generatorReducer(
-  state: GeneratorState,
-  action: GeneratorAction,
-): GeneratorState {
-  switch (action.type) {
-    case "SET_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-    case "START_GENERATION":
-      return {
-        ...state,
-        isGenerating: true,
-        streamedContent: "",
-        error: null,
-      };
-    case "APPEND_CHUNK":
-      return {
-        ...state,
-        streamedContent: state.streamedContent + action.chunk,
-      };
-    case "COMPLETE_GENERATION":
-      return {
-        ...state,
-        isGenerating: false,
-        savedOutputs: [...state.savedOutputs, state.streamedContent],
-      };
-    case "SET_ERROR":
-      return {
-        ...state,
-        isGenerating: false,
-        error: action.error,
-      };
-    case "RESET":
-      return {
-        ...initialState,
-        activeType: state.activeType,
-        savedOutputs: state.savedOutputs,
-      };
-    default:
-      return state;
-  }
-}
-
 interface AiGeneratorContextType {
   state: GeneratorState;
-  dispatch: React.Dispatch<GeneratorAction>;
-  setField: (field: keyof GeneratorState, value: any) => void;
+  setActiveType: (type: ContentType) => void;
+  setPrompt: (prompt: string) => void;
+  setTone: (tone: ToneType) => void;
+  setLength: (length: LengthType) => void;
+  setKeywords: (keywords: string) => void;
   startGeneration: () => void;
   appendChunk: (chunk: string) => void;
   completeGeneration: () => void;
@@ -104,38 +42,93 @@ const AiGeneratorContext = createContext<AiGeneratorContextType | undefined>(
 );
 
 export function AiGeneratorProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(generatorReducer, initialState);
+  const [state, setState] = useState<GeneratorState>({
+    activeType: "Ad",
+    prompt: "",
+    tone: "Professional",
+    length: "Medium",
+    keywords: "",
+    isGenerating: false,
+    streamedContent: "",
+    error: null,
+    savedOutputs: [],
+  });
 
-  const setField = (field: keyof GeneratorState, value: any) => {
-    dispatch({ type: "SET_FIELD", field, value });
+  const setActiveType = (type: ContentType) => {
+    setState((prev) => ({ ...prev, activeType: type }));
+  };
+
+  const setPrompt = (prompt: string) => {
+    setState((prev) => ({ ...prev, prompt }));
+  };
+
+  const setTone = (tone: ToneType) => {
+    setState((prev) => ({ ...prev, tone }));
+  };
+
+  const setLength = (length: LengthType) => {
+    setState((prev) => ({ ...prev, length }));
+  };
+
+  const setKeywords = (keywords: string) => {
+    setState((prev) => ({ ...prev, keywords }));
   };
 
   const startGeneration = () => {
-    dispatch({ type: "START_GENERATION" });
+    setState((prev) => ({
+      ...prev,
+      isGenerating: true,
+      streamedContent: "",
+      error: null,
+    }));
   };
 
   const appendChunk = (chunk: string) => {
-    dispatch({ type: "APPEND_CHUNK", chunk });
+    setState((prev) => ({
+      ...prev,
+      streamedContent: prev.streamedContent + chunk,
+    }));
   };
 
   const completeGeneration = () => {
-    dispatch({ type: "COMPLETE_GENERATION" });
+    setState((prev) => ({
+      ...prev,
+      isGenerating: false,
+      savedOutputs: [...prev.savedOutputs, prev.streamedContent],
+    }));
   };
 
   const setError = (error: string) => {
-    dispatch({ type: "SET_ERROR", error });
+    setState((prev) => ({
+      ...prev,
+      isGenerating: false,
+      error,
+    }));
   };
 
   const reset = () => {
-    dispatch({ type: "RESET" });
+    setState((prev) => ({
+      activeType: prev.activeType,
+      prompt: "",
+      tone: "Professional",
+      length: "Medium",
+      keywords: "",
+      isGenerating: false,
+      streamedContent: "",
+      error: null,
+      savedOutputs: prev.savedOutputs,
+    }));
   };
 
   return (
     <AiGeneratorContext.Provider
       value={{
         state,
-        dispatch,
-        setField,
+        setActiveType,
+        setPrompt,
+        setTone,
+        setLength,
+        setKeywords,
         startGeneration,
         appendChunk,
         completeGeneration,

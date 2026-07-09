@@ -1,4 +1,4 @@
-import { prisma } from '@/config/db';
+import { prisma } from '@/config/db.config';
 import { ApiError } from '@/utils/apiResponse';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';

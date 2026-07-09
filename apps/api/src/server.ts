@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import app from './app';
-import logger from './config/logger';
-import { connectDB, disconnectDB } from './config/db';
+import logger from './config/logger.config';
+import { connectDB, disconnectDB } from './config/db.config';
 
 // Load environment variables first
 config();

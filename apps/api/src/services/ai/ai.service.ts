@@ -61,10 +61,15 @@ export async function* streamGenerateContent(
             ],
         });
 
+        // Process streaming events from Anthropic API:
+        // - content_block_delta with text_delta: yield text chunks for SSE and accumulate full content
+        // - message_start: capture input token usage
+        // - message_delta: capture output token usage
         for await (const event of stream) {
             if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
                 const delta = event.delta.text;
                 fullContent += delta;
+                // sends this chunk to the caller immediately (for SSE streaming to the client)
                 yield delta;
             } else if (event.type === 'message_start') {
                 inputTokens = event.message.usage.input_tokens;

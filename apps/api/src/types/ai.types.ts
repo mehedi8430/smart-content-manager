@@ -1,7 +1,6 @@
 export type ContentType = 'ad' | 'caption' | 'email';
 
 export interface GenerateContentInput {
-    campaignId: string;
     type: ContentType;
     prompt: string;
     tone?: string;

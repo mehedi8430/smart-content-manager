@@ -11,8 +11,56 @@ import {
 import type { GenerateContentInput, RegenerateContentInput } from '@/validators/aiOutput.validator';
 import logger from '@/config/logger.config';
 
+// This implementation uses Async Generators + Server-Sent Events (SSE) to stream AI responses from Anthropic to the browser in real time while saving the final result to the database
+// Frontend
+//    │
+//    │ POST /generate
+//    ▼
+// generateStream()
+//    │
+//    ▼
+// streamGenerateContent()
+//    │
+//    ▼
+// Claude
+//    │
+//    ├── "Hello"
+//    │      ▲
+//    │      │ yield
+//    ▼
+// generateStream()
+//    │
+//    ├── res.write(chunk)
+//    ▼
+// Browser updates UI
+
+// Claude
+//    │
+//    ├── " World"
+//    │
+//    ▼
+// Browser updates UI
+
+// Claude
+//    │
+//    ├── finished
+//    ▼
+// streamGenerateContent() returns
+// {
+//   content,
+//   tokensUsed,
+//   model
+// }
+//    │
+//    ▼
+// generateStream()
+//    │
+//    ├── save database
+//    ├── send "done"
+//    └── end response
+
 /**
- * Generate AI content with streaming (SSE)
+ * Generate AI content with streaming (SSE).
  * @route POST /api/v1/campaigns/:campaignId/ai-outputs/generate
  */
 const generateStream = async (req: Request, res: Response) => {
@@ -61,6 +109,7 @@ const generateStream = async (req: Request, res: Response) => {
 
         // Get the final result from the generator
         const finalResult = await generator.next();
+
         if (finalResult.value && typeof finalResult.value !== 'string') {
             tokensUsed = finalResult.value.tokensUsed;
             model = finalResult.value.model;

@@ -20,9 +20,12 @@ const router: Router = createRouter({ mergeParams: true });
 
 // Rate limiter for AI generation endpoints
 const aiGenerationLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
+    windowMs: 60 * 1000,
     max: 5, // 5 generations per minute per IP
-    message: { success: false, message: 'Too many generation requests, please slow down.' },
+    message: {
+        success: false,
+        message: 'Too many generation requests, please slow down.'
+    },
 });
 
 // All AI output routes require authentication

@@ -33,7 +33,7 @@ export function KanbanColumn({ status, onAddClick, posts }: KanbanColumnProps) {
     <div
       ref={setNodeRef} // Register this div as a drop zone
       className={cn(
-        "rounded-lg flex flex-col min-w-87.5 max-w-100 transition-all",
+        "rounded-lg flex flex-col w-full transition-all",
         isOver && "ring-2 ring-primary ring-offset-2", // Highlight when hovering
       )}
     >

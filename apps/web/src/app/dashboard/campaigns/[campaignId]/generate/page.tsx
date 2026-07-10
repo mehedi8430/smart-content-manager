@@ -28,7 +28,7 @@ export default async function GeneratePage({
             </p>
           </div>
           <Link href={`/dashboard/campaigns/${campaignId}/board`}>
-            <Button variant="outline">
+            <Button variant="outline" className="cursor-pointer">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Board
             </Button>
@@ -41,7 +41,7 @@ export default async function GeneratePage({
           <div className="space-y-6">
             <GeneratorForm />
           </div>
-          <div className="min-h-[400px]">
+          <div className="min-h-100">
             <GeneratorOutput />
           </div>
         </div>

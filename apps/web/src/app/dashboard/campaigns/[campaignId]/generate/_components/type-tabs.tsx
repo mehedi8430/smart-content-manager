@@ -14,15 +14,15 @@ export function TypeTabs() {
   return (
     <Tabs value={state.activeType} onValueChange={handleTypeChange}>
       <TabsList>
-        <TabsTrigger value="Ad">
+        <TabsTrigger value="Ad" className="cursor-pointer">
           <Megaphone className="h-4 w-4 mr-2" />
           Ad
         </TabsTrigger>
-        <TabsTrigger value="Caption">
+        <TabsTrigger value="Caption" className="cursor-pointer">
           <MessageSquare className="h-4 w-4 mr-2" />
           Caption
         </TabsTrigger>
-        <TabsTrigger value="Email">
+        <TabsTrigger value="Email" className="cursor-pointer">
           <Mail className="h-4 w-4 mr-2" />
           Email
         </TabsTrigger>

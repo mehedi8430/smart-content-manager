@@ -52,6 +52,7 @@ export function GeneratorForm() {
         />
       </div>
 
+      {/* Tone */}
       <div className="space-y-2">
         <Label htmlFor="tone">Tone</Label>
         <Select
@@ -71,11 +72,12 @@ export function GeneratorForm() {
         </Select>
       </div>
 
+      {/* Length */}
       <div className="space-y-2">
         <Label htmlFor="length">Length</Label>
         <Select
           value={state.length}
-          onValueChange={(value) => setField("length", value as LengthType)}
+          onValueChange={(value) => setLength(value as LengthType)}
         >
           <SelectTrigger id="length">
             <SelectValue />

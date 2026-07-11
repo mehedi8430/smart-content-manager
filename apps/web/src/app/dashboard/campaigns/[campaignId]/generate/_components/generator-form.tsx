@@ -13,50 +13,61 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useRef } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { TypeTabs } from "./type-tabs";
-import {
-  useAiGenerator,
-  ToneType,
-  LengthType,
-} from "@/providers/ai-generator-provider";
+import { useAiGenerator } from "@/providers/ai-generator-provider";
 import { streamGeneration } from "@/lib/ai-stream-client";
 
+const formSchema = z.object({
+  type: z.enum(["Ad", "Caption", "Email"]),
+  prompt: z.string().min(1, "Prompt is required"),
+  tone: z.string().optional(),
+  length: z.string().optional(),
+  keywords: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 export function GeneratorForm({ campaignId }: { campaignId: string }) {
-  const {
-    state,
-    setPrompt,
-    setTone,
-    setLength,
-    setKeywords,
-    startGeneration,
-    appendChunk,
-    completeGeneration,
-    setError,
-  } = useAiGenerator();
+  const { state, startGeneration, appendChunk, completeGeneration, setError } =
+    useAiGenerator();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      type: "Ad",
+      prompt: "",
+      tone: "Professional",
+      length: "Medium",
+      keywords: "",
+    },
+  });
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const handleGenerate = () => {
+  const handleGenerate = (values: FormValues) => {
     // Convert keywords from comma-separated string to string[]
-    const keywordsArray = state.keywords
-      .split(",")
-      .map((k) => k.trim())
-      .filter((k) => k.length > 0);
+    const keywordsArray = values.keywords
+      ? values.keywords
+          .split(",")
+          .map((k) => k.trim())
+          .filter((k) => k.length > 0)
+      : [];
 
     // Convert UI types to API types
-    const typeMap: Record<typeof state.activeType, "ad" | "caption" | "email"> =
-      {
-        Ad: "ad",
-        Caption: "caption",
-        Email: "email",
-      };
+    const typeMap: Record<typeof values.type, "ad" | "caption" | "email"> = {
+      Ad: "ad",
+      Caption: "caption",
+      Email: "email",
+    };
 
-    const lengthMap: Record<typeof state.length, "short" | "medium" | "long"> =
-      {
-        Short: "short",
-        Medium: "medium",
-        Long: "long",
-      };
+    const lengthMap: Record<string, "short" | "medium" | "long"> = {
+      Short: "short",
+      Medium: "medium",
+      Long: "long",
+    };
 
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController();
@@ -68,11 +79,11 @@ export function GeneratorForm({ campaignId }: { campaignId: string }) {
     streamGeneration(
       campaignId,
       {
-        type: typeMap[state.activeType],
-        prompt: state.prompt,
-        tone: state.tone,
+        type: typeMap[values.type],
+        prompt: values.prompt,
+        tone: values.tone,
         keywords: keywordsArray.length > 0 ? keywordsArray : undefined,
-        length: lengthMap[state.length],
+        length: lengthMap[values.length as "Short" | "Medium" | "Long"],
       },
       {
         onChunk: (text) => appendChunk(text),
@@ -92,16 +103,18 @@ export function GeneratorForm({ campaignId }: { campaignId: string }) {
   };
 
   return (
-    <div className="space-y-6">
-      <TypeTabs />
+    <form
+      onSubmit={(e) => form.handleSubmit(handleGenerate)(e)}
+      className="space-y-6"
+    >
+      <TypeTabs control={form.control} name="type" />
 
       <div className="space-y-2">
         <Label htmlFor="prompt">What should this be about?</Label>
         <Textarea
           id="prompt"
           placeholder="Describe what you want to generate..."
-          value={state.prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          {...form.register("prompt")}
           className="min-h-32"
         />
       </div>
@@ -109,39 +122,45 @@ export function GeneratorForm({ campaignId }: { campaignId: string }) {
       {/* Tone */}
       <div className="space-y-2">
         <Label htmlFor="tone">Tone</Label>
-        <Select
-          value={state.tone}
-          onValueChange={(value) => setTone(value as ToneType)}
-        >
-          <SelectTrigger id="tone">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Professional">Professional</SelectItem>
-            <SelectItem value="Playful">Playful</SelectItem>
-            <SelectItem value="Urgent">Urgent</SelectItem>
-            <SelectItem value="Friendly">Friendly</SelectItem>
-            <SelectItem value="Bold">Bold</SelectItem>
-          </SelectContent>
-        </Select>
+        <Controller
+          name="tone"
+          control={form.control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger id="tone">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Professional">Professional</SelectItem>
+                <SelectItem value="Playful">Playful</SelectItem>
+                <SelectItem value="Urgent">Urgent</SelectItem>
+                <SelectItem value="Friendly">Friendly</SelectItem>
+                <SelectItem value="Bold">Bold</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
 
       {/* Length */}
       <div className="space-y-2">
         <Label htmlFor="length">Length</Label>
-        <Select
-          value={state.length}
-          onValueChange={(value) => setLength(value as LengthType)}
-        >
-          <SelectTrigger id="length">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Short">Short</SelectItem>
-            <SelectItem value="Medium">Medium</SelectItem>
-            <SelectItem value="Long">Long</SelectItem>
-          </SelectContent>
-        </Select>
+        <Controller
+          name="length"
+          control={form.control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger id="length">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Short">Short</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Long">Long</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
 
       <div className="space-y-2">
@@ -149,8 +168,7 @@ export function GeneratorForm({ campaignId }: { campaignId: string }) {
         <Input
           id="keywords"
           placeholder="keyword1, keyword2, keyword3"
-          value={state.keywords}
-          onChange={(e) => setKeywords(e.target.value)}
+          {...form.register("keywords")}
         />
         <p className="text-xs text-muted-foreground">
           Separate multiple keywords with commas
@@ -158,11 +176,7 @@ export function GeneratorForm({ campaignId }: { campaignId: string }) {
       </div>
 
       <div className="flex gap-2">
-        <Button
-          onClick={handleGenerate}
-          disabled={state.isGenerating || !state.prompt.trim()}
-          className="flex-1"
-        >
+        <Button type="submit" disabled={state.isGenerating} className="flex-1">
           {state.isGenerating ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -177,11 +191,12 @@ export function GeneratorForm({ campaignId }: { campaignId: string }) {
             onClick={handleCancel}
             variant="outline"
             disabled={!state.isGenerating}
+            type="button"
           >
             Cancel
           </Button>
         )}
       </div>
-    </div>
+    </form>
   );
 }

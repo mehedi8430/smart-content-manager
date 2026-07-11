@@ -10,7 +10,7 @@ import {
 /**
  * List AI outputs for a campaign
  */
-export async function listAiOutputs(campaignId: string) {
+export async function listAiOutputsAction(campaignId: string) {
     try {
         const response = await fetcher<ListAiOutputsResponse>(
             `/campaigns/${campaignId}/ai-outputs`,
@@ -36,7 +36,7 @@ export async function listAiOutputs(campaignId: string) {
 /**
  * Get a single AI output by ID
  */
-export async function getAiOutput(campaignId: string, id: string) {
+export async function getAiOutputAction(campaignId: string, id: string) {
     try {
         const response = await fetcher<GetAiOutputResponse>(
             `/campaigns/${campaignId}/ai-outputs/${id}`,
@@ -62,7 +62,7 @@ export async function getAiOutput(campaignId: string, id: string) {
 /**
  * Delete an AI output
  */
-export async function deleteAiOutput(campaignId: string, id: string) {
+export async function deleteAiOutputAction(campaignId: string, id: string) {
     try {
         const response = await fetcher<DeleteAiOutputResponse>(
             `/campaigns/${campaignId}/ai-outputs/${id}`,

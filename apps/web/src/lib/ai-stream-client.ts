@@ -8,6 +8,32 @@ export interface GenerateContentInput {
     length?: "short" | "medium" | "long";
 }
 
+/**
+ * Streams AI content generation from the API using Server-Sent Events (SSE).
+ *
+ * @param campaignId - The ID of the campaign to generate content for
+ * @param payload - The generation input parameters
+ * @param handlers - Callback functions for handling streaming events
+ * @param handlers.onChunk - Called when a chunk of content is received
+ * @param handlers.onDone - Called when generation completes successfully with the final output
+ * @param handlers.onError - Called when an error occurs during generation
+ * @param signal - Optional AbortSignal to cancel the request
+ * @returns Promise that resolves when streaming completes or is aborted
+ *
+ * @example
+ * ```ts
+ * await streamGeneration(
+ *   'campaign-123',
+ *   { type: 'ad', prompt: 'Create a summer sale ad' },
+ *   {
+ *     onChunk: (text) => console.log('Chunk:', text),
+ *     onDone: (output) => console.log('Complete:', output),
+ *     onError: (error) => console.error('Error:', error),
+ *   },
+ *   abortController.signal
+ * );
+ * ```
+ */
 export async function streamGeneration(
     campaignId: string,
     payload: GenerateContentInput,
@@ -20,7 +46,7 @@ export async function streamGeneration(
 ): Promise<void> {
     try {
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/campaigns/${campaignId}/ai-outputs/generate`,
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/campaigns/${campaignId}/ai-outputs/generate`,
             {
                 method: "POST",
                 credentials: "include",

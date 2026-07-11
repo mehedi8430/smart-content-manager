@@ -1,15 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Save, RefreshCw, X } from "lucide-react";
+import { Copy, Save, RefreshCw, X, Check } from "lucide-react";
 import { useAiGenerator } from "@/providers/ai-generator-provider";
+import { toast } from "sonner";
 
 export function GeneratorOutput() {
   const { state, reset, startGeneration } = useAiGenerator();
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(state.streamedContent);
+    toast.success("Content copied to clipboard");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
   };
 
   const handleSave = () => {
@@ -91,8 +97,12 @@ export function GeneratorOutput() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button onClick={handleCopy} variant="outline" size="sm">
-            <Copy className="h-4 w-4 mr-2" />
-            Copy
+            {copied ? (
+              <Check className="h-4 w-4 mr-2" />
+            ) : (
+              <Copy className="h-4 w-4 mr-2" />
+            )}
+            {copied ? "Copied" : "Copy"}
           </Button>
           <Button onClick={handleSave} variant="outline" size="sm">
             <Save className="h-4 w-4 mr-2" />

@@ -15,8 +15,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -26,6 +24,7 @@ import {
   Eye,
   MoreVertical,
   Pencil,
+  Sparkle,
   Trash2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -203,8 +202,6 @@ export function CampaignsTable({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() =>
                               router.push(
@@ -235,6 +232,17 @@ export function CampaignsTable({
                           >
                             <Trash2 className="h-4 w-4" />
                             Delete
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/campaigns/${campaign.id}/generate`,
+                              )
+                            }
+                            className="gap-2"
+                          >
+                            <Sparkle className="size-4" />
+                            Generate
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

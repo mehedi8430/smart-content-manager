@@ -28,6 +28,10 @@ const data = {
       title: "Campaigns",
       url: "/dashboard/campaigns",
       icon: FileText,
+    },
+    {
+      title: "Recent Campaigns",
+      icon: FileText,
       hasSubmenu: true,
     },
   ],
@@ -107,7 +111,10 @@ export function NavMain() {
                     pathname === item.url ? "bg-sidebar-accent" : ""
                   }`}
                 >
-                  <Link href={item.url} className="font-medium">
+                  <Link
+                    href={item?.url || "/dashboard"}
+                    className="font-medium"
+                  >
                     <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
                   </Link>

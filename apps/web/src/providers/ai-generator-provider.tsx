@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
+import { AiOutput } from "@/types/ai-output.type";
 
 export type ContentType = "Ad" | "Caption" | "Email";
 export type ToneType =
@@ -21,6 +22,7 @@ interface GeneratorState {
   streamedContent: string;
   error: string | null;
   savedOutputs: string[];
+  completedOutput: AiOutput | null;
 }
 
 interface AiGeneratorContextType {
@@ -32,7 +34,7 @@ interface AiGeneratorContextType {
   setKeywords: (keywords: string) => void;
   startGeneration: () => void;
   appendChunk: (chunk: string) => void;
-  completeGeneration: () => void;
+  completeGeneration: (output: AiOutput) => void;
   setError: (error: string) => void;
   reset: () => void;
 }
@@ -52,6 +54,7 @@ export function AiGeneratorProvider({ children }: { children: ReactNode }) {
     streamedContent: "",
     error: null,
     savedOutputs: [],
+    completedOutput: null,
   });
 
   const setActiveType = (type: ContentType) => {
@@ -90,10 +93,11 @@ export function AiGeneratorProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const completeGeneration = () => {
+  const completeGeneration = (output: AiOutput) => {
     setState((prev) => ({
       ...prev,
       isGenerating: false,
+      completedOutput: output,
       savedOutputs: [...prev.savedOutputs, prev.streamedContent],
     }));
   };
@@ -117,6 +121,7 @@ export function AiGeneratorProvider({ children }: { children: ReactNode }) {
       streamedContent: "",
       error: null,
       savedOutputs: prev.savedOutputs,
+      completedOutput: null,
     }));
   };
 

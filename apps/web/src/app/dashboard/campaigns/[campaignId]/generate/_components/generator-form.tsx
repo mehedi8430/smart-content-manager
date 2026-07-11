@@ -12,16 +12,29 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { useRef } from "react";
 import { TypeTabs } from "./type-tabs";
 import {
   useAiGenerator,
   ToneType,
   LengthType,
 } from "@/providers/ai-generator-provider";
+import { streamGeneration } from "@/lib/ai-stream-client";
 
-export function GeneratorForm() {
-  const { state, setPrompt, setTone, setLength, setKeywords, startGeneration } =
-    useAiGenerator();
+export function GeneratorForm({ campaignId }: { campaignId: string }) {
+  const {
+    state,
+    setPrompt,
+    setTone,
+    setLength,
+    setKeywords,
+    startGeneration,
+    appendChunk,
+    completeGeneration,
+    setError,
+  } = useAiGenerator();
+
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleGenerate = () => {
     // Convert keywords from comma-separated string to string[]
@@ -30,11 +43,52 @@ export function GeneratorForm() {
       .map((k) => k.trim())
       .filter((k) => k.length > 0);
 
-    // For now, just start generation (no API call yet)
+    // Convert UI types to API types
+    const typeMap: Record<typeof state.activeType, "ad" | "caption" | "email"> =
+      {
+        Ad: "ad",
+        Caption: "caption",
+        Email: "email",
+      };
+
+    const lengthMap: Record<typeof state.length, "short" | "medium" | "long"> =
+      {
+        Short: "short",
+        Medium: "medium",
+        Long: "long",
+      };
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+
+    // Start generation state
     startGeneration();
 
-    // TODO: Later, this will trigger the API call with:
-    // { type: state.activeType, prompt: state.prompt, tone: state.tone, length: state.length, keywords: keywordsArray }
+    // Call the streaming API
+    streamGeneration(
+      campaignId,
+      {
+        type: typeMap[state.activeType],
+        prompt: state.prompt,
+        tone: state.tone,
+        keywords: keywordsArray.length > 0 ? keywordsArray : undefined,
+        length: lengthMap[state.length],
+      },
+      {
+        onChunk: (text) => appendChunk(text),
+        onDone: (output) => completeGeneration(output),
+        onError: (message) => setError(message),
+      },
+      abortControllerRef.current.signal,
+    );
+  };
+
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setError("Generation cancelled");
   };
 
   return (
@@ -103,20 +157,31 @@ export function GeneratorForm() {
         </p>
       </div>
 
-      <Button
-        onClick={handleGenerate}
-        disabled={state.isGenerating || !state.prompt.trim()}
-        className="w-full"
-      >
-        {state.isGenerating ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Generating...
-          </>
-        ) : (
-          "Generate"
+      <div className="flex gap-2">
+        <Button
+          onClick={handleGenerate}
+          disabled={state.isGenerating || !state.prompt.trim()}
+          className="flex-1"
+        >
+          {state.isGenerating ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            "Generate"
+          )}
+        </Button>
+        {state.isGenerating && (
+          <Button
+            onClick={handleCancel}
+            variant="outline"
+            disabled={!state.isGenerating}
+          >
+            Cancel
+          </Button>
         )}
-      </Button>
+      </div>
     </div>
   );
 }

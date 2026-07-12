@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Save, RefreshCw, X, Check } from "lucide-react";
+import { Copy, RefreshCw, X, Check } from "lucide-react";
 import { useAiGenerator } from "@/providers/ai-generator-provider";
 import { toast } from "sonner";
 
@@ -16,11 +16,6 @@ export function GeneratorOutput() {
     toast.success("Content copied to clipboard");
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
-  };
-
-  const handleSave = () => {
-    // TODO: Implement save functionality later
-    console.log("Save content:", state.streamedContent);
   };
 
   const handleRegenerate = () => {
@@ -103,10 +98,6 @@ export function GeneratorOutput() {
               <Copy className="h-4 w-4 mr-2" />
             )}
             {copied ? "Copied" : "Copy"}
-          </Button>
-          <Button onClick={handleSave} variant="outline" size="sm">
-            <Save className="h-4 w-4 mr-2" />
-            Save
           </Button>
           <Button onClick={handleRegenerate} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />

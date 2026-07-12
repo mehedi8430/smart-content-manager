@@ -63,8 +63,10 @@ export async function streamGeneration(
             throw new Error(errorText || "Failed to start generation");
         }
 
+        // Get the reader from the response body
         const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
+        // Convert bytes to text
+        const textDecoder = new TextDecoder();
 
         if (!reader) {
             throw new Error("Response body is not readable");
@@ -73,25 +75,38 @@ export async function streamGeneration(
         let buffer = "";
 
         while (true) {
+            // Instead of waiting for the entire response, read chunks(bytes) as they arrive
             const { done, value } = await reader.read();
 
             if (done) {
                 break;
             }
 
-            const chunk = decoder.decode(value, { stream: true });
+            const chunk = textDecoder.decode(value, { stream: true });
             buffer += chunk;
 
             // Split on '\n\n' to parse individual SSE frames
             const frames = buffer.split("\n\n");
-            buffer = frames.pop() || ""; // Keep the last incomplete frame in buffer
+            // Keep the last incomplete frame in buffer
+            const incompleteFrame = frames.pop();
+            buffer = incompleteFrame || "";
 
+            // buffer will be:
+            // - an empty string (everything completed), or
+            // - an incomplete SSE message waiting for more data.
+
+            // Parse SSE format: "data: {...}"(process only the remaining complete frames)
             for (const frame of frames) {
                 if (!frame.trim()) continue;
 
-                // Parse SSE format: "data: {...}"
                 const match = frame.match(/^data:\s*(.+)$/);
                 if (!match) continue;
+
+                // after frame.match() return
+                // [
+                //     'data: {"type":"chunk","content":"Hello"}', // index 0
+                //     '{"type":"chunk","content":"Hello"}'        // index 1
+                // ]
 
                 try {
                     const data = JSON.parse(match[1]);

@@ -44,6 +44,7 @@ export function PostSheet() {
     setIsSheetOpen: onOpenChange,
     defaultStatusForNew: defaultStatus,
     campaignId,
+    initialDescription,
   } = useBoard();
   const router = useRouter();
 
@@ -57,7 +58,7 @@ export function PostSheet() {
     resolver: zodResolver(postFormSchema),
     defaultValues: {
       title: post?.title || "",
-      description: post?.description || "",
+      description: post?.description || initialDescription || "",
       dueDate: post?.dueDate ? post.dueDate.split("T")[0] : "",
       status: post?.status || defaultStatus,
     },
@@ -110,12 +111,12 @@ export function PostSheet() {
     if (isOpen) {
       reset({
         title: post?.title || "",
-        description: post?.description || "",
+        description: post?.description || initialDescription || "",
         dueDate: post?.dueDate ? post.dueDate.split("T")[0] : "",
         status: post?.status || defaultStatus,
       });
     }
-  }, [isOpen, post, defaultStatus, reset]);
+  }, [isOpen, post, defaultStatus, initialDescription, reset]);
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange} key={post?.id || "new"}>

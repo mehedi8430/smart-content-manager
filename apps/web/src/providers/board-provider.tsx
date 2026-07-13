@@ -11,11 +11,16 @@ interface BoardContextType {
   defaultStatusForNew: PostStatus;
   deleteDialogOpen: boolean;
   postToDelete: Post | undefined;
+  initialDescription: string | undefined;
   setPostToDelete: (post: Post | undefined) => void;
   // Handlers
   handleAddPost: (status: PostStatus) => void;
   handleEditPost: (post: Post) => void;
   handleDeletePost: (post: Post) => void;
+  handleAddPostWithDescription: (
+    status: PostStatus,
+    description: string,
+  ) => void;
   setIsSheetOpen: (open: boolean) => void;
   setDeleteDialogOpen: (open: boolean) => void;
 }
@@ -36,16 +41,31 @@ export function BoardProvider({
     useState<PostStatus>("todo");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<Post | undefined>(undefined);
+  const [initialDescription, setInitialDescription] = useState<
+    string | undefined
+  >(undefined);
 
   // Handlers
   const handleAddPost = (status: PostStatus) => {
     setEditingPost(undefined);
     setDefaultStatusForNew(status);
+    setInitialDescription(undefined);
+    setIsSheetOpen(true);
+  };
+
+  const handleAddPostWithDescription = (
+    status: PostStatus,
+    description: string,
+  ) => {
+    setEditingPost(undefined);
+    setDefaultStatusForNew(status);
+    setInitialDescription(description);
     setIsSheetOpen(true);
   };
 
   const handleEditPost = (post: Post) => {
     setEditingPost(post);
+    setInitialDescription(undefined);
     setIsSheetOpen(true);
   };
 
@@ -63,10 +83,12 @@ export function BoardProvider({
         defaultStatusForNew,
         deleteDialogOpen,
         postToDelete,
+        initialDescription,
         setPostToDelete,
         handleAddPost,
         handleEditPost,
         handleDeletePost,
+        handleAddPostWithDescription,
         setIsSheetOpen,
         setDeleteDialogOpen,
       }}

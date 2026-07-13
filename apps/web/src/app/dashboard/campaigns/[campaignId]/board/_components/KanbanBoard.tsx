@@ -28,13 +28,23 @@ import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 interface KanbanBoardProps {
   campaignName: string;
   posts: Post[];
+  initialContent?: string;
 }
 
 export function KanbanBoard({
   campaignName,
   posts: initialPosts,
+  initialContent,
 }: KanbanBoardProps) {
-  const { handleAddPost, campaignId } = useBoard();
+  const { handleAddPost, handleAddPostWithDescription, campaignId } =
+    useBoard();
+
+  useEffect(() => {
+    if (initialContent) {
+      handleAddPostWithDescription("todo", initialContent);
+    }
+  }, [initialContent]);
+
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [activeId, setActiveId] = useState<string | null>(null);
 

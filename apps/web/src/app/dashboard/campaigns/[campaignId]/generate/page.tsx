@@ -1,6 +1,7 @@
 import { AiGeneratorProvider } from "@/providers/ai-generator-provider";
 import { GeneratorForm } from "./_components/generator-form";
 import { GeneratorOutput } from "./_components/generator-output";
+import { OutputHistorySection } from "./_components/output-history-section";
 import { getCampaignAction } from "@/actions/campaign.action";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -39,12 +40,22 @@ export default async function GeneratePage({
       <AiGeneratorProvider>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
-            <GeneratorForm />
+            <GeneratorForm campaignId={campaignId} />
           </div>
           <div className="min-h-100">
-            <GeneratorOutput />
+            <GeneratorOutput campaignId={campaignId} />
           </div>
         </div>
+
+        <section className="mt-12">
+          <h2 className="text-2xl font-bold tracking-tight mb-1">
+            Output History
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            All AI-generated content for this campaign
+          </p>
+          <OutputHistorySection campaignId={campaignId} />
+        </section>
       </AiGeneratorProvider>
     </div>
   );

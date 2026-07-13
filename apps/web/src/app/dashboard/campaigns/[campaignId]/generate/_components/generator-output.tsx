@@ -1,25 +1,66 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Save, RefreshCw, X } from "lucide-react";
+import { Copy, RefreshCw, X, Check } from "lucide-react";
 import { useAiGenerator } from "@/providers/ai-generator-provider";
+import { streamRegeneration } from "@/lib/ai-stream-client";
+import { toast } from "sonner";
 
-export function GeneratorOutput() {
-  const { state, reset, startGeneration } = useAiGenerator();
+export function GeneratorOutput({ campaignId }: { campaignId: string }) {
+  const {
+    state,
+    reset,
+    startGeneration,
+    startRegeneration,
+    appendChunk,
+    completeGeneration,
+    setError,
+  } = useAiGenerator();
+  const [copied, setCopied] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(state.streamedContent);
-  };
-
-  const handleSave = () => {
-    // TODO: Implement save functionality later
-    console.log("Save content:", state.streamedContent);
+    toast.success("Content copied to clipboard");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
   };
 
   const handleRegenerate = () => {
-    // TODO: Implement regenerate functionality later
-    startGeneration();
+    if (state.completedOutput?.id) {
+      // Regenerate existing output
+      abortControllerRef.current = new AbortController();
+      startRegeneration(state.completedOutput.id);
+
+      streamRegeneration(
+        campaignId,
+        state.completedOutput.id,
+        {}, // Empty payload to use original parameters
+        {
+          onChunk: (text) => appendChunk(text),
+          onDone: (output) => completeGeneration(output),
+          onError: (message) => setError(message),
+        },
+        abortControllerRef.current.signal,
+      );
+    } else {
+      // No output to regenerate, start fresh generation
+      startGeneration();
+    }
+  };
+
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setError(
+      state.regeneratingOutputId
+        ? "Regeneration cancelled"
+        : "Generation cancelled",
+    );
   };
 
   const handleDiscard = () => {
@@ -77,6 +118,11 @@ export function GeneratorOutput() {
               <span className="inline-block w-2 h-4 bg-foreground ml-1 animate-pulse" />
             </p>
           </div>
+          <div className="flex gap-2 mt-4">
+            <Button onClick={handleCancel} variant="outline" size="sm">
+              Cancel
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -91,12 +137,12 @@ export function GeneratorOutput() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button onClick={handleCopy} variant="outline" size="sm">
-            <Copy className="h-4 w-4 mr-2" />
-            Copy
-          </Button>
-          <Button onClick={handleSave} variant="outline" size="sm">
-            <Save className="h-4 w-4 mr-2" />
-            Save
+            {copied ? (
+              <Check className="h-4 w-4 mr-2" />
+            ) : (
+              <Copy className="h-4 w-4 mr-2" />
+            )}
+            {copied ? "Copied" : "Copy"}
           </Button>
           <Button onClick={handleRegenerate} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />

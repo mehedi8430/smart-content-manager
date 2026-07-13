@@ -5,6 +5,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Copy, Trash2, FileText, Check } from "lucide-react";
 import { AiOutput } from "@/types/ai-output.type";
 import {
@@ -23,6 +33,7 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
   const [outputs, setOutputs] = useState<AiOutput[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const loadOutputs = useCallback(async () => {
     setLoading(true);
@@ -72,6 +83,12 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
 
   const handleUseInPost = (content: string) => {
     onUseInPost(content);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
+    await handleDelete(pendingDeleteId);
+    setPendingDeleteId(null);
   };
 
   // Group outputs by type
@@ -138,6 +155,7 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
                         onClick={() => handleCopy(output.content, output.id)}
                         variant="ghost"
                         size="sm"
+                        className="cursor-pointer"
                       >
                         {copiedId === output.id ? (
                           <Check className="h-4 w-4" />
@@ -149,14 +167,15 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
                         onClick={() => handleUseInPost(output.content)}
                         variant="ghost"
                         size="sm"
+                        className="cursor-pointer"
                       >
                         Use in Post
                       </Button>
                       <Button
-                        onClick={() => handleDelete(output.id)}
+                        onClick={() => setPendingDeleteId(output.id)}
                         variant="ghost"
                         size="sm"
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -168,6 +187,32 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
           </div>
         </div>
       ))}
+
+      <AlertDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete output?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the generated content. This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

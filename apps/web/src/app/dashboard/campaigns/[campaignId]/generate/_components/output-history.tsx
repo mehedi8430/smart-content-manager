@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -109,15 +109,17 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
   };
 
   // Group outputs by type
-  const groupedOutputs = outputs.reduce(
-    (acc, output) => {
-      const type = output.type || "other";
-      if (!acc[type]) acc[type] = [];
-      acc[type].push(output);
-      return acc;
-    },
-    {} as Record<string, AiOutput[]>,
-  );
+  const groupedOutputs = useMemo(() => {
+    return outputs.reduce(
+      (acc, output) => {
+        const type = output.type || "other";
+        if (!acc[type]) acc[type] = [];
+        acc[type].push(output);
+        return acc;
+      },
+      {} as Record<string, AiOutput[]>,
+    );
+  }, [outputs]);
 
   if (loading) {
     return <LoadingSkeleton />;

@@ -7,10 +7,13 @@ import { KanbanBoard } from "./_components/KanbanBoard";
 
 export default async function BoardPage({
   params,
+  searchParams,
 }: {
   params: { campaignId: string };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { campaignId } = await params;
+  const { content } = await searchParams;
   const campaign = await getCampaignAction(campaignId);
   const campaignName = campaign.data?.name || "N/A";
 
@@ -20,7 +23,11 @@ export default async function BoardPage({
     <div className="container mx-auto md:p-6">
       <BoardProvider campaignId={campaignId}>
         <Suspense fallback={<SkeletonBoard />}>
-          <KanbanBoard campaignName={campaignName} posts={posts?.data || []} />
+          <KanbanBoard
+            campaignName={campaignName}
+            posts={posts?.data || []}
+            initialContent={typeof content === "string" ? content : undefined}
+          />
         </Suspense>
       </BoardProvider>
     </div>

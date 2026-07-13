@@ -42,7 +42,7 @@ export default async function GeneratePage({
             <GeneratorForm campaignId={campaignId} />
           </div>
           <div className="min-h-100">
-            <GeneratorOutput />
+            <GeneratorOutput campaignId={campaignId} />
           </div>
         </div>
       </AiGeneratorProvider>

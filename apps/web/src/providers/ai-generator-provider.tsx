@@ -9,11 +9,13 @@ interface GeneratorState {
   error: string | null;
   savedOutputs: string[];
   completedOutput: AiOutput | null;
+  regeneratingOutputId: string | null;
 }
 
 interface AiGeneratorContextType {
   state: GeneratorState;
   startGeneration: () => void;
+  startRegeneration: (outputId: string) => void;
   appendChunk: (chunk: string) => void;
   completeGeneration: (output: AiOutput) => void;
   setError: (error: string) => void;
@@ -31,6 +33,7 @@ export function AiGeneratorProvider({ children }: { children: ReactNode }) {
     error: null,
     savedOutputs: [],
     completedOutput: null,
+    regeneratingOutputId: null,
   });
 
   const startGeneration = () => {
@@ -39,6 +42,17 @@ export function AiGeneratorProvider({ children }: { children: ReactNode }) {
       isGenerating: true,
       streamedContent: "",
       error: null,
+      regeneratingOutputId: null,
+    }));
+  };
+
+  const startRegeneration = (outputId: string) => {
+    setState((prev) => ({
+      ...prev,
+      isGenerating: true,
+      streamedContent: "",
+      error: null,
+      regeneratingOutputId: outputId,
     }));
   };
 
@@ -73,6 +87,7 @@ export function AiGeneratorProvider({ children }: { children: ReactNode }) {
       error: null,
       savedOutputs: prev.savedOutputs,
       completedOutput: null,
+      regeneratingOutputId: null,
     }));
   };
 
@@ -81,6 +96,7 @@ export function AiGeneratorProvider({ children }: { children: ReactNode }) {
       value={{
         state,
         startGeneration,
+        startRegeneration,
         appendChunk,
         completeGeneration,
         setError,

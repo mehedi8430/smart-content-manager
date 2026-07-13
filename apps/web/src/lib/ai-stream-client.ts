@@ -137,3 +137,112 @@ export async function streamGeneration(
         handlers.onError(errorMessage);
     }
 }
+
+export interface RegenerateContentInput {
+    type?: "ad" | "caption" | "email";
+    prompt?: string;
+    tone?: string;
+    keywords?: string[];
+    length?: "short" | "medium" | "long";
+}
+
+/**
+ * Streams AI content regeneration from the API using Server-Sent Events (SSE).
+ *
+ * @param campaignId - The ID of the campaign
+ * @param outputId - The ID of the AI output to regenerate
+ * @param payload - Optional regeneration input parameters (all fields optional)
+ * @param handlers - Callback functions for handling streaming events
+ * @param handlers.onChunk - Called when a chunk of content is received
+ * @param handlers.onDone - Called when regeneration completes successfully with the final output
+ * @param handlers.onError - Called when an error occurs during regeneration
+ * @param signal - Optional AbortSignal to cancel the request
+ * @returns Promise that resolves when streaming completes or is aborted
+ */
+export async function streamRegeneration(
+    campaignId: string,
+    outputId: string,
+    payload: RegenerateContentInput,
+    handlers: {
+        onChunk: (text: string) => void;
+        onDone: (output: AiOutput) => void;
+        onError: (message: string) => void;
+    },
+    signal?: AbortSignal
+): Promise<void> {
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/campaigns/${campaignId}/ai-outputs/${outputId}/regenerate`,
+            {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+                signal,
+            }
+        );
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || "Failed to start regeneration");
+        }
+
+        const reader = response.body?.getReader();
+        const textDecoder = new TextDecoder();
+
+        if (!reader) {
+            throw new Error("Response body is not readable");
+        }
+
+        let buffer = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+                break;
+            }
+
+            const chunk = textDecoder.decode(value, { stream: true });
+            buffer += chunk;
+
+            const frames = buffer.split("\n\n");
+            const incompleteFrame = frames.pop();
+            buffer = incompleteFrame || "";
+
+            for (const frame of frames) {
+                if (!frame.trim()) continue;
+
+                const match = frame.match(/^data:\s*(.+)$/);
+                if (!match) continue;
+
+                try {
+                    const data = JSON.parse(match[1]);
+
+                    switch (data.type) {
+                        case "chunk":
+                            handlers.onChunk(data.content || "");
+                            break;
+                        case "done":
+                            handlers.onDone(data.output);
+                            return;
+                        case "error":
+                            handlers.onError(data.message || "Regeneration failed");
+                            return;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse SSE frame:", e);
+                }
+            }
+        }
+    } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+            return;
+        }
+        const errorMessage =
+            error instanceof Error ? error.message : "Unknown error occurred";
+        handlers.onError(errorMessage);
+    }
+}

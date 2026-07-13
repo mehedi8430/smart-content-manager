@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -15,21 +13,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Copy, Trash2, FileText, Check } from "lucide-react";
+import { FileText } from "lucide-react";
 import { AiOutput } from "@/types/ai-output.type";
 import {
   listAiOutputsAction,
   deleteAiOutputAction,
 } from "@/actions/ai-output.actions";
+import { useAiGenerator } from "@/providers/ai-generator-provider";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { useRouter } from "next/navigation";
+import OutputCard from "./output-card";
 
 interface OutputHistoryProps {
   campaignId: string;
-  onUseInPost: (content: string) => void;
 }
 
-export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
+export function OutputHistory({ campaignId }: OutputHistoryProps) {
+  const router = useRouter();
+  const { state } = useAiGenerator();
   const [outputs, setOutputs] = useState<AiOutput[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -37,8 +38,10 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
 
   const loadOutputs = useCallback(async () => {
     setLoading(true);
+
     try {
       const result = await listAiOutputsAction(campaignId);
+
       if (result.success && result.data) {
         setOutputs(result.data);
       }
@@ -50,9 +53,27 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
     }
   }, [campaignId]);
 
+  const lastCompletedId = useRef<string | null>(null);
+
+  // Refetch the list whenever a new AI output is generated/regenerated
+  useEffect(() => {
+    const completedId = state.completedOutput?.id ?? null;
+    if (completedId && completedId !== lastCompletedId.current) {
+      lastCompletedId.current = completedId;
+      loadOutputs();
+    }
+  }, [state.completedOutput, loadOutputs]);
+
   useEffect(() => {
     loadOutputs();
   }, [campaignId]);
+
+  const handleUseInPost = (content: string) => {
+    const params = new URLSearchParams({ content });
+    router.push(
+      `/dashboard/campaigns/${campaignId}/board?${params.toString()}`,
+    );
+  };
 
   const handleCopy = async (content: string, id: string) => {
     await navigator.clipboard.writeText(content);
@@ -79,10 +100,6 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
       loadOutputs();
       toast.error("Failed to delete output");
     }
-  };
-
-  const handleUseInPost = (content: string) => {
-    onUseInPost(content);
   };
 
   const confirmDelete = async () => {
@@ -127,62 +144,14 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
           <h3 className="text-lg font-semibold mb-3 capitalize">{type}s</h3>
           <div className="grid gap-3">
             {items.map((output) => (
-              <Card key={output.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="secondary" className="capitalize">
-                          {output.type}
-                        </Badge>
-                        {output.tone && (
-                          <Badge variant="outline" className="capitalize">
-                            {output.tone}
-                          </Badge>
-                        )}
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(output.createdAt), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {output.content}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <Button
-                        onClick={() => handleCopy(output.content, output.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="cursor-pointer"
-                      >
-                        {copiedId === output.id ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        onClick={() => handleUseInPost(output.content)}
-                        variant="ghost"
-                        size="sm"
-                        className="cursor-pointer"
-                      >
-                        Use in Post
-                      </Button>
-                      <Button
-                        onClick={() => setPendingDeleteId(output.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive cursor-pointer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <OutputCard
+                key={output.id}
+                output={output}
+                copiedId={copiedId}
+                onCopy={handleCopy}
+                onUseInPost={handleUseInPost}
+                onDelete={setPendingDeleteId}
+              />
             ))}
           </div>
         </div>

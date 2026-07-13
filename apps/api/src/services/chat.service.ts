@@ -20,7 +20,6 @@ export const createChatSession = async (
 ) => {
   try {
     // If a campaignId is provided, verify it exists and belongs to the user.
-    // Return 404 (not 403) to avoid leaking existence, matching existing conventions.
     if (data.campaignId) {
       const campaign = await prisma.campaign.findUnique({
         where: { id: data.campaignId },

@@ -7,6 +7,7 @@ import { Copy, RefreshCw, X, Check } from "lucide-react";
 import { useAiGenerator } from "@/providers/ai-generator-provider";
 import { streamRegeneration } from "@/lib/ai-stream-client";
 import { toast } from "sonner";
+import { useAiOutputCache } from "@/hooks/server-state/useAiOutputs";
 
 export function GeneratorOutput({ campaignId }: { campaignId: string }) {
   const {
@@ -18,6 +19,7 @@ export function GeneratorOutput({ campaignId }: { campaignId: string }) {
     completeGeneration,
     setError,
   } = useAiGenerator();
+  const { upsertOutputToCache } = useAiOutputCache();
   const [copied, setCopied] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -40,7 +42,14 @@ export function GeneratorOutput({ campaignId }: { campaignId: string }) {
         {}, // Empty payload to use original parameters
         {
           onChunk: (text) => appendChunk(text),
-          onDone: (output) => completeGeneration(output),
+          onDone: (output) => {
+            // Generation-flow state (reducer) updated as before...
+            completeGeneration(output);
+            // ...and mirror the saved record into the React Query list cache
+            // so the history updates instantly (no refetch). Regenerate returns
+            // the same id, so this upserts in place rather than duplicating.
+            upsertOutputToCache(campaignId, output);
+          },
           onError: (message) => setError(message),
         },
         abortControllerRef.current.signal,

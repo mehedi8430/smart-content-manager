@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,11 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FileText } from "lucide-react";
 import { AiOutput } from "@/types/ai-output.type";
-import {
-  listAiOutputsAction,
-  deleteAiOutputAction,
-} from "@/actions/ai-output.actions";
-import { useAiGenerator } from "@/providers/ai-generator-provider";
+import { useAiOutputsList, useDeleteAiOutput } from "@/hooks/server-state/useAiOutputs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import OutputCard from "./output-card";
@@ -30,49 +27,18 @@ interface OutputHistoryProps {
 
 export function OutputHistory({ campaignId }: OutputHistoryProps) {
   const router = useRouter();
-  const { state } = useAiGenerator();
-  const [outputs, setOutputs] = useState<AiOutput[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // All data/loading/error now comes from React Query — no manual
+  // useState/useEffect fetching. The query only runs once campaignId exists.
+  const { data: outputs = [], status, error, refetch } = useAiOutputsList(campaignId);
+  const deleteMutation = useDeleteAiOutput(campaignId);
+
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const loadOutputs = useCallback(async () => {
-    setLoading(true);
-
-    try {
-      const result = await listAiOutputsAction(campaignId);
-
-      if (result.success && result.data) {
-        setOutputs(result.data);
-      }
-    } catch (error) {
-      console.error("Failed to load outputs:", error);
-      toast.error("Failed to load output history");
-    } finally {
-      setLoading(false);
-    }
-  }, [campaignId]);
-
-  const lastCompletedId = useRef<string | null>(null);
-
-  // Refetch the list whenever a new AI output is generated/regenerated
-  useEffect(() => {
-    const completedId = state.completedOutput?.id ?? null;
-    if (completedId && completedId !== lastCompletedId.current) {
-      lastCompletedId.current = completedId;
-      loadOutputs();
-    }
-  }, [state.completedOutput, loadOutputs]);
-
-  useEffect(() => {
-    loadOutputs();
-  }, [campaignId]);
-
   const handleUseInPost = (content: string) => {
     const params = new URLSearchParams({ content });
-    router.push(
-      `/dashboard/campaigns/${campaignId}/board?${params.toString()}`,
-    );
+    router.push(`/dashboard/campaigns/${campaignId}/board?${params.toString()}`);
   };
 
   const handleCopy = async (content: string, id: string) => {
@@ -81,39 +47,21 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
       setCopiedId(id);
       toast.success("Content copied to clipboard");
       setTimeout(() => setCopiedId(null), 3000);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       toast.error("Content copied failed, Please try again");
     }
   };
 
-  const handleDelete = async (id: string) => {
-    // Optimistic removal
-    setOutputs((prev) => prev.filter((output) => output.id !== id));
-
-    try {
-      const result = await deleteAiOutputAction(campaignId, id);
-      if (result.success) {
-        toast.success(result.message || "Output deleted");
-      } else {
-        // Revert on failure
-        loadOutputs();
-        toast.error("Failed to delete output");
-      }
-    } catch (error) {
-      console.error("Failed to delete output:", error);
-      loadOutputs();
-      toast.error("Failed to delete output");
-    }
-  };
-
-  const confirmDelete = async () => {
+  // The mutation handles the optimistic removal, rollback, toast, and
+  // server reconciliation. We only wire it to the existing confirm step.
+  const confirmDelete = () => {
     if (!pendingDeleteId) return;
-    await handleDelete(pendingDeleteId);
+    deleteMutation.mutate(pendingDeleteId);
     setPendingDeleteId(null);
   };
 
-  // Group outputs by type
+  // Group outputs by type (derived from the cached list).
   const groupedOutputs = useMemo(() => {
     return outputs.reduce(
       (acc, output) => {
@@ -126,8 +74,30 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
     );
   }, [outputs]);
 
-  if (loading) {
+  // Loading: drive the skeleton off the query's own pending status.
+  if (status === "pending") {
     return <LoadingSkeleton />;
+  }
+
+  // Error: surface a retry so the user isn't stuck on a silently failing page.
+  if (status === "error") {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">
+            {error instanceof Error ? error.message : "Failed to load output history"}
+          </p>
+          <Button
+            variant="outline"
+            className="mt-4 cursor-pointer"
+            onClick={() => refetch()}
+          >
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (outputs.length === 0) {

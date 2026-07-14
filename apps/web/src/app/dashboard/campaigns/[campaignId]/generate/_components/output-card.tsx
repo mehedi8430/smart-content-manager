@@ -52,6 +52,7 @@ export default function OutputCard({
               variant="ghost"
               size="sm"
               className="cursor-pointer"
+              aria-label="Copy content"
             >
               {copiedId === output.id ? (
                 <Check className="h-4 w-4" />
@@ -64,6 +65,7 @@ export default function OutputCard({
               variant="ghost"
               size="sm"
               className="cursor-pointer"
+              aria-label="Use in post"
             >
               Use in Post
             </Button>
@@ -72,6 +74,7 @@ export default function OutputCard({
               variant="ghost"
               size="sm"
               className="text-destructive hover:text-destructive cursor-pointer"
+              aria-label="Delete output"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

@@ -76,10 +76,15 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
   };
 
   const handleCopy = async (content: string, id: string) => {
-    await navigator.clipboard.writeText(content);
-    setCopiedId(id);
-    toast.success("Content copied to clipboard");
-    setTimeout(() => setCopiedId(null), 3000);
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      toast.success("Content copied to clipboard");
+      setTimeout(() => setCopiedId(null), 3000);
+    } catch (error) {
+      console.error(error);
+      toast.error("Content copied failed, Please try again");
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -112,7 +117,7 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
   const groupedOutputs = useMemo(() => {
     return outputs.reduce(
       (acc, output) => {
-        const type = output.type || "other";
+        const type = output.type?.toLowerCase() || "other";
         if (!acc[type]) acc[type] = [];
         acc[type].push(output);
         return acc;

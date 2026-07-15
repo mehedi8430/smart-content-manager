@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -16,10 +15,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FileText } from "lucide-react";
 import { AiOutput } from "@/types/ai-output.type";
-import { useAiOutputsList, useDeleteAiOutput } from "@/hooks/server-state/useAiOutputs";
+import {
+  useAiOutputsList,
+  useDeleteAiOutput,
+} from "@/hooks/server-state/useAiOutputs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import OutputCard from "./output-card";
+import HistoryLoadingSkeleton from "./history-loading-skeleton";
 
 interface OutputHistoryProps {
   campaignId: string;
@@ -28,9 +31,12 @@ interface OutputHistoryProps {
 export function OutputHistory({ campaignId }: OutputHistoryProps) {
   const router = useRouter();
 
-  // All data/loading/error now comes from React Query — no manual
-  // useState/useEffect fetching. The query only runs once campaignId exists.
-  const { data: outputs = [], status, error, refetch } = useAiOutputsList(campaignId);
+  const {
+    data: outputs = [],
+    status,
+    error,
+    refetch,
+  } = useAiOutputsList(campaignId);
   const deleteMutation = useDeleteAiOutput(campaignId);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -38,7 +44,9 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
 
   const handleUseInPost = (content: string) => {
     const params = new URLSearchParams({ content });
-    router.push(`/dashboard/campaigns/${campaignId}/board?${params.toString()}`);
+    router.push(
+      `/dashboard/campaigns/${campaignId}/board?${params.toString()}`,
+    );
   };
 
   const handleCopy = async (content: string, id: string) => {
@@ -53,8 +61,7 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
     }
   };
 
-  // The mutation handles the optimistic removal, rollback, toast, and
-  // server reconciliation. We only wire it to the existing confirm step.
+  // The mutation handles the optimistic removal, rollback, toast, and server reconciliation.
   const confirmDelete = () => {
     if (!pendingDeleteId) return;
     deleteMutation.mutate(pendingDeleteId);
@@ -76,7 +83,7 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
 
   // Loading: drive the skeleton off the query's own pending status.
   if (status === "pending") {
-    return <LoadingSkeleton />;
+    return <HistoryLoadingSkeleton />;
   }
 
   // Error: surface a retry so the user isn't stuck on a silently failing page.
@@ -86,7 +93,9 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
         <CardContent className="p-12 text-center">
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">
-            {error instanceof Error ? error.message : "Failed to load output history"}
+            {error instanceof Error
+              ? error.message
+              : "Failed to load output history"}
           </p>
           <Button
             variant="outline"
@@ -134,6 +143,7 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
         </div>
       ))}
 
+      {/* Delete Output History Alert Dialog */}
       <AlertDialog
         open={pendingDeleteId !== null}
         onOpenChange={(open) => {
@@ -159,42 +169,6 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i}>
-          <Skeleton className="h-6 w-32 mb-3" />
-          <div className="space-y-3">
-            {[1, 2].map((j) => (
-              <Card key={j}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex gap-2">
-                        <Skeleton className="h-5 w-16" />
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-4 w-24" />
-                      </div>
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-                    <div className="flex gap-2">
-                      <Skeleton className="h-8 w-8" />
-                      <Skeleton className="h-8 w-20" />
-                      <Skeleton className="h-8 w-8" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

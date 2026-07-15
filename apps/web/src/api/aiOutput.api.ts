@@ -1,18 +1,6 @@
 import { api } from "@/api/axios";
 import type { AiOutput } from "@/types/ai-output.type";
 
-/**
- * Thin data layer for AI outputs.
- *
- * These are plain async functions (not React Query hooks) so they can also be
- * fed to `queryFn` / `mutationFn`. They deliberately RETURN UNWRAPPED DATA
- * (e.g. `AiOutput[]`, not `{ success, data, message }`): the Express API wraps
- * every response in that envelope, but callers shouldn't have to know or repeat
- * that shape. Any failure is converted to a clean `Error` carrying the
- * backend's `message` here, ONCE, instead of in every hook that uses it.
- */
-
-/** The envelope shape the Express API returns. */
 interface ApiEnvelope<T> {
   success: boolean;
   message: string;
@@ -20,13 +8,9 @@ interface ApiEnvelope<T> {
 }
 
 /**
- * Convert any thrown value into a clean Error. Axios rejects non-2xx responses,
- * and the backend's error body is `{ success: false, message }`, so we surface
- * that `message` directly. Falls back to a generic message for network errors.
+ * Convert any thrown value into a clean `Error`, preserving the backend message when available.
  */
 function toAppError(error: unknown): Error {
-  // Axios rejects non-2xx responses; the backend error body is
-  // `{ success: false, message }`, so surface that message directly.
   if (error && typeof error === "object" && "response" in error) {
     const res = (
       error as { response?: { data?: { message?: string }; status?: number } }
@@ -42,7 +26,7 @@ function toAppError(error: unknown): Error {
   return new Error("Unexpected error occurred");
 }
 
-/** List every AI output for a campaign. */
+/** Lists every AI output for a campaign. */
 export async function listAiOutputs(campaignId: string): Promise<AiOutput[]> {
   try {
     const res = await api.get<ApiEnvelope<AiOutput[]>>(

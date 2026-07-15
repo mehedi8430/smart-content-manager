@@ -90,12 +90,8 @@ export function GeneratorForm({ campaignId }: { campaignId: string }) {
       {
         onChunk: (text) => appendChunk(text),
         onDone: (output) => {
-          // Generation-flow state (reducer) is updated as before...
           completeGeneration(output);
-          // ...and we mirror the freshly-saved record straight into the React
-          // Query list cache so the history updates immediately (no refetch).
-          // The streaming call itself stays raw fetch — only the cache write
-          // is React Query, which is exactly the intended split.
+          // Update the React Query cache immediately so the history updates without a refetch.
           upsertOutputToCache(campaignId, output);
         },
         onError: (message) => setError(message),

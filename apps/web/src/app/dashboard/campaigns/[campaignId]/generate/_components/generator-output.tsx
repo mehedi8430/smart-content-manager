@@ -24,10 +24,15 @@ export function GeneratorOutput({ campaignId }: { campaignId: string }) {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(state.streamedContent);
-    toast.success("Content copied to clipboard");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
+    try {
+      await navigator.clipboard.writeText(state.streamedContent);
+      toast.success("Content copied to clipboard");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch (error) {
+      console.error(error);
+      toast.error("Content Copied failed. Please try again.");
+    }
   };
 
   const handleRegenerate = () => {
@@ -43,11 +48,8 @@ export function GeneratorOutput({ campaignId }: { campaignId: string }) {
         {
           onChunk: (text) => appendChunk(text),
           onDone: (output) => {
-            // Generation-flow state (reducer) updated as before...
             completeGeneration(output);
-            // ...and mirror the saved record into the React Query list cache
-            // so the history updates instantly (no refetch). Regenerate returns
-            // the same id, so this upserts in place rather than duplicating.
+            // Update the React Query cache immediately, replacing existing items by id or adding new ones.
             upsertOutputToCache(campaignId, output);
           },
           onError: (message) => setError(message),

@@ -1,0 +1,100 @@
+{
+  "info": {
+    "name": "Smart Content Manager - Chat Sessions",
+    "description": "Chat Sessions feature: Phase 2 CRUD + Phase 3 SSE streaming. Routes are relative to your Postman `baseUrl` environment variable (which already includes /api/v1). Set `sessionId` and `campaignId` variables after creating a session.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "sessionId", "value": "", "type": "string" },
+    { "key": "campaignId", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": { "token": "{{accessToken}}" }
+  },
+  "item": [
+    {
+      "name": "Create session (general)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.data && json.data.id) {",
+              "  pm.collectionVariables.set('sessionId', json.data.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/chat/sessions", "host": ["{{baseUrl}}"], "path": ["chat", "sessions"] },
+        "body": { "mode": "raw", "raw": "{\n  \"campaignId\": \"\"\n}" }
+      }
+    },
+    {
+      "name": "Create session (campaign-scoped)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/chat/sessions", "host": ["{{baseUrl}}"], "path": ["chat", "sessions"] },
+        "body": { "mode": "raw", "raw": "{\n  \"campaignId\": \"{{campaignId}}\"\n}" }
+      }
+    },
+    {
+      "name": "List sessions (sidebar)",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/chat/sessions", "host": ["{{baseUrl}}"], "path": ["chat", "sessions"] }
+      }
+    },
+    {
+      "name": "List sessions (filtered by campaign)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/chat/sessions?campaignId={{campaignId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat", "sessions"],
+          "query": [ { "key": "campaignId", "value": "{{campaignId}}" } ]
+        }
+      }
+    },
+    {
+      "name": "Get session (with messages)",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/chat/sessions/{{sessionId}}", "host": ["{{baseUrl}}"], "path": ["chat", "sessions", "{{sessionId}}"] }
+      }
+    },
+    {
+      "name": "Rename session",
+      "request": {
+        "method": "PATCH",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/chat/sessions/{{sessionId}}", "host": ["{{baseUrl}}"], "path": ["chat", "sessions", "{{sessionId}}"] },
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Q3 Launch planning\"\n}" }
+      }
+    },
+    {
+      "name": "Delete session",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{baseUrl}}/chat/sessions/{{sessionId}}", "host": ["{{baseUrl}}"], "path": ["chat", "sessions", "{{sessionId}}"] }
+      }
+    },
+    {
+      "name": "Send message (stream, SSE)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/chat/sessions/{{sessionId}}/messages/stream", "host": ["{{baseUrl}}"], "path": ["chat", "sessions", "{{sessionId}}", "messages", "stream"] },
+        "body": { "mode": "raw", "raw": "{\n  \"content\": \"What should we prioritize for the launch this week?\"\n}" }
+      }
+    }
+  ]
+}

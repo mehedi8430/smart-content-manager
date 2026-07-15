@@ -32,6 +32,17 @@ export const chatSessionIdSchema = z.object({
   id: z.string().uuid('Invalid session ID format'),
 });
 
+/**
+ * Schema for sending a chat message (streaming)
+ */
+export const sendChatMessageSchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(1, 'Message content is required')
+    .max(8000, 'Message is too long'),
+});
+
 export type CreateChatSessionInput = z.infer<typeof createChatSessionSchema>;
 export type ListChatSessionsQuery = z.infer<typeof listChatSessionsQuerySchema>;
 export type UpdateChatSessionInput = z.infer<typeof updateChatSessionSchema>;

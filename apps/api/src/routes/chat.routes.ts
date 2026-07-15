@@ -6,12 +6,14 @@ import {
   updateChatSessionHandler,
   deleteChatSessionHandler,
 } from '@/controllers/chat.controller';
+import { streamMessageHandler } from '@/controllers/chat.stream.controller';
 import { validate } from '@/middleware/validate.middleware';
 import { protect } from '@/middleware/auth.middleware';
 import {
   createChatSessionSchema,
   listChatSessionsQuerySchema,
   updateChatSessionSchema,
+  sendChatMessageSchema,
   chatSessionIdSchema,
 } from '@/validators/chat.validator';
 
@@ -53,6 +55,13 @@ router.delete(
   '/sessions/:id',
   validate({ params: chatSessionIdSchema }),
   deleteChatSessionHandler
+);
+
+// POST /api/v1/chat/sessions/:id/messages/stream - Stream a chat reply (SSE)
+router.post(
+  '/sessions/:id/messages/stream',
+  validate({ params: chatSessionIdSchema, body: sendChatMessageSchema }),
+  streamMessageHandler
 );
 
 export default router;

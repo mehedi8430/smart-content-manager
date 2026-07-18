@@ -22,14 +22,9 @@ export interface ChatGenerationResult {
 
 /**
  * Generate a chat reply, streaming tokens via an AsyncGenerator.
- *
- * Signature mirrors the content generator's `streamGenerateContent`:
- *   AsyncGenerator<string, ChatGenerationResult>
- * The real and mock implementations share this exact signature so call sites
- * never branch on mock vs real.
- *
  * Reuses the existing Anthropic client/constants from `@/config/ai.config`
- * (the same provider-abstracted module the F4 content generator uses) — no
+ * 
+ * (the same provider-abstracted module the content generator uses) — no
  * second AI client is created here.
  */
 export async function* generateChatReply(
@@ -55,8 +50,7 @@ export async function* generateChatReply(
       })),
     });
 
-    // Process streaming events from the Anthropic API: yield text chunks for SSE
-    // and accumulate the full reply for persistence on completion.
+    // Process streaming events from the Anthropic API: yield text chunks for SSE and accumulate the full reply for persistence on completion.
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
         const delta = event.delta.text;

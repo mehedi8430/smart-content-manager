@@ -1,20 +1,11 @@
 import { Request, Response } from 'express';
 import { prisma } from '@/config/db.config';
 import { getChatSession } from '@/services/chat.service';
-import { generateChatReply, type ChatMessageTurn } from '@/services/chat.ai-service';
+import { generateChatReply, type ChatMessageTurn } from '@/services/chat/chat.ai-service';
 import logger from '@/config/logger.config';
 
 /**
  * Streaming "send message" endpoint for a chat session.
- *
- * DELIBERATE EXCEPTION to the shared `sendResponse` / `ApiError` response-shape
- * rule (see the F4 SSE-vs-Server-Actions constraint documented in the content
- * generator). Once headers are flushed as `text/event-stream` we cannot switch
- * to a single JSON body, so errors are emitted as SSE `error` events and the
- * stream is ended cleanly. Every other endpoint in this feature (Phase 2 CRUD)
- * still uses `sendResponse` / `ApiError` as usual — this route is the only
- * exception, by design.
- *
  * @route POST /api/v1/chat/sessions/:id/messages/stream
  */
 const streamMessageHandler = async (req: Request, res: Response) => {
@@ -23,21 +14,18 @@ const streamMessageHandler = async (req: Request, res: Response) => {
   const sessionId = Array.isArray(id) ? id[0] : id;
   const data = req.body as { content: string };
 
-  // 1. Verify the session belongs to the user (reuses Phase 2's getChatSession
-  //    ownership check — throws ApiError 404 if missing or not owned). It also
-  //    returns prior messages (asc), campaignId and title, which we need below.
+  // 1. Verify the session belongs to the user It also returns prior messages (asc), campaignId and title, which we need below.
   const session = await getChatSession(sessionId, userId);
   const isFirstExchange = session.messages.length === 0;
 
-  // 2. Persist the user's message immediately, BEFORE streaming starts, so a
-  //    dropped connection can never lose the user's input.
+  // 2. Persist the user's message immediately, BEFORE streaming starts, so a dropped connection can never lose the user's input.
   await prisma.chatMessage.create({
     data: { role: 'user', content: data.content, sessionId },
   });
 
-  // 3. Build the system prompt. If the session is campaign-scoped, fetch the
-  //    campaign's posts + recent AiOutputs and inject them as a context preamble.
+  // 3. Build the system prompt. If the session is campaign-scoped, fetch the campaign's posts + recent AiOutputs and inject them as a context preamble.
   let system: string;
+
   if (session.campaignId) {
     const campaign = await prisma.campaign.findUnique({
       where: { id: session.campaignId },
@@ -55,17 +43,19 @@ const streamMessageHandler = async (req: Request, res: Response) => {
     });
 
     if (campaign) {
+      // Build a readable summary of the campaign's tasks for the AI prompt.
       const tasks = campaign.posts
-        .map(
-          (p) =>
-            `- ${p.title} [${p.status}]${
-              p.dueDate ? ` due ${new Date(p.dueDate).toISOString().slice(0, 10)}` : ''
-            }`
-        )
+        .map((p) =>
+          `- ${p.title} [${p.status}]${p.dueDate ? ` due ${new Date(p.dueDate).toISOString().slice(0, 10)}` : ''
+          }`)
         .join('\n');
+
+      // Include recent AI-generated content so the assistant has campaign context.
       const recent = campaign.outputs
         .map((o) => `- [${o.type}] ${o.content.slice(0, 120)}${o.content.length > 120 ? '…' : ''}`)
         .join('\n');
+
+      // Build the system prompt with campaign context to help the AI give relevant answers.
       system =
         `You are a marketing copilot for the campaign '${campaign.name}'.\n` +
         `Current tasks:\n${tasks || '(none)'}\n\n` +
@@ -85,7 +75,7 @@ const streamMessageHandler = async (req: Request, res: Response) => {
   }));
   history.push({ role: 'user', content: data.content });
 
-  // 5. SSE headers — copied verbatim from the F4 content-generator streaming route.
+  // 5. SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -102,8 +92,7 @@ const streamMessageHandler = async (req: Request, res: Response) => {
     const generator = generateChatReply({ messages: history, system, sessionId });
     let fullContent = '';
 
-    // 7. Manual while-loop consume (NOT for-await-of) so we can capture the final
-    //    return value once done === true.
+    // 7. Manual while-loop consume (NOT for-await-of) so we can capture the final return value once done === true.
     while (true) {
       const step = await generator.next();
 
@@ -128,8 +117,7 @@ const streamMessageHandler = async (req: Request, res: Response) => {
     // 9. Auto-derive a title on the first exchange if none is set yet.
     const title = isFirstExchange && !session.title ? deriveTitle(data.content) : undefined;
 
-    // 8 & 9. Persist the assistant reply and touch session.updatedAt (and set the
-    //    derived title when applicable) in a single transaction.
+    // 8 & 9. Persist the assistant reply and touch session.updatedAt (and set the derived title when applicable) in a single transaction.
     const updateData: { updatedAt: Date; title?: string } = { updatedAt: new Date() };
     if (title !== undefined) updateData.title = title;
 
@@ -166,12 +154,14 @@ const GENERAL_SYSTEM_PROMPT =
 function deriveTitle(content: string): string {
   const words = content.trim().split(/\s+/);
   let title = '';
+
   for (const word of words) {
     const candidate = (title + ' ' + word).trim();
     if (candidate.length > 40) break;
     title = candidate;
   }
   const exceeded = content.trim().length > title.length;
+  
   return exceeded ? `${title}…` : title;
 }
 

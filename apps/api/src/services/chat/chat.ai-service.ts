@@ -14,18 +14,20 @@ export interface ChatGenerationParams {
   sessionId: string;
 }
 
-// Mirrors the content-generator's GenerationResult shape ({ fullContent, ... })
 export interface ChatGenerationResult {
   fullContent: string;
   sessionId: string;
 }
 
 /**
- * Generate a chat reply, streaming tokens via an AsyncGenerator.
- * Reuses the existing Anthropic client/constants from `@/config/ai.config`
- * 
- * (the same provider-abstracted module the content generator uses) — no
- * second AI client is created here.
+ * Generate an AI chat reply as a streamed AsyncGenerator.
+ *
+ * Streams text chunks as they are generated while accumulating the complete
+ * response, which is returned when the stream finishes for persistence.
+ *
+ * @param params Chat history, system prompt, and session metadata.
+ * @returns An AsyncGenerator that yields text chunks and returns the full reply.
+ * @throws {AiGenerationError} If the AI provider fails to generate a response.
  */
 export async function* generateChatReply(
   params: ChatGenerationParams

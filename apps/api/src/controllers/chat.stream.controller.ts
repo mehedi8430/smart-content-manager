@@ -4,9 +4,14 @@ import { getChatSession } from '@/services/chat.service';
 import { generateChatReply, type ChatMessageTurn } from '@/services/chat/chat.ai-service';
 import logger from '@/config/logger.config';
 
+const GENERAL_SYSTEM_PROMPT =
+  "You are a helpful marketing copilot. Answer the user's question clearly and concisely.";
+
 /**
- * Streaming "send message" endpoint for a chat session.
+ * Stream an AI reply for a chat session
  * @route POST /api/v1/chat/sessions/:id/messages/stream
+ * @auth Requires valid JWT token
+ * @returns Server-Sent Events (SSE) stream of AI response chunks
  */
 const streamMessageHandler = async (req: Request, res: Response) => {
   const userId = req.user!.id;
@@ -144,12 +149,9 @@ const streamMessageHandler = async (req: Request, res: Response) => {
   }
 };
 
-const GENERAL_SYSTEM_PROMPT =
-  "You are a helpful marketing copilot. Answer the user's question clearly and concisely.";
-
 /**
- * Derive a sidebar title from the first ~40 chars of the user's message,
- * trimmed at a word boundary.
+ * Generate a short chat title from the user's first message.
+ * Used only for the first exchange when the session has no title.
  */
 function deriveTitle(content: string): string {
   const words = content.trim().split(/\s+/);

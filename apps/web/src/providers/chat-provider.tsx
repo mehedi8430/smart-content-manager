@@ -1,0 +1,140 @@
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useCallback,
+} from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { streamChatMessage } from "@/lib/chat-stream-client";
+import { chatKeys } from "@/types/queryKeys";
+import type { ChatMessage } from "@/types/chat.type";
+
+interface ChatContextType {
+  activeSessionId: string | null;
+  setActiveSessionId: (id: string | null) => void;
+  messages: ChatMessage[];
+  appendUserMessage: (content: string) => void;
+  startAssistantStream: () => void;
+  appendStreamChunk: (chunk: string) => void;
+  completeStream: (finalMessage: ChatMessage) => void;
+  streamError: string | null;
+  setStreamError: (error: string | null) => void;
+  isStreaming: boolean;
+}
+
+const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+export function ChatProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
+
+  // --- Plain useState only; no reducer / dispatch ---
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamError, setStreamError] = useState<string | null>(null);
+
+  // Read the active session's messages straight from the React Query cache so
+  // we re-hydrate useState from server-fetched data (same pattern used elsewhere
+  // in this project). The sidebar list deliberately stays in the query cache
+  // only — we do NOT mirror it into context to avoid two sources of truth.
+  const sessionQuery = useQueryClient().getQueryData<{
+    messages: ChatMessage[];
+  }>(chatKeys.detail(activeSessionId ?? ""));
+
+  useEffect(() => {
+    if (!activeSessionId) {
+      setMessages([]);
+      return;
+    }
+    if (sessionQuery?.messages) {
+      setMessages(sessionQuery.messages);
+    }
+  }, [activeSessionId, sessionQuery]);
+
+  const appendUserMessage = useCallback((content: string) => {
+    if (!activeSessionId || !content.trim()) return;
+    const optimistic: ChatMessage = {
+      id: `temp-${Date.now()}`,
+      role: "user",
+      content,
+      sessionId: activeSessionId,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+  }, [activeSessionId]);
+
+  const startAssistantStream = useCallback(() => {
+    setIsStreaming(true);
+    setStreamError(null);
+    // Seed an empty assistant bubble that appendStreamChunk fills in.
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `assistant-temp-${Date.now()}`,
+        role: "assistant",
+        content: "",
+        sessionId: activeSessionId ?? "",
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }, [activeSessionId]);
+
+  const appendStreamChunk = useCallback((chunk: string) => {
+    setMessages((prev) => {
+      const next = [...prev];
+      const last = next[next.length - 1];
+      if (last && last.role === "assistant") {
+        next[next.length - 1] = { ...last, content: last.content + chunk };
+      }
+      return next;
+    });
+  }, []);
+
+  const completeStream = useCallback(
+    (finalMessage: ChatMessage) => {
+      setIsStreaming(false);
+      // Replace the temporary assistant bubble with the persisted server message.
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.role === "assistant" && m.id.startsWith("assistant-temp-")
+            ? finalMessage
+            : m,
+        ),
+      );
+      // Refresh the sidebar list so updatedAt ordering + auto-derived title show up.
+      queryClient.invalidateQueries({ queryKey: chatKeys.lists() });
+    },
+    [queryClient],
+  );
+
+  return (
+    <ChatContext.Provider
+      value={{
+        activeSessionId,
+        setActiveSessionId,
+        messages,
+        appendUserMessage,
+        startAssistantStream,
+        appendStreamChunk,
+        completeStream,
+        streamError,
+        setStreamError,
+        isStreaming,
+      }}
+    >
+      {children}
+    </ChatContext.Provider>
+  );
+}
+
+export function useChat() {
+  const context = useContext(ChatContext);
+  if (!context) {
+    throw new Error("useChat must be used within ChatProvider");
+  }
+  return context;
+}

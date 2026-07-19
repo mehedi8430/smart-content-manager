@@ -24,6 +24,8 @@ interface ChatContextType {
   streamError: string | null;
   setStreamError: (error: string | null) => void;
   isStreaming: boolean;
+  drawerOpen: boolean;
+  setDrawerOpen: (open: boolean) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -36,6 +38,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Read the active session's messages straight from the React Query cache so
   // we re-hydrate useState from server-fetched data (same pattern used elsewhere
@@ -124,6 +127,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         streamError,
         setStreamError,
         isStreaming,
+        drawerOpen,
+        setDrawerOpen,
       }}
     >
       {children}

@@ -12,9 +12,12 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { Command } from "lucide-react";
+import { Command, MessagesSquare } from "lucide-react";
+import { useOpenChat } from "@/hooks/use-open-chat";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { openGeneral } = useOpenChat();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -40,6 +43,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* Sidebar menu content */}
       <SidebarContent>
         <NavMain />
+        <SidebarMenu className="gap-2 px-2 pb-2">
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={openGeneral}
+              className="cursor-pointer"
+              tooltip="Chat"
+            >
+              <MessagesSquare className="h-4 w-4" />
+              <span>Chat</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

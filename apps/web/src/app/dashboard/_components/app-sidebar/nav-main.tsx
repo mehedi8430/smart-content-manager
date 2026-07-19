@@ -92,6 +92,7 @@ export function NavMain() {
                             isActive={pathname.startsWith(
                               `/dashboard/campaigns/${campaign.id}`,
                             )}
+                            className="truncate"
                           >
                             <Link
                               href={`/dashboard/campaigns/${campaign.id}/board`}

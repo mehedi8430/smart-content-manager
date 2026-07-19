@@ -7,6 +7,7 @@ import { Copy, RefreshCw, X, Check } from "lucide-react";
 import { useAiGenerator } from "@/providers/ai-generator-provider";
 import { streamRegeneration } from "@/lib/ai-stream-client";
 import { toast } from "sonner";
+import { useAiOutputCache } from "@/hooks/server-state/useAiOutputs";
 
 export function GeneratorOutput({ campaignId }: { campaignId: string }) {
   const {
@@ -18,14 +19,20 @@ export function GeneratorOutput({ campaignId }: { campaignId: string }) {
     completeGeneration,
     setError,
   } = useAiGenerator();
+  const { upsertOutputToCache } = useAiOutputCache();
   const [copied, setCopied] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(state.streamedContent);
-    toast.success("Content copied to clipboard");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
+    try {
+      await navigator.clipboard.writeText(state.streamedContent);
+      toast.success("Content copied to clipboard");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch (error) {
+      console.error(error);
+      toast.error("Content Copied failed. Please try again.");
+    }
   };
 
   const handleRegenerate = () => {
@@ -40,7 +47,11 @@ export function GeneratorOutput({ campaignId }: { campaignId: string }) {
         {}, // Empty payload to use original parameters
         {
           onChunk: (text) => appendChunk(text),
-          onDone: (output) => completeGeneration(output),
+          onDone: (output) => {
+            completeGeneration(output);
+            // Update the React Query cache immediately, replacing existing items by id or adding new ones.
+            upsertOutputToCache(campaignId, output);
+          },
           onError: (message) => setError(message),
         },
         abortControllerRef.current.signal,

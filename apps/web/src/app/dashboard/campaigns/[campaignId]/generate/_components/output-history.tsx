@@ -1,10 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,95 +13,100 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Copy, Trash2, FileText, Check } from "lucide-react";
+import { FileText } from "lucide-react";
 import { AiOutput } from "@/types/ai-output.type";
 import {
-  listAiOutputsAction,
-  deleteAiOutputAction,
-} from "@/actions/ai-output.actions";
+  useAiOutputsList,
+  useDeleteAiOutput,
+} from "@/hooks/server-state/useAiOutputs";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { useRouter } from "next/navigation";
+import OutputCard from "./output-card";
+import HistoryLoadingSkeleton from "./history-loading-skeleton";
 
 interface OutputHistoryProps {
   campaignId: string;
-  onUseInPost: (content: string) => void;
 }
 
-export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
-  const [outputs, setOutputs] = useState<AiOutput[]>([]);
-  const [loading, setLoading] = useState(true);
+export function OutputHistory({ campaignId }: OutputHistoryProps) {
+  const router = useRouter();
+
+  const {
+    data: outputs = [],
+    status,
+    error,
+    refetch,
+  } = useAiOutputsList(campaignId);
+  const deleteMutation = useDeleteAiOutput(campaignId);
+
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const loadOutputs = useCallback(async () => {
-    setLoading(true);
-    try {
-      const result = await listAiOutputsAction(campaignId);
-      if (result.success && result.data) {
-        setOutputs(result.data);
-      }
-    } catch (error) {
-      console.error("Failed to load outputs:", error);
-      toast.error("Failed to load output history");
-    } finally {
-      setLoading(false);
-    }
-  }, [campaignId]);
-
-  useEffect(() => {
-    loadOutputs();
-  }, [campaignId]);
+  const handleUseInPost = (content: string) => {
+    const params = new URLSearchParams({ content });
+    router.push(
+      `/dashboard/campaigns/${campaignId}/board?${params.toString()}`,
+    );
+  };
 
   const handleCopy = async (content: string, id: string) => {
-    await navigator.clipboard.writeText(content);
-    setCopiedId(id);
-    toast.success("Content copied to clipboard");
-    setTimeout(() => setCopiedId(null), 3000);
-  };
-
-  const handleDelete = async (id: string) => {
-    // Optimistic removal
-    setOutputs((prev) => prev.filter((output) => output.id !== id));
-
     try {
-      const result = await deleteAiOutputAction(campaignId, id);
-      if (result.success) {
-        toast.success(result.message || "Output deleted");
-      } else {
-        // Revert on failure
-        loadOutputs();
-        toast.error("Failed to delete output");
-      }
-    } catch (error) {
-      console.error("Failed to delete output:", error);
-      loadOutputs();
-      toast.error("Failed to delete output");
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      toast.success("Content copied to clipboard");
+      setTimeout(() => setCopiedId(null), 3000);
+    } catch (err) {
+      console.error(err);
+      toast.error("Content copied failed, Please try again");
     }
   };
 
-  const handleUseInPost = (content: string) => {
-    onUseInPost(content);
-  };
-
-  const confirmDelete = async () => {
+  // The mutation handles the optimistic removal, rollback, toast, and server reconciliation.
+  const confirmDelete = () => {
     if (!pendingDeleteId) return;
-    await handleDelete(pendingDeleteId);
+    deleteMutation.mutate(pendingDeleteId);
     setPendingDeleteId(null);
   };
 
-  // Group outputs by type
-  const groupedOutputs = outputs.reduce(
-    (acc, output) => {
-      const type = output.type || "other";
-      if (!acc[type]) acc[type] = [];
-      acc[type].push(output);
-      return acc;
-    },
-    {} as Record<string, AiOutput[]>,
-  );
+  // Group outputs by type (derived from the cached list).
+  const groupedOutputs = useMemo(() => {
+    return outputs.reduce(
+      (acc, output) => {
+        const type = output.type?.toLowerCase() || "other";
+        if (!acc[type]) acc[type] = [];
+        acc[type].push(output);
+        return acc;
+      },
+      {} as Record<string, AiOutput[]>,
+    );
+  }, [outputs]);
 
-  if (loading) {
-    return <LoadingSkeleton />;
+  // Loading: drive the skeleton off the query's own pending status.
+  if (status === "pending") {
+    return <HistoryLoadingSkeleton />;
+  }
+
+  // Error: surface a retry so the user isn't stuck on a silently failing page.
+  if (status === "error") {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">
+            {error instanceof Error
+              ? error.message
+              : "Failed to load output history"}
+          </p>
+          <Button
+            variant="outline"
+            className="mt-4 cursor-pointer"
+            onClick={() => refetch()}
+          >
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (outputs.length === 0) {
@@ -127,67 +130,20 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
           <h3 className="text-lg font-semibold mb-3 capitalize">{type}s</h3>
           <div className="grid gap-3">
             {items.map((output) => (
-              <Card key={output.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="secondary" className="capitalize">
-                          {output.type}
-                        </Badge>
-                        {output.tone && (
-                          <Badge variant="outline" className="capitalize">
-                            {output.tone}
-                          </Badge>
-                        )}
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(output.createdAt), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {output.content}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <Button
-                        onClick={() => handleCopy(output.content, output.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="cursor-pointer"
-                      >
-                        {copiedId === output.id ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        onClick={() => handleUseInPost(output.content)}
-                        variant="ghost"
-                        size="sm"
-                        className="cursor-pointer"
-                      >
-                        Use in Post
-                      </Button>
-                      <Button
-                        onClick={() => setPendingDeleteId(output.id)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive cursor-pointer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <OutputCard
+                key={output.id}
+                output={output}
+                copiedId={copiedId}
+                onCopy={handleCopy}
+                onUseInPost={handleUseInPost}
+                onDelete={setPendingDeleteId}
+              />
             ))}
           </div>
         </div>
       ))}
 
+      {/* Delete Output History Alert Dialog */}
       <AlertDialog
         open={pendingDeleteId !== null}
         onOpenChange={(open) => {
@@ -213,42 +169,6 @@ export function OutputHistory({ campaignId, onUseInPost }: OutputHistoryProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i}>
-          <Skeleton className="h-6 w-32 mb-3" />
-          <div className="space-y-3">
-            {[1, 2].map((j) => (
-              <Card key={j}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex gap-2">
-                        <Skeleton className="h-5 w-16" />
-                        <Skeleton className="h-5 w-20" />
-                        <Skeleton className="h-4 w-24" />
-                      </div>
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-                    <div className="flex gap-2">
-                      <Skeleton className="h-8 w-8" />
-                      <Skeleton className="h-8 w-20" />
-                      <Skeleton className="h-8 w-8" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

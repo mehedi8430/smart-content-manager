@@ -79,4 +79,23 @@ Chose **Zod** over express-validator.
 
 ---
 
+## July 13, 2026
+
+### Server State Management
+
+Introduced **TanStack React Query** for server state management across the frontend.
+
+**Reason**
+
+- Centralized server state management for API data.
+- Automatic caching and background refetching.
+- Built-in loading, error, and stale state handling.
+- Optimistic updates for a more responsive user experience.
+- Query invalidation after mutations instead of manual refetch logic.
+- Request deduplication and cancellation to prevent duplicate network requests.
+- Cleaner separation of server state from UI state through reusable custom hooks.
+- Improved scalability and maintainability for data-intensive dashboard features.
+
+---
+
 _New decisions will be documented here as the project evolves._

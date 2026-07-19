@@ -19,6 +19,7 @@ import { z } from "zod";
 import { TypeTabs } from "./type-tabs";
 import { useAiGenerator } from "@/providers/ai-generator-provider";
 import { streamGeneration } from "@/lib/ai-stream-client";
+import { useAiOutputCache } from "@/hooks/server-state/useAiOutputs";
 
 const formSchema = z.object({
   type: z.enum(["Ad", "Caption", "Email"]),
@@ -33,6 +34,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function GeneratorForm({ campaignId }: { campaignId: string }) {
   const { state, startGeneration, appendChunk, completeGeneration, setError } =
     useAiGenerator();
+  const { upsertOutputToCache } = useAiOutputCache();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -87,7 +89,11 @@ export function GeneratorForm({ campaignId }: { campaignId: string }) {
       },
       {
         onChunk: (text) => appendChunk(text),
-        onDone: (output) => completeGeneration(output),
+        onDone: (output) => {
+          completeGeneration(output);
+          // Update the React Query cache immediately so the history updates without a refetch.
+          upsertOutputToCache(campaignId, output);
+        },
         onError: (message) => setError(message),
       },
       abortControllerRef.current.signal,

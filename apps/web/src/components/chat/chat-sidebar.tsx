@@ -4,7 +4,6 @@ import { useChatSessionsList } from "@/hooks/server-state/use-chat-sessions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatSidebarItem } from "./chat-sidebar-item";
-import { NewChatButton } from "./new-chat-button";
 import { MessagesSquare } from "lucide-react";
 
 interface ChatSidebarProps {
@@ -40,10 +39,6 @@ export function ChatSidebar({
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="px-1">
-        <NewChatButton campaignId={campaignId} campaignName={campaignName} />
-      </div>
-
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-1 pr-3">
           {isLoading ? (

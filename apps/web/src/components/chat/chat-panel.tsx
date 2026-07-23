@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { MessagesSquare, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatThread } from "./chat-thread";
 import { ChatComposer } from "./chat-composer";
@@ -60,27 +60,9 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
     }
   };
 
-  // No session selected — don't render an empty thread; show a prompt state.
-  if (!activeSessionId) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-primary">
-          <MessagesSquare className="size-6" />
-        </div>
-        <div>
-          <p className="text-base font-medium">No conversation selected</p>
-          <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-            Pick a chat from the sidebar or start a new one to talk with your
-            campaign copilot.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-full flex-col">
-      <ChatThread messages={messages} />
+      {activeSessionId && <ChatThread messages={messages} />}
 
       {streamError && (
         <div className="mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">

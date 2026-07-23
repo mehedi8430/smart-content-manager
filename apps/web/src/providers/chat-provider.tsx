@@ -9,8 +9,8 @@ import {
   useCallback,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { streamChatMessage } from "@/lib/chat-stream-client";
 import { chatKeys } from "@/types/queryKeys";
+import { useChatSession } from "@/hooks/server-state/use-chat-sessions";
 import type { ChatMessage } from "@/types/chat.type";
 
 interface ChatContextType {
@@ -40,23 +40,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [streamError, setStreamError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Read the active session's messages straight from the React Query cache so
-  // we re-hydrate useState from server-fetched data (same pattern used elsewhere
-  // in this project). The sidebar list deliberately stays in the query cache
-  // only — we do NOT mirror it into context to avoid two sources of truth.
-  const sessionQuery = useQueryClient().getQueryData<{
-    messages: ChatMessage[];
-  }>(chatKeys.detail(activeSessionId ?? ""));
+  // Read the active session's messages from React Query using the proper hook.
+  // This automatically fetches when activeSessionId changes.
+  const { data: sessionData } = useChatSession(activeSessionId ?? undefined);
 
   useEffect(() => {
     if (!activeSessionId) {
       setMessages([]);
       return;
     }
-    if (sessionQuery?.messages) {
-      setMessages(sessionQuery.messages);
-    }
-  }, [activeSessionId, sessionQuery]);
+    setMessages(sessionData?.messages ?? []);
+  }, [activeSessionId, sessionData]);
 
   const appendUserMessage = useCallback((content: string) => {
     if (!activeSessionId || !content.trim()) return;

@@ -7,7 +7,6 @@ import { ChatThread } from "./chat-thread";
 import { ChatComposer } from "./chat-composer";
 import { useChat } from "@/providers/chat-provider";
 import { streamChatMessage } from "@/lib/chat-stream-client";
-import { cn } from "@/lib/utils";
 
 interface ChatPanelProps {
   /** The session id currently active in the sidebar. May be null on fresh load. */
@@ -61,11 +60,11 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col overflow-hidden">
       {activeSessionId && <ChatThread messages={messages} />}
 
       {streamError && (
-        <div className="mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <div className="flex-shrink-0 mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           <span className="truncate">{streamError}</span>
           <Button
             variant="outline"

@@ -34,7 +34,7 @@ export function ChatComposer({
   };
 
   return (
-    <div className="border-t border-border bg-background/80 p-3 backdrop-blur">
+    <div className="flex-shrink-0 border-t border-border bg-background/80 p-3 backdrop-blur">
       <div className="flex items-end gap-2">
         <Textarea
           value={value}

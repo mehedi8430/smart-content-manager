@@ -21,7 +21,7 @@ export function ChatThread({ messages }: ChatThreadProps) {
   }, [messages]);
 
   return (
-    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
       {messages.map((message) => (
         <ChatMessageBubble key={message.id} message={message} />
       ))}

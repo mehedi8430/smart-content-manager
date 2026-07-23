@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { usePathname } from "next/navigation";
 import { ChatPanel } from "./chat-panel";
@@ -29,6 +29,21 @@ export function ChatDrawer() {
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const { data: sessions, isLoading, isError } = useChatSessionsList(campaignId);
   const queryClient = useQueryClient();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
   const handleNewChat = async () => {
     try {
@@ -96,7 +111,10 @@ export function ChatDrawer() {
 
             {/* Dropdown Menu */}
             {menuOpen && (
-              <div className="absolute right-0 top-12 z-50 w-64 rounded-lg border border-border bg-background shadow-lg">
+              <div
+                ref={menuRef}
+                className="absolute right-0 top-12 z-50 w-64 rounded-lg border border-border bg-background shadow-lg"
+              >
                 <div className="flex flex-col">
                   {/* Recent Chats Header */}
                   <div className="border-b border-border px-4 py-2">

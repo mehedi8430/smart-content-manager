@@ -7,10 +7,9 @@ import { ChatThread } from "./chat-thread";
 import { ChatComposer } from "./chat-composer";
 import { useChat } from "@/providers/chat-provider";
 import { streamChatMessage } from "@/lib/chat-stream-client";
-import { useChatSession } from "@/hooks/server-state/use-chat-sessions";
+import { useChatSession, useCreateChatSession } from "@/hooks/server-state/use-chat-sessions";
 import { useQueryClient } from "@tanstack/react-query";
 import { chatKeys } from "@/types/queryKeys";
-import { createChatSession } from "@/api/chat.api";
 import { usePathname } from "next/navigation";
 import type { ChatMessage } from "@/types/chat.type";
 
@@ -22,7 +21,6 @@ interface ChatPanelProps {
 export function ChatPanel({ activeSessionId }: ChatPanelProps) {
   const { isStreaming, setIsStreaming, streamError, setStreamError, setActiveSessionId: setActiveSessionIdFromContext } = useChat();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isAutoCreating, setIsAutoCreating] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastUserMessageRef = useRef<string>("");
   const pathName = usePathname();
@@ -30,8 +28,10 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
   const CAMPAIGN_ID_RE = /^\/dashboard\/campaigns\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
   const campaignMatch = pathName.match(CAMPAIGN_ID_RE);
   const campaignId = campaignMatch?.[1];
-  const { data: sessionData } = useChatSession(activeSessionId ?? undefined);
+
   const queryClient = useQueryClient();
+  const { data: sessionData } = useChatSession(activeSessionId ?? undefined);
+  const createSession = useCreateChatSession();
 
   // Sync messages from React Query when activeSessionId or sessionData changes
   useEffect(() => {
@@ -101,19 +101,14 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
     // Auto-create a session if no active session exists
     if (!sessionId) {
       try {
-        setIsAutoCreating(true);
-        const newSession = await createChatSession(campaignId);
+        const newSession = await createSession.mutateAsync(campaignId);
         sessionId = newSession.id;
         setActiveSessionIdFromContext(sessionId);
-        queryClient.invalidateQueries({ queryKey: chatKeys.lists() });
       } catch (error) {
         setStreamError(
           error instanceof Error ? error.message : "Failed to create chat session",
         );
-        setIsAutoCreating(false);
         return;
-      } finally {
-        setIsAutoCreating(false);
       }
     }
 
@@ -153,7 +148,7 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
       {activeSessionId && <ChatThread messages={messages} />}
 
       {streamError && (
-        <div className="flex-shrink-0 mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <div className="shrink-0 mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           <span className="truncate">{streamError}</span>
           <Button
             variant="outline"
@@ -168,7 +163,7 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
       )}
 
       <ChatComposer
-        isStreaming={isStreaming || isAutoCreating}
+        isStreaming={isStreaming || createSession.isPending}
         onSend={handleSend}
         onCancel={handleCancel}
       />

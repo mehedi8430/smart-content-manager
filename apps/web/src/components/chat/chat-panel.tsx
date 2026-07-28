@@ -7,67 +7,101 @@ import { ChatThread } from "./chat-thread";
 import { ChatComposer } from "./chat-composer";
 import { useChat } from "@/providers/chat-provider";
 import { streamChatMessage } from "@/lib/chat-stream-client";
-import { useChatSession, useCreateChatSession } from "@/hooks/server-state/use-chat-sessions";
+import {
+  useChatSession,
+  useCreateChatSession,
+} from "@/hooks/server-state/use-chat-sessions";
 import { useQueryClient } from "@tanstack/react-query";
 import { chatKeys } from "@/types/queryKeys";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import type { ChatMessage } from "@/types/chat.type";
 
-interface ChatPanelProps {
-  /** The session id currently active. May be null on fresh load. */
-  activeSessionId: string | null;
-}
-
-export function ChatPanel({ activeSessionId }: ChatPanelProps) {
-  const { isStreaming, setIsStreaming, streamError, setStreamError, setActiveSessionId: setActiveSessionIdFromContext } = useChat();
+export function ChatPanel() {
+  const { campaignId } = useParams<{ campaignId: string }>();
+  const {
+    isStreaming,
+    setIsStreaming,
+    streamError,
+    setStreamError,
+    activeSessionId,
+    setActiveSessionId: setActiveSessionIdFromContext,
+  } = useChat();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastUserMessageRef = useRef<string>("");
-  const pathName = usePathname();
-  
-  const CAMPAIGN_ID_RE = /^\/dashboard\/campaigns\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
-  const campaignMatch = pathName.match(CAMPAIGN_ID_RE);
-  const campaignId = campaignMatch?.[1];
+  const localMessagesBySessionRef = useRef<Map<string, ChatMessage[]>>(
+    new Map(),
+  );
 
   const queryClient = useQueryClient();
   const { data: sessionData } = useChatSession(activeSessionId ?? undefined);
   const createSession = useCreateChatSession();
 
-  // Sync messages from React Query when activeSessionId or sessionData changes
+  // Sync messages from React Query when sessionData changes
+  // Only sync when not streaming and sessionData has messages, to avoid overwriting optimistic updates
   useEffect(() => {
-    if (!activeSessionId) {
+    if (isStreaming) return;
+
+    // Check if we have local messages for this session
+    const localMessages = activeSessionId
+      ? localMessagesBySessionRef.current.get(activeSessionId)
+      : null;
+
+    if (sessionData?.messages && sessionData.messages.length > 0) {
+      setMessages(sessionData.messages);
+      // Clear local messages for this session since we have server data
+      if (activeSessionId) {
+        localMessagesBySessionRef.current.delete(activeSessionId);
+      }
+    } else if (localMessages && localMessages.length > 0) {
+      // Restore local messages if we have them and server has no data yet
+      setMessages(localMessages);
+    } else if (sessionData?.messages && sessionData.messages.length === 0) {
+      // Clear messages when switching to a session with no messages and no local messages
       setMessages([]);
-      return;
     }
-    setMessages(sessionData?.messages ?? []);
-  }, [activeSessionId, sessionData]);
+  }, [sessionData, isStreaming, activeSessionId]);
 
-  const appendUserMessage = useCallback((content: string) => {
-    if (!activeSessionId || !content.trim()) return;
-    const optimistic: ChatMessage = {
-      id: `temp-${Date.now()}`,
-      role: "user",
-      content,
-      sessionId: activeSessionId,
-      createdAt: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimistic]);
-  }, [activeSessionId]);
-
-  const startAssistantStream = useCallback(() => {
-    setIsStreaming(true);
-    setStreamError(null);
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `assistant-temp-${Date.now()}`,
-        role: "assistant",
-        content: "",
-        sessionId: activeSessionId ?? "",
+  const appendUserMessage = useCallback(
+    (content: string, sessionId: string) => {
+      if (!sessionId || !content.trim()) return;
+      const optimistic: ChatMessage = {
+        id: `temp-${Date.now()}`,
+        role: "user",
+        content,
+        sessionId,
         createdAt: new Date().toISOString(),
-      },
-    ]);
-  }, [activeSessionId, setIsStreaming, setStreamError]);
+      };
+      setMessages((prev) => {
+        const newMessages = [...prev, optimistic];
+        // Store in local messages map
+        localMessagesBySessionRef.current.set(sessionId, newMessages);
+        return newMessages;
+      });
+    },
+    [],
+  );
+
+  const startAssistantStream = useCallback(
+    (sessionId: string) => {
+      setIsStreaming(true);
+      setStreamError(null);
+      setMessages((prev) => {
+        const newMessage: ChatMessage = {
+          id: `assistant-temp-${Date.now()}`,
+          role: "assistant",
+          content: "",
+          sessionId,
+          createdAt: new Date().toISOString(),
+        };
+        const newMessages = [...prev, newMessage];
+        // Store in local messages map
+        localMessagesBySessionRef.current.set(sessionId, newMessages);
+        return newMessages;
+      });
+    },
+    [setIsStreaming, setStreamError],
+  );
 
   const appendStreamChunk = useCallback((chunk: string) => {
     setMessages((prev) => {
@@ -75,6 +109,10 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
       const last = next[next.length - 1];
       if (last && last.role === "assistant") {
         next[next.length - 1] = { ...last, content: last.content + chunk };
+        // Update in local messages map
+        if (last.sessionId) {
+          localMessagesBySessionRef.current.set(last.sessionId, next);
+        }
       }
       return next;
     });
@@ -106,7 +144,9 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
         setActiveSessionIdFromContext(sessionId);
       } catch (error) {
         setStreamError(
-          error instanceof Error ? error.message : "Failed to create chat session",
+          error instanceof Error
+            ? error.message
+            : "Failed to create chat session",
         );
         return;
       }
@@ -115,8 +155,8 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
     lastUserMessageRef.current = content;
     setStreamError(null);
 
-    appendUserMessage(content);
-    startAssistantStream();
+    appendUserMessage(content, sessionId);
+    startAssistantStream(sessionId);
 
     abortControllerRef.current = new AbortController();
     streamChatMessage(
@@ -145,7 +185,7 @@ export function ChatPanel({ activeSessionId }: ChatPanelProps) {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {activeSessionId && <ChatThread messages={messages} />}
+      <ChatThread messages={messages} />
 
       {streamError && (
         <div className="shrink-0 mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">

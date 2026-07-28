@@ -13,10 +13,7 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
 
   return (
     <div
-      className={cn(
-        "flex w-full",
-        isUser ? "justify-end" : "justify-start",
-      )}
+      className={cn("flex w-full", isUser ? "justify-end" : "justify-start")}
     >
       <div
         className={cn(
@@ -30,7 +27,9 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
           // Streaming placeholder so the in-progress bubble is visible immediately.
           <span className="inline-block h-4 w-2 animate-pulse rounded-sm bg-foreground/40 align-middle" />
         ) : (
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          <p className="whitespace-pre-wrap wrap-break-word">
+            {message.content}
+          </p>
         )}
       </div>
     </div>

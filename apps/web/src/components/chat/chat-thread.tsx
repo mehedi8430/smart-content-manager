@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { ChatMessageBubble } from "./chat-message-bubble";
-import { useChat } from "@/providers/chat-provider";
 import type { ChatMessage } from "@/types/chat.type";
 
 interface ChatThreadProps {
@@ -12,10 +11,7 @@ interface ChatThreadProps {
 export function ChatThread({ messages }: ChatThreadProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll to the newest message as tokens stream in. Mirrors the content
-  // generator's live-render pattern: keep the latest content in view without
-  // reimplementing a scroll library — a bottom anchor scrolled into view on
-  // every messages change handles both the user send and token-by-token growth.
+  // Auto-scroll to the latest message, including streamed AI responses.
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);

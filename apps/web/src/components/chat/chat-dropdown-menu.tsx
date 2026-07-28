@@ -10,22 +10,20 @@ import {
   useDeleteChatSession,
 } from "@/hooks/server-state/use-chat-sessions";
 import { toast } from "sonner";
+import { useChat } from "@/providers/chat-provider";
 
 interface ChatDropdownMenuProps {
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
   campaignId: string | undefined;
-  activeSessionId: string | null;
-  setActiveSessionId: (id: string | null) => void;
 }
 
 export function ChatDropdownMenu({
   menuOpen,
   setMenuOpen,
   campaignId,
-  activeSessionId,
-  setActiveSessionId,
 }: ChatDropdownMenuProps) {
+  const { activeSessionId, setActiveSessionId } = useChat();
   const menuRef = useRef<HTMLDivElement>(null);
   const [hoveredSessionId, setHoveredSessionId] = useState<string | null>(null);
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(

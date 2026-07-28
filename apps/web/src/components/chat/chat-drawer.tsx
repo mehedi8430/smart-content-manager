@@ -7,11 +7,8 @@ import { ChatPanel } from "./chat-panel";
 import { useChat } from "@/providers/chat-provider";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Trash2, ChevronRight, ExternalLink } from "lucide-react";
-import { useChatSessionsList } from "@/hooks/server-state/use-chat-sessions";
+import { useChatSessionsList, useCreateChatSession, useDeleteChatSession } from "@/hooks/server-state/use-chat-sessions";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { createChatSession, deleteChatSession } from "@/api/chat.api";
-import { useQueryClient } from "@tanstack/react-query";
-import { chatKeys } from "@/types/queryKeys";
 import { toast } from "sonner";
 
 const CAMPAIGN_ID_RE =
@@ -24,12 +21,13 @@ export function ChatDrawer() {
 
   const { drawerOpen, setDrawerOpen, activeSessionId, setActiveSessionId } = useChat();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
   const [hoveredSessionId, setHoveredSessionId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const { data: sessions, isLoading, isError } = useChatSessionsList(campaignId);
-  const queryClient = useQueryClient();
-  const menuRef = useRef<HTMLDivElement>(null);
+  const createSession = useCreateChatSession();
+  const deleteSession = useDeleteChatSession(deletingSessionId ?? "");
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -47,17 +45,13 @@ export function ChatDrawer() {
 
   const handleNewChat = async () => {
     try {
-      setIsCreating(true);
-      const session = await createChatSession(campaignId);
-      queryClient.invalidateQueries({ queryKey: chatKeys.lists() });
+      const session = await createSession.mutateAsync(campaignId);
       setActiveSessionId(session.id);
       setMenuOpen(false);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to start a new chat",
       );
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -68,8 +62,7 @@ export function ChatDrawer() {
     e.stopPropagation();
     try {
       setDeletingSessionId(sessionId);
-      await deleteChatSession(sessionId);
-      queryClient.invalidateQueries({ queryKey: chatKeys.lists() });
+      await deleteSession.mutateAsync();
       if (activeSessionId === sessionId) {
         setActiveSessionId(null);
       }
@@ -176,11 +169,11 @@ export function ChatDrawer() {
                   <div className="border-t border-border">
                     <button
                       onClick={handleNewChat}
-                      disabled={isCreating}
+                      disabled={createSession.isPending}
                       className="flex w-full items-center gap-2 px-4 py-2 text-xs text-muted-foreground hover:bg-accent disabled:opacity-50"
                     >
                       <ExternalLink className="size-3" />
-                      <span>{isCreating ? "Creating..." : "New chat"}</span>
+                      <span>{createSession.isPending ? "Creating..." : "New chat"}</span>
                     </button>
                   </div>
                 </div>

@@ -4,21 +4,11 @@ import {
   getChatSession,
   renameChatSession,
   deleteChatSession,
+  createChatSession,
 } from "@/api/chat.api";
 import { chatKeys } from "@/types/queryKeys";
 import type { ChatSessionSummary } from "@/types/chat.type";
 import { toast } from "sonner";
-
-/**
- * Server-state hooks for chat sessions.
- * These are the ONLY place the UI talks to the chat-session API for
- * non-streaming reads/writes. Mirrors the AI Outputs hooks.
- *
- * The sidebar list lives directly in the React Query cache (via
- * `useChatSessionsList`); the active session's live message thread lives in
- * ChatProvider's useState because it needs optimistic + streaming updates that
- * don't fit cleanly into query-cache mutations.
- */
 
 /**
  * Fetch the chat session list (sidebar). Optionally scoped by campaignId.
@@ -104,6 +94,28 @@ export function useDeleteChatSession(sessionId: string) {
 
     onSettled: () => {
       // Reconcile with the server whether we succeeded or rolled back.
+      queryClient.invalidateQueries({ queryKey: chatKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Create a new chat session (optionally campaign-scoped).
+ * Invalidates the list so the new session appears in the sidebar.
+ */
+export function useCreateChatSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (campaignId?: string) => createChatSession(campaignId),
+
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create session",
+      );
+    },
+
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: chatKeys.lists() });
     },
   });

@@ -42,12 +42,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* Sidebar menu content */}
       <SidebarContent>
+        {/* Main Nav */}
         <NavMain />
+        {/* Chat Button */}
         <SidebarMenu className="gap-2 px-2 pb-2">
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={openGeneral}
-              className="cursor-pointer"
+              className="cursor-pointer bg-sidebar-accent font-medium text-sidebar-accent-foreground"
               tooltip="Chat"
             >
               <MessagesSquare className="h-4 w-4" />

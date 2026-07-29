@@ -2,6 +2,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import Header from "./_components/header";
 import { AppSidebar } from "./_components/app-sidebar/app-sidebar";
+import { ChatDrawer } from "@/components/chat/chat-drawer";
 
 export default function DashboardLayout({
   children,
@@ -21,6 +22,7 @@ export default function DashboardLayout({
               {children}
             </main>
           </SidebarInset>
+          <ChatDrawer />
         </SidebarProvider>
       </TooltipProvider>
     </main>

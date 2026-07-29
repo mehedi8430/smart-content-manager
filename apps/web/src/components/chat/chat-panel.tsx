@@ -34,7 +34,9 @@ export function ChatPanel() {
   );
 
   const queryClient = useQueryClient();
-  const { data: sessionData } = useChatSession(activeSessionId ?? undefined);
+  const { data: sessionData, isLoading: isSessionPending } = useChatSession(
+    activeSessionId ?? undefined,
+  );
   const createSession = useCreateChatSession();
 
   // Sync messages from React Query when sessionData changes
@@ -56,8 +58,9 @@ export function ChatPanel() {
     } else if (localMessages && localMessages.length > 0) {
       // Restore local messages if we have them and server has no data yet
       setMessages(localMessages);
-    } else if (sessionData?.messages && sessionData.messages.length === 0) {
-      // Clear messages when switching to a session with no messages and no local messages
+    } else {
+      // Clear messages when there is no server data and no local data
+      // (e.g. deleted session, newly selected empty session, null activeSessionId)
       setMessages([]);
     }
   }, [sessionData, isStreaming, activeSessionId]);
@@ -185,7 +188,7 @@ export function ChatPanel() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <ChatThread messages={messages} />
+      <ChatThread messages={messages} isSessionPending={isSessionPending} />
 
       {streamError && (
         <div className="shrink-0 mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -206,6 +209,7 @@ export function ChatPanel() {
         isStreaming={isStreaming || createSession.isPending}
         onSend={handleSend}
         onCancel={handleCancel}
+        sessionId={activeSessionId}
       />
     </div>
   );

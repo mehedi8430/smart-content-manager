@@ -39,9 +39,8 @@ export function ChatDropdownMenu({
   const deleteSession = useDeleteChatSession(deletingSessionId ?? "");
 
   const handleNewChat = async () => {
-    if (!campaignId) return;
     try {
-      const session = await createSession.mutateAsync(campaignId);
+      const session = await createSession.mutateAsync(campaignId ?? "");
       setActiveSessionId(session.id);
       setMenuOpen(false);
     } catch (error) {
@@ -56,11 +55,13 @@ export function ChatDropdownMenu({
     sessionId: string,
   ) => {
     e.stopPropagation();
+    
     try {
       setDeletingSessionId(sessionId);
       await deleteSession.mutateAsync();
       if (activeSessionId === sessionId) {
-        setActiveSessionId(null);
+        const remaining = sessions?.filter((s) => s.id !== sessionId) ?? [];
+        setActiveSessionId(remaining[0]?.id ?? null);
       }
       toast.success("Chat deleted successfully");
     } catch (error) {
@@ -156,12 +157,12 @@ export function ChatDropdownMenu({
         </ScrollArea>
 
         {/* Menu Items */}
-        <div className="border-t border-border">
+        {/* <div className="border-t border-border">
           <button className="flex w-full items-center justify-between px-4 py-2 text-xs text-muted-foreground hover:bg-accent">
             <span>More</span>
             <ChevronRight className="size-3" />
           </button>
-        </div>
+        </div> */}
 
         <div className="border-t border-border">
           <button

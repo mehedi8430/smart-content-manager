@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Send, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,14 +9,21 @@ interface ChatComposerProps {
   isStreaming: boolean;
   onSend: (content: string) => void;
   onCancel: () => void;
+  sessionId?: string | null;
 }
 
 export function ChatComposer({
   isStreaming,
   onSend,
   onCancel,
+  sessionId,
 }: ChatComposerProps) {
   const [value, setValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, [sessionId]);
 
   const submit = () => {
     const content = value.trim();
@@ -37,6 +44,7 @@ export function ChatComposer({
     <div className="shrink-0 border-t border-border bg-background/80 p-3 backdrop-blur">
       <div className="flex items-end gap-2">
         <Textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}

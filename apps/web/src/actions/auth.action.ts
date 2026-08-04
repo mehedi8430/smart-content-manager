@@ -6,7 +6,6 @@ import {
   TLoginPayload,
   TLoginResponse,
   TLogoutResponse,
-  TRefreshTokenResponse,
   TSignupPayload,
   TSignupResponse
 } from "@/types/auth.type";
@@ -32,13 +31,13 @@ export async function loginAction(values: TLoginPayload) {
 
     cookieStore.set("accessToken", response?.data?.accessToken || "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: "none" as const,
       path: "/",
     });
     cookieStore.set("refreshToken", response?.data?.refreshToken || "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: "none" as const,
       path: "/",
     });

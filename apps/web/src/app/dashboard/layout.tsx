@@ -22,7 +22,8 @@ export default function DashboardLayout({
               {children}
             </main>
           </SidebarInset>
-          <ChatDrawer />
+          {/* Chat Drawer */}
+          {/* <ChatDrawer /> */}
         </SidebarProvider>
       </TooltipProvider>
     </main>

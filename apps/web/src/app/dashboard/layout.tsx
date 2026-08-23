@@ -23,7 +23,7 @@ export default function DashboardLayout({
             </main>
           </SidebarInset>
           {/* Chat Drawer */}
-          {/* <ChatDrawer /> */}
+          <ChatDrawer />
         </SidebarProvider>
       </TooltipProvider>
     </main>

@@ -45,8 +45,12 @@ export async function streamGeneration(
     signal?: AbortSignal
 ): Promise<void> {
     try {
+        const apiBaseUrl =
+            typeof window === "undefined"
+                ? process.env.NEXT_PUBLIC_API_BASE_URL
+                : "/api/v1";
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/campaigns/${campaignId}/ai-outputs/generate`,
+            `${apiBaseUrl}/campaigns/${campaignId}/ai-outputs/generate`,
             {
                 method: "POST",
                 credentials: "include",
@@ -171,8 +175,12 @@ export async function streamRegeneration(
     signal?: AbortSignal
 ): Promise<void> {
     try {
+        const apiBaseUrl =
+            typeof window === "undefined"
+                ? process.env.NEXT_PUBLIC_API_BASE_URL
+                : "/api/v1";
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/campaigns/${campaignId}/ai-outputs/${outputId}/regenerate`,
+            `${apiBaseUrl}/campaigns/${campaignId}/ai-outputs/${outputId}/regenerate`,
             {
                 method: "POST",
                 credentials: "include",

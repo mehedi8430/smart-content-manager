@@ -14,7 +14,10 @@ export function useOpenChat() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
 
   const createSession = useCreateChatSession();
-  const { data: sessions } = useChatSessionsList(selectedCampaignId ?? undefined);
+  const { data: sessions } = useChatSessionsList(
+    selectedCampaignId ?? undefined,
+    Boolean(selectedCampaignId),
+  );
 
   const openGeneral = useCallback(() => {
     setDrawerOpen(true);

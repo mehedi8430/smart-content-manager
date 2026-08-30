@@ -6,7 +6,9 @@ import axios, {
 import { config } from "@/config/env-config";
 
 export const api: AxiosInstance = axios.create({
-  baseURL: config.baseURL,
+  // Browser requests must stay same-origin so the HttpOnly web cookie is sent
+  // to the Next rewrite, which forwards it to the API host.
+  baseURL: typeof window === "undefined" ? config.baseURL : "/api/v1",
   timeout: config.defaultTimeout,
   withCredentials: true,
   headers: {

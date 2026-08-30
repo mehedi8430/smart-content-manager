@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, ChevronRight, ExternalLink } from "lucide-react";
+import { Trash2, ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useChatSessionsList,
@@ -34,7 +34,7 @@ export function ChatDropdownMenu({
     data: sessions,
     isLoading,
     isError,
-  } = useChatSessionsList(campaignId);
+  } = useChatSessionsList(campaignId, menuOpen);
   const createSession = useCreateChatSession();
   const deleteSession = useDeleteChatSession(deletingSessionId ?? "");
 
@@ -122,6 +122,7 @@ export function ChatDropdownMenu({
                   className="flex items-center border-b border-border/50 hover:bg-accent"
                 >
                   <button
+                    type="button"
                     onClick={() => {
                       setActiveSessionId(session.id);
                       setMenuOpen(false);
@@ -137,6 +138,7 @@ export function ChatDropdownMenu({
                   </button>
                   {hoveredSessionId === session.id && (
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       onClick={(e) => handleDeleteSession(e, session.id)}
@@ -166,6 +168,7 @@ export function ChatDropdownMenu({
 
         <div className="border-t border-border">
           <button
+            type="button"
             onClick={handleNewChat}
             disabled={createSession.isPending}
             className="flex w-full items-center gap-2 px-4 py-2 text-xs text-muted-foreground hover:bg-accent disabled:opacity-50"

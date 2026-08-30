@@ -27,8 +27,12 @@ export async function streamChatMessage(
   signal?: AbortSignal,
 ): Promise<void> {
   try {
+    const apiBaseUrl =
+      typeof window === "undefined"
+        ? process.env.NEXT_PUBLIC_API_BASE_URL
+        : "/api/v1";
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/chat/sessions/${sessionId}/messages/stream`,
+      `${apiBaseUrl}/chat/sessions/${sessionId}/messages/stream`,
       {
         method: "POST",
         credentials: "include",

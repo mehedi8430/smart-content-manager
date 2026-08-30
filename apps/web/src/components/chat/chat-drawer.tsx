@@ -27,6 +27,7 @@ export function ChatDrawer() {
               </p>
             </div>
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               onClick={() => setMenuOpen(!menuOpen)}

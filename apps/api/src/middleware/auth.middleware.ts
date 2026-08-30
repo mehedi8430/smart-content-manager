@@ -22,9 +22,6 @@ export const protect = async (
       token = req.cookies.accessToken;
     }
 
-    console.log("req cookies:", req.cookies?.accessToken);
-    // console.log("access token:", token);
-
     if (!token) {
       throw new ApiError(401, 'Access denied. No token provided.');
     }

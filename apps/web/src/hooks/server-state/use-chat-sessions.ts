@@ -13,10 +13,14 @@ import { toast } from "sonner";
 /**
  * Fetch the chat session list (sidebar). Optionally scoped by campaignId.
  */
-export function useChatSessionsList(campaignId?: string) {
+export function useChatSessionsList(
+  campaignId?: string,
+  enabled = true,
+) {
   return useQuery({
     queryKey: chatKeys.list(campaignId ?? ""),
     queryFn: () => listChatSessions(campaignId),
+    enabled,
     staleTime: 5 * 60 * 1000,
   });
 }

@@ -13,8 +13,7 @@ import {
 import { LayoutDashboard, FileText, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import { listCampaignsAction } from "@/actions/campaign.action";
+import { useState } from "react";
 import { Campaign } from "@/types/campaign.type";
 
 const data = {
@@ -37,29 +36,9 @@ const data = {
   ],
 };
 
-export function NavMain() {
+export function NavMain({ recentCampaigns }: { recentCampaigns: Campaign[] }) {
   const pathname = usePathname();
   const [isCampaignsOpen, setIsCampaignsOpen] = useState(true);
-  const [recentCampaigns, setRecentCampaigns] = useState<Campaign[]>([]);
-
-  useEffect(() => {
-    const fetchRecentCampaigns = async () => {
-      try {
-        const result = await listCampaignsAction({
-          limit: 10,
-          sortBy: "createdAt",
-          sortOrder: "desc",
-        });
-        if (result.data && result.data.data) {
-          setRecentCampaigns(result.data.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch recent campaigns:", error);
-      }
-    };
-
-    fetchRecentCampaigns();
-  }, []);
 
   return (
     <SidebarContent>

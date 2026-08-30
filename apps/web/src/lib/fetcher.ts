@@ -24,9 +24,9 @@ export async function fetcher<T = unknown>(
 
     // Don't add auth header for auth endpoints
     const isAuthEndpoint = [
-        "/auth/login",
-        "/auth/register",
-        "/auth/refresh-token",
+        "auth/login",
+        "auth/register",
+        "auth/refresh-token",
     ].includes(cleanEndpoint);
 
     let accessToken: string | undefined;
@@ -80,6 +80,7 @@ export async function fetcher<T = unknown>(
                     ...(systemKey && {
                         "System-Key": systemKey,
                     }),
+                    ...(incomingCookieHeader && { Cookie: incomingCookieHeader }),
                 },
             },
         );
@@ -109,11 +110,12 @@ export async function fetcher<T = unknown>(
                 });
             }
 
-            // retry original request without Authorization header so the refreshed cookie is used
             const retryHeaders = {
                 ...fetchOptions.headers,
+                ...(refreshData?.data?.accessToken && {
+                    Authorization: `Bearer ${refreshData.data.accessToken}`,
+                }),
             } as Record<string, string>;
-            delete retryHeaders.Authorization;
 
             response = await fetch(url, {
                 ...fetchOptions,

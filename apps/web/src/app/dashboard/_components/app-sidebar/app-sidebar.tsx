@@ -14,8 +14,12 @@ import {
 } from "@/components/ui/sidebar";
 import { Command, MessagesSquare } from "lucide-react";
 import { useOpenChat } from "@/hooks/use-open-chat";
+import { Campaign } from "@/types/campaign.type";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  recentCampaigns,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { recentCampaigns: Campaign[] }) {
   const { openGeneral } = useOpenChat();
 
   return (
@@ -43,7 +47,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* Sidebar menu content */}
       <SidebarContent>
         {/* Main Nav */}
-        <NavMain />
+        <NavMain recentCampaigns={recentCampaigns} />
         {/* Chat Button */}
         <SidebarMenu className="gap-2 px-2 pb-2">
           <SidebarMenuItem>

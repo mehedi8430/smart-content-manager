@@ -3,17 +3,25 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import Header from "./_components/header";
 import { AppSidebar } from "./_components/app-sidebar/app-sidebar";
 import { ChatDrawer } from "@/components/chat/chat-drawer";
+import { listCampaignsAction } from "@/actions/campaign.action";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const result = await listCampaignsAction({
+    limit: 10,
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  });
+  const recentCampaigns = result.data?.data ?? [];
+
   return (
     <main>
       <TooltipProvider>
         <SidebarProvider>
-          <AppSidebar />
+          <AppSidebar recentCampaigns={recentCampaigns} />
           <SidebarInset>
             {/* Header */}
             <Header />

@@ -21,6 +21,7 @@ import {
 } from "@/hooks/server-state/useAiOutputs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { jsPDF } from "jspdf";
 import OutputCard from "./output-card";
 import HistoryLoadingSkeleton from "./history-loading-skeleton";
 
@@ -58,6 +59,64 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
     } catch (err) {
       console.error(err);
       toast.error("Content copied failed, Please try again");
+    }
+  };
+
+  const handleExport = (output: AiOutput) => {
+    try {
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 40;
+      const maxTextWidth = pageWidth - margin * 2;
+
+      const title = output.title || `${output.type} content`;
+      const safeTitle = title.replace(/\s+/g, " ").trim() || "content";
+      const fileName = `${safeTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.pdf`;
+
+      doc.setFontSize(20);
+      doc.setTextColor(15, 23, 42);
+      doc.text(title, margin, 60, { maxWidth: maxTextWidth });
+
+      doc.setFontSize(11);
+      doc.setTextColor(71, 85, 105);
+      let y = 96;
+
+      const meta = [
+        `Type: ${output.type}`,
+        output.tone ? `Tone: ${output.tone}` : null,
+        `Created: ${new Date(output.createdAt).toLocaleString()}`,
+      ].filter(Boolean) as string[];
+
+      meta.forEach((line) => {
+        doc.text(line, margin, y);
+        y += 18;
+      });
+
+      doc.setDrawColor(203, 213, 225);
+      doc.line(margin, y + 6, pageWidth - margin, y + 6);
+      y += 26;
+
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(12);
+
+      const normalizedContent = (output.content || "").replace(/\r\n/g, "\n");
+      const lines = doc.splitTextToSize(normalizedContent, maxTextWidth);
+
+      lines.forEach((line: string) => {
+        if (y > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.text(line, margin, y);
+        y += 16;
+      });
+
+      doc.save(fileName);
+      toast.success("PDF downloaded successfully");
+    } catch (error) {
+      console.error("PDF export failed:", error);
+      toast.error("Failed to export PDF. Please try again.");
     }
   };
 
@@ -135,6 +194,7 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
                 output={output}
                 copiedId={copiedId}
                 onCopy={handleCopy}
+                onExport={handleExport}
                 onUseInPost={handleUseInPost}
                 onDelete={setPendingDeleteId}
               />

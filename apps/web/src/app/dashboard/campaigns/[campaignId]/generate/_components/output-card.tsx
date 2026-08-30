@@ -4,13 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
-import { Check, Copy, Trash2 } from "lucide-react";
+import { Check, Copy, Download, Trash2 } from "lucide-react";
 import { AiOutput } from "@/types/ai-output.type";
 
 interface OutputCardProps {
   output: AiOutput;
   copiedId: string | null;
   onCopy: (content: string, id: string) => void;
+  onExport: (output: AiOutput) => void;
   onUseInPost: (content: string) => void;
   onDelete: (id: string) => void;
 }
@@ -19,6 +20,7 @@ export default function OutputCard({
   output,
   copiedId,
   onCopy,
+  onExport,
   onUseInPost,
   onDelete,
 }: OutputCardProps) {
@@ -46,7 +48,7 @@ export default function OutputCard({
               {output.content}
             </p>
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap justify-end">
             <Button
               onClick={() => onCopy(output.content, output.id)}
               variant="ghost"
@@ -59,6 +61,15 @@ export default function OutputCard({
               ) : (
                 <Copy className="h-4 w-4" />
               )}
+            </Button>
+            <Button
+              onClick={() => onExport(output)}
+              variant="ghost"
+              size="sm"
+              className="cursor-pointer"
+              aria-label="Export PDF"
+            >
+              <Download className="h-4 w-4" />
             </Button>
             <Button
               onClick={() => onUseInPost(output.content)}

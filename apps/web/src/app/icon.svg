@@ -1,0 +1,19 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="24" y1="16" x2="232" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="oklch(73.842% 0.15513 163.719 / 0.858)"/>
+      <stop offset="1" stop-color="oklch(73.842% 0.15513 163.719 / 0.95)"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="96" y1="72" x2="176" y2="184" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#DDEBFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="224" height="224" rx="48" fill="url(#bg)"/>
+  <path d="M74 80C74 70.0589 82.0589 62 92 62H159C176.673 62 191 76.3269 191 94V98C191 115.673 176.673 130 159 130H116C104.954 130 96 138.954 96 150V151C96 162.046 104.954 171 116 171H164C174.493 171 183 179.507 183 190V194C183 204.493 174.493 213 164 213H92C82.0589 213 74 204.941 74 195V80Z" fill="url(#accent)" fill-opacity="0.98"/>
+  <path d="M107 92H161" stroke="#0F172A" stroke-width="16" stroke-linecap="round"/>
+  <path d="M107 111H145" stroke="#0F172A" stroke-width="16" stroke-linecap="round"/>
+  <path d="M94 174H161" stroke="#0F172A" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="184" cy="72" r="16" fill="#E8F1FF"/>
+  <path d="M184 49V58M184 86V95M161 72H170M198 72H207M166 55L172 61M196 83L202 89M166 89L172 83M196 61L202 55" stroke="oklch(73.842% 0.15513 163.719 / 0.858)" stroke-width="6" stroke-linecap="round"/>
+</svg>

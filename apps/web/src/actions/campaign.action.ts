@@ -44,7 +44,7 @@ export async function listCampaignsAction(query: ListCampaignsQuery = {}) {
     const queryParams = new URLSearchParams();
 
     if (query.page) queryParams.append("page", query.page.toString());
-    if (query.limit) queryParams.append("limit", query.limit.toString());
+    if (query.limit !== undefined) queryParams.append("limit", query.limit.toString());
     if (query.search) queryParams.append("search", query.search);
     if (query.sortBy) queryParams.append("sortBy", query.sortBy);
     if (query.sortOrder) queryParams.append("sortOrder", query.sortOrder);

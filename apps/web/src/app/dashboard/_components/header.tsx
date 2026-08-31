@@ -22,12 +22,12 @@ import { Moon, Sun } from "lucide-react";
 import { NavUser } from "./app-sidebar/nav-user";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { CampaignSearch } from "@/components/campaign-search";
 
 export default function Header() {
   const { setTheme } = useTheme();
   const pathname = usePathname();
 
-  // Generate breadcrumb items from pathname
   const getBreadcrumbs = () => {
     const segments = pathname.split("/").filter(Boolean);
     const breadcrumbs = [];
@@ -36,18 +36,15 @@ export default function Header() {
       return [{ label: "Dashboard", href: "/dashboard", isLast: true }];
     }
 
-    // Always add Dashboard as first item
     breadcrumbs.push({
       label: "Dashboard",
       href: "/dashboard",
       isLast: segments.length === 1 && segments[0] === "dashboard",
     });
 
-    // Add additional segments
     let accumulatedPath = "";
 
     for (let i = 1; i < segments.length; i++) {
-      // Check if segment is a UUID (skip it entirely)
       const isUuid =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
           segments[i],
@@ -55,7 +52,7 @@ export default function Header() {
 
       if (isUuid) {
         accumulatedPath += `/dashboard/${segments[i]}`;
-        continue; // Skip UUID segments
+        continue;
       }
 
       accumulatedPath += `/dashboard/${segments[i]}`;
@@ -74,7 +71,7 @@ export default function Header() {
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-      <div className="flex justify-between w-full items-center">
+      <div className="flex w-full items-center justify-between gap-3">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -82,7 +79,6 @@ export default function Header() {
             className="mr-2 data-vertical:h-4 data-vertical:self-auto"
           />
 
-          {/* Breadcrumb */}
           <Breadcrumb>
             <BreadcrumbList>
               {breadcrumbs.map((crumb) => (
@@ -106,7 +102,9 @@ export default function Header() {
           </Breadcrumb>
         </div>
 
-        <div className="mr-4 space-x-2">
+        <div className="mr-4 flex items-center gap-2">
+          <CampaignSearch />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="cursor-pointer">

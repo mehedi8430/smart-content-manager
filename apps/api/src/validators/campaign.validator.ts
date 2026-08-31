@@ -38,7 +38,12 @@ export const updateCampaignSchema = z.object({
  */
 export const listCampaignsSchema = z.object({
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(50).default(10),
+  limit: z.union([
+    z.coerce.number().int().positive().max(50),
+    z.string().trim().toLowerCase().refine((value) => value === 'all', {
+      message: 'Limit must be a positive number or "all"',
+    }),
+  ]).default(10),
   search: z.string().trim().optional(),
   sortBy: z.enum(['createdAt', 'name']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),

@@ -12,10 +12,11 @@ function formatMetricValue(value: number) {
 
 export default async function DashboardPage() {
   const campaignsResult = await listCampaignsAction({
-    limit: 30,
+    limit: "all",
     sortBy: "createdAt",
     sortOrder: "desc",
   });
+  console.log({campaignsResult})
 
   const campaigns = campaignsResult.data?.data ?? [];
 

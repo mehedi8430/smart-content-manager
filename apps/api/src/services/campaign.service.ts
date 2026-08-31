@@ -37,11 +37,11 @@ export const createCampaign = async (userId: string, data: CreateCampaignInput) 
  */
 export const listCampaigns = async (userId: string, query: ListCampaignsQuery) => {
   const { page, limit, search, sortBy, sortOrder } = query;
-  // how many records to skip for pagination
-  const skip = (page - 1) * limit;
+  const isAll = limit === 'all';
+  const pageLimit = isAll ? undefined : Number(limit);
+  const skip = isAll ? 0 : (page - 1) * (pageLimit ?? 0);
 
   try {
-    // Build where clause for search by name if have and filter by userid
     const where = {
       userId,
       ...(search && {
@@ -52,18 +52,15 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
       }),
     };
 
-    // Counts how many campaigns match the filter
     const total = await prisma.campaign.count({ where });
 
-    // Get campaigns with counts
     const campaigns = await prisma.campaign.findMany({
       where,
       skip,
-      take: limit,
+      take: pageLimit,
       orderBy: {
         [sortBy]: sortOrder,
       },
-      // Prisma feature that adds counts of related records without fetching the actual records.
       include: {
         _count: {
           select: {
@@ -74,14 +71,14 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
       },
     });
 
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = isAll ? 1 : Math.ceil(total / (pageLimit ?? 1));
 
     return {
       data: campaigns,
       pagination: {
         total,
         page,
-        limit,
+        limit: isAll ? total : (pageLimit ?? total),
         totalPages,
       },
     };

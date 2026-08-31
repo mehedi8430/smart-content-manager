@@ -15,7 +15,7 @@ export interface UpdateCampaignPayload {
 
 export interface ListCampaignsQuery {
   page?: number;
-  limit?: number;
+  limit?: number | 'all';
   search?: string;
   sortBy?: 'createdAt' | 'name';
   sortOrder?: 'asc' | 'desc';

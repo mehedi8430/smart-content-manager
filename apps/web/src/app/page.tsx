@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { LandingNavigation } from './_landing/navigation';
 import { HeroSection } from './_landing/hero';
 import { FeaturesSection } from './_landing/features';
+import { ScreenshotsGallery } from './_landing/screenshots-gallery';
 import { CtaSection } from './_landing/cta-section';
 import { PricingSection } from './_landing/pricing';
 import { Footer } from './_landing/footer';
@@ -40,6 +41,7 @@ export default function HomePage() {
       <LandingNavigation />
       <HeroSection />
       <FeaturesSection />
+      <ScreenshotsGallery />
       <CtaSection />
       <PricingSection />
       <Footer />

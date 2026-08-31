@@ -11,14 +11,14 @@ export function proxy(request: NextRequest) {
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
   const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path));
 
-  // Handle root path
-  // TODO: remove this when landing page is added
+  // Handle root path - landing page
   if (pathname === "/") {
+    // Redirect authenticated users to dashboard
     if (accessToken) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
-    } else {
-      return NextResponse.redirect(new URL("/login", request.url));
     }
+    // Allow unauthenticated users to view landing page
+    return NextResponse.next();
   }
 
   // If trying to access protected route without token, redirect to login

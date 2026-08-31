@@ -16,7 +16,6 @@ export default async function DashboardPage() {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
-  console.log({campaignsResult})
 
   const campaigns = campaignsResult.data?.data ?? [];
 
@@ -32,6 +31,7 @@ export default async function DashboardPage() {
     entry.posts.map((post) => ({
       ...post,
       campaignName: entry.campaignName,
+      campaignId: entry.campaignId,
     })),
   );
 

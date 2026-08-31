@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "Smart Content and Campaign Manager",
   description:
     "An AI-powered SaaS dashboard for marketers and small businesses to create campaigns, generate content, and manage their entire workflow — in one place",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

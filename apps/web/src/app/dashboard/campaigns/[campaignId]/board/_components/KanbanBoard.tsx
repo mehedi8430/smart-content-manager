@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Post, PostStatus } from "@/types/post.type";
 import { bulkUpdatePostsAction } from "@/actions/post.action";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { toast } from "sonner";
 
 interface KanbanBoardProps {
   campaignName: string;
@@ -127,10 +128,14 @@ export function KanbanBoard({
       .then((result) => {
         if (result.error) {
           console.error("Failed to update post order:", result.error);
+          toast.error(result.error || "Failed to update post order");
           setPosts(posts);
         }
       })
-      .catch(() => setPosts(posts));
+      .catch((error) => {
+        toast.error("Failed to update post order");
+        setPosts(posts);
+      });
   }
 
   return (

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Sparkles, X } from "lucide-react";
+import { Search, Sparkles, X, AlertCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { listCampaignsAction } from "@/actions/campaign.action";
 import type { Campaign } from "@/types/campaign.type";
@@ -13,6 +14,7 @@ export function CampaignSearch() {
   const [results, setResults] = useState<Campaign[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -31,11 +33,13 @@ export function CampaignSearch() {
     if (!trimmed) {
       setResults([]);
       setIsOpen(false);
+      setHasError(false);
       return;
     }
 
     const timeout = setTimeout(async () => {
       setIsLoading(true);
+      setHasError(false);
 
       try {
         const response = await listCampaignsAction({
@@ -45,9 +49,18 @@ export function CampaignSearch() {
           sortOrder: "desc",
         });
 
-        setResults(response.data?.data ?? []);
+        if (response.error) {
+          setHasError(true);
+          toast.error(response.error);
+          setResults([]);
+        } else {
+          setResults(response.data?.data ?? []);
+        }
         setIsOpen(true);
-      } catch {
+      } catch (_error) {
+        console.error("Error searching campaigns:", _error);
+        setHasError(true);
+        toast.error("Failed to search campaigns");
         setResults([]);
       } finally {
         setIsLoading(false);
@@ -78,7 +91,7 @@ export function CampaignSearch() {
           onChange={(event) => setSearchQuery(event.target.value)}
           onFocus={() => searchQuery.trim() && setIsOpen(true)}
           placeholder="Search campaigns..."
-          className="h-10 w-[360px] rounded-full border border-border bg-background pl-9 pr-10 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-sidebar-primary/60 focus:ring-3 focus:ring-sidebar-primary/15"
+          className="h-10 w-90 rounded-full border border-border bg-background pl-9 pr-10 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-sidebar-primary/60 focus:ring-3 focus:ring-sidebar-primary/15"
         />
         {searchQuery && (
           <button
@@ -93,7 +106,7 @@ export function CampaignSearch() {
       </div>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-[420px] overflow-hidden rounded-2xl border bg-popover text-popover-foreground shadow-2xl ring-1 ring-border">
+        <div className="absolute left-0 top-full z-50 mt-2 w-105 overflow-hidden rounded-2xl border bg-popover text-popover-foreground shadow-2xl ring-1 ring-border">
           <div className="flex items-center justify-between border-b px-3 py-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
             <span>Campaign search</span>
             <span>{isLoading ? "Searching..." : `${results.length} results`}</span>
@@ -108,8 +121,13 @@ export function CampaignSearch() {
                 />
               ))}
             </div>
+          ) : hasError ? (
+            <div className="flex items-center gap-2 p-4 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>Failed to search campaigns. Please try again.</span>
+            </div>
           ) : results.length > 0 ? (
-            <div className="max-h-[360px] overflow-y-auto p-2">
+            <div className="max-h-90 overflow-y-auto p-2">
               {results.map((campaign) => (
                 <Link
                   key={campaign.id}

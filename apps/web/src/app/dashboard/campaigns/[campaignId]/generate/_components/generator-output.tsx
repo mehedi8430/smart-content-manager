@@ -51,8 +51,12 @@ export function GeneratorOutput({ campaignId }: { campaignId: string }) {
             completeGeneration(output);
             // Update the React Query cache immediately, replacing existing items by id or adding new ones.
             upsertOutputToCache(campaignId, output);
+            toast.success("Content regenerated successfully");
           },
-          onError: (message) => setError(message),
+          onError: (message) => {
+            setError(message);
+            toast.error(message || "Failed to regenerate content");
+          },
         },
         abortControllerRef.current.signal,
       );

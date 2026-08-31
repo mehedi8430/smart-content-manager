@@ -8,13 +8,12 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
 import { loginAction } from "@/actions/auth.action";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +26,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -43,13 +42,15 @@ export function LoginForm({
     },
   });
 
-  const onSubmit = (data: LoginInput) => {
-    startTransition(async () => {
+  const onSubmit = async (data: LoginInput) => {
+    setIsLoading(true);
+    try {
       const result = await loginAction(data);
 
       if (result.error) {
         setFormError("root", { message: result.error });
         toast.error(result.error);
+        setIsLoading(false);
         return;
       }
 
@@ -57,7 +58,10 @@ export function LoginForm({
         toast.success(result.message || "Login successful");
         router.push("/dashboard");
       }
-    });
+    } catch {
+      toast.error("Login failed. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -84,7 +88,7 @@ export function LoginForm({
                   type="email"
                   placeholder="m@example.com"
                   {...register("email")}
-                  disabled={isPending}
+                  disabled={isLoading}
                 />
                 {errors.email && (
                   <div className="text-sm text-destructive mt-1">
@@ -107,7 +111,7 @@ export function LoginForm({
                     id="password"
                     type={showPassword ? "text" : "password"}
                     {...register("password")}
-                    disabled={isPending}
+                    disabled={isLoading}
                     className="pr-10"
                   />
                   <Button
@@ -116,7 +120,7 @@ export function LoginForm({
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={isPending}
+                    disabled={isLoading}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -132,8 +136,8 @@ export function LoginForm({
                 )}
               </Field>
               <Field>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Logging in..." : "Login"}
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Logging in..." : "Login"}
                 </Button>
               </Field>
 

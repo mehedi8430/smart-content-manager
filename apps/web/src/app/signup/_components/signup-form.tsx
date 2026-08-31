@@ -21,6 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, type SignupInput } from "@/validations/auth.shema";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 export function SignupForm({
   className,
@@ -46,7 +47,12 @@ export function SignupForm({
 
       if (result.error) {
         setFormError("root", { message: result.error });
-      } else if (result.success) {
+        toast.error(result.error);
+        return;
+      }
+
+      if (result.success) {
+        toast.success(result.message || "Account created successfully");
         router.push("/login");
       }
     });

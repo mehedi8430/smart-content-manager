@@ -20,6 +20,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@/validations/auth.shema";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 export function LoginForm({
   className,
@@ -48,7 +49,12 @@ export function LoginForm({
 
       if (result.error) {
         setFormError("root", { message: result.error });
-      } else if (result.success) {
+        toast.error(result.error);
+        return;
+      }
+
+      if (result.success) {
+        toast.success(result.message || "Login successful");
         router.push("/dashboard");
       }
     });

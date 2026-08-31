@@ -14,6 +14,7 @@ import {
   deleteCampaignAction,
 } from "@/actions/campaign.action";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 export default function CampaignsClient() {
   const searchParams = useSearchParams();
@@ -57,15 +58,18 @@ export default function CampaignsClient() {
       };
 
       const result = await listCampaignsAction(query);
-      
+
       if (result.error) {
         setError(result.error);
+        toast.error(result.error);
       } else if (result.data) {
         setCampaigns(result.data.data);
         setPagination(result.data.pagination);
       }
     } catch {
-      setError("Failed to fetch campaigns");
+      const message = "Failed to fetch campaigns";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -103,13 +107,17 @@ export default function CampaignsClient() {
       const result = await createCampaignAction(formData);
       if (result.error) {
         setError(result.error);
+        toast.error(result.error);
         return;
       }
       setIsCreateModalOpen(false);
       setFormData({ name: "", description: "" });
+      toast.success(result.message || "Campaign created successfully");
       await fetchCampaigns();
     } catch {
-      setError("Failed to create campaign");
+      const message = "Failed to create campaign";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -123,14 +131,18 @@ export default function CampaignsClient() {
       const result = await updateCampaignAction(selectedCampaign.id, formData);
       if (result.error) {
         setError(result.error);
+        toast.error(result.error);
         return;
       }
       setIsEditModalOpen(false);
       setSelectedCampaign(null);
       setFormData({ name: "", description: "" });
+      toast.success(result.message || "Campaign updated successfully");
       await fetchCampaigns();
     } catch {
-      setError("Failed to update campaign");
+      const message = "Failed to update campaign";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -143,13 +155,17 @@ export default function CampaignsClient() {
       const result = await deleteCampaignAction(selectedCampaign.id);
       if (result.error) {
         setError(result.error);
+        toast.error(result.error);
         return;
       }
       setIsDeleteDialogOpen(false);
       setSelectedCampaign(null);
+      toast.success(result.message || "Campaign deleted successfully");
       await fetchCampaigns();
     } catch {
-      setError("Failed to delete campaign");
+      const message = "Failed to delete campaign";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

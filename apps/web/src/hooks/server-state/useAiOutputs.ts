@@ -60,6 +60,10 @@ export function useDeleteAiOutput(campaignId: string) {
       return { previous };
     },
 
+    onSuccess: () => {
+      toast.success("Output deleted successfully");
+    },
+
     onError: (error, _id, context) => {
       // Roll back to the snapshot taken before the optimistic update.
       if (context?.previous) {

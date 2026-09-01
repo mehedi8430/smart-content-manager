@@ -8,26 +8,25 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
 import { signupAction } from "@/actions/auth.action";
-import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, type SignupInput } from "@/validations/auth.shema";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -40,17 +39,28 @@ export function SignupForm({
     resolver: zodResolver(signupSchema),
   });
 
-  const onSubmit = (data: SignupInput) => {
-    startTransition(async () => {
+  const onSubmit = async (data: SignupInput) => {
+    setIsLoading(true);
+    try {
       const result = await signupAction(data);
 
       if (result.error) {
         setFormError("root", { message: result.error });
-      } else if (result.success) {
+        toast.error(result.error);
+        setIsLoading(false);
+        return;
+      }
+
+      if (result.success) {
+        toast.success(result.message || "Account created successfully");
         router.push("/login");
       }
-    });
+    } catch {
+      toast.error("Signup failed. Please try again.");
+      setIsLoading(false);
+    }
   };
+  
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
@@ -75,7 +85,7 @@ export function SignupForm({
                   type="email"
                   placeholder="m@example.com"
                   {...register("email")}
-                  disabled={isPending}
+                  disabled={isLoading}
                 />
                 {errors.email && (
                   <div className="text-sm text-destructive mt-1">
@@ -96,7 +106,7 @@ export function SignupForm({
                         id="password"
                         type={showPassword ? "text" : "password"}
                         {...register("password")}
-                        disabled={isPending}
+                        disabled={isLoading}
                         className="pr-10"
                       />
                       <Button
@@ -105,7 +115,7 @@ export function SignupForm({
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
-                        disabled={isPending}
+                        disabled={isLoading}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -129,7 +139,7 @@ export function SignupForm({
                         id="confirmPassword"
                         type={showConfirmPassword ? "text" : "password"}
                         {...register("confirmPassword")}
-                        disabled={isPending}
+                        disabled={isLoading}
                         className="pr-10"
                       />
                       <Button
@@ -140,7 +150,7 @@ export function SignupForm({
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
-                        disabled={isPending}
+                        disabled={isLoading}
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -161,8 +171,8 @@ export function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Creating account..." : "Create Account"}
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
               </Field>
 

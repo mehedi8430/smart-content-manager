@@ -73,10 +73,10 @@ export function ScreenshotsGallery() {
   const currentScreenshot = screenshots[currentIndex];
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+    <section className="py-10 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+        <div className="text-center mb-6">
+          <h2 className="text-4xl sm:text-5xl font-bold mb-2">
             See It In Action
           </h2>
           <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
@@ -88,7 +88,7 @@ export function ScreenshotsGallery() {
         <div className="relative">
           {/* Main Image */}
           <Card className="overflow-hidden border border-border/40 group">
-            <div className="relative w-full h-96 sm:h-125 lg:h-150">
+            <div className="relative w-full h-48 sm:h-72 lg:h-96">
               <Image
                 src={currentScreenshot.image}
                 alt={currentScreenshot.alt}
@@ -118,37 +118,8 @@ export function ScreenshotsGallery() {
             <ChevronRight className="w-6 h-6" />
           </button>
 
-          {/* Info Section Below Image */}
-          <div className="mt-8 text-center">
-            <h3 className="text-3xl font-bold mb-3">{currentScreenshot.title}</h3>
-            <p className="text-lg text-foreground/70 mb-8 max-w-2xl mx-auto">
-              {currentScreenshot.description}
-            </p>
-
-            {/* Dot Indicators */}
-            <div className="flex justify-center items-center gap-3 mb-8">
-              {screenshots.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  className={`transition-all duration-300 rounded-full ${
-                    index === currentIndex
-                      ? 'w-3 h-3 bg-primary'
-                      : 'w-2 h-2 bg-primary/40 hover:bg-primary/60'
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
-
-            {/* Slide Counter */}
-            <div className="text-sm text-foreground/50">
-              {currentIndex + 1} / {screenshots.length}
-            </div>
-          </div>
-
           {/* Mobile Navigation Buttons */}
-          <div className="flex gap-3 justify-center mt-8 sm:hidden">
+          <div className="flex gap-3 justify-center mt-4 sm:hidden">
             <Button
               variant="outline"
               size="sm"
@@ -169,7 +140,7 @@ export function ScreenshotsGallery() {
         </div>
 
         {/* Feature Highlights */}
-        <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {screenshots.map((screenshot, index) => (
             <button
               key={index}

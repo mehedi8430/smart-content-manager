@@ -41,7 +41,7 @@ export default function HomePage() {
       <LandingNavigation />
       <HeroSection />
       <FeaturesSection />
-      <ScreenshotsGallery />
+      {/* <ScreenshotsGallery /> */}
       <CtaSection />
       <PricingSection />
       <Footer />

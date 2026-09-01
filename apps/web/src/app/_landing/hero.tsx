@@ -58,7 +58,7 @@ export function HeroSection() {
             <div className="text-center">
               <div className="text-6xl mb-4">📊</div>
               <p className="text-foreground/50 font-medium">Smart Content Dashboard Preview</p>
-              <p className="text-sm text-foreground/40 mt-2">Campaigns • AI Content • Kanban • Chat • Export</p>
+              <p className="text-sm text-foreground/40 mt-2">Campaigns • Kanban • AI Content • Chat • Export</p>
             </div>
           </div>
         </div>

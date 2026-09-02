@@ -22,7 +22,7 @@ import { Moon, Sun } from "lucide-react";
 import { NavUser } from "./app-sidebar/nav-user";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { CampaignSearch } from "@/components/campaign-search";
+import { CampaignSearch } from "@/app/dashboard/_components/campaign-search";
 
 export default function Header() {
   const { setTheme } = useTheme();

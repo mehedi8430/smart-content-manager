@@ -15,7 +15,7 @@ export function HeroSection() {
         <div className="absolute bottom-0 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-10" />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 text-center">
         <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 rounded-full border border-border/50 bg-muted/30">
           <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" />
           <span className="text-sm font-medium">AI-Powered Marketing Tools</span>

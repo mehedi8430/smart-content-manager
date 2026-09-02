@@ -30,7 +30,7 @@ export function BoardHeader({
             Manage your campaign content and tasks
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap gap-3">
           {/* open add post sheet */}
           <Button
             variant="outline"

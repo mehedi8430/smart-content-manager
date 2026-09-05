@@ -97,7 +97,7 @@ export function LoginForm({
                 )}
               </Field>
               <Field>
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <Link
                     href="#"
@@ -105,7 +105,7 @@ export function LoginForm({
                   >
                     Forgot your password?
                   </Link>
-                </div>
+                </div> */}
                 <div className="relative">
                   <Input
                     id="password"
@@ -197,8 +197,13 @@ export function LoginForm({
       </Card>
       <FieldDescription className="px-6 text-center">
         By clicking continue, you agree to our{" "}
-        <Link href="#">Terms of Service</Link> and{" "}
-        <Link href="#">Privacy Policy</Link>.
+        <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
+          Privacy Policy
+        </Link>.
       </FieldDescription>
     </div>
   );

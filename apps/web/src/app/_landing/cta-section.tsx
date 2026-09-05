@@ -8,7 +8,7 @@ export function CtaSection() {
   const router = useRouter();
 
   return (
-    <section id="about" className="py-20 px-4 sm:px-6 lg:px-8">
+    <section id="about" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-linear-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-8 sm:p-12 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">

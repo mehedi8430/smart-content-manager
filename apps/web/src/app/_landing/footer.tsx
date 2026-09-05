@@ -20,8 +20,8 @@ export function Footer() {
       { label: 'Careers', href: '#careers' },
     ],
     legal: [
-      { label: 'Privacy Policy', href: '#privacy' },
-      { label: 'Terms of Service', href: '#terms' },
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
       { label: 'Contact', href: '#contact' },
     ],
   };

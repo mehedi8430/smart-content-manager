@@ -2,7 +2,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import Header from "./_components/header";
 import { AppSidebar } from "./_components/app-sidebar/app-sidebar";
-import { ChatDrawer } from "@/components/chat/chat-drawer";
+import { ChatDrawer } from "@/app/dashboard/_components/chat/chat-drawer";
 import { listCampaignsAction } from "@/actions/campaign.action";
 
 export default async function DashboardLayout({

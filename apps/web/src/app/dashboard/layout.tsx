@@ -2,7 +2,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import Header from "./_components/header";
 import { AppSidebar } from "./_components/app-sidebar/app-sidebar";
-import { ChatDrawer } from "@/app/dashboard/_components/chat/chat-drawer";
+import { ChatDrawerLazy } from "./_components/chat/chat-drawer-lazy";
 import { listCampaignsAction } from "@/actions/campaign.action";
 
 export default async function DashboardLayout({
@@ -30,8 +30,8 @@ export default async function DashboardLayout({
               {children}
             </main>
           </SidebarInset>
-          {/* Chat Drawer */}
-          <ChatDrawer />
+          {/* Chat Drawer - lazy-loaded on first open */}
+          <ChatDrawerLazy />
         </SidebarProvider>
       </TooltipProvider>
     </main>

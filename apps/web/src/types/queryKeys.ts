@@ -23,3 +23,18 @@ export const chatKeys = {
   details: () => [...chatKeys.all, "detail"] as const,
   detail: (sessionId: string) => [...chatKeys.details(), sessionId] as const,
 };
+
+/**
+ * Query key factory for campaigns.
+ * The list key is parameterized by the full query so that different
+ * pagination/search/sort combinations cache independently. Mutations
+ * invalidate all lists via `campaignKeys.lists()`.
+ */
+export const campaignKeys = {
+  all: ["campaigns"] as const,
+  lists: () => [...campaignKeys.all, "list"] as const,
+  list: (query: Record<string, unknown>) =>
+    [...campaignKeys.lists(), JSON.stringify(query)] as const,
+  details: () => [...campaignKeys.all, "detail"] as const,
+  detail: (id: string) => [...campaignKeys.details(), id] as const,
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { CampaignsHeader } from "./campaigns-header";
 import { CampaignsTable } from "./campaigns-table";
 import { CreateCampaignModal } from "./create-campaign-modal";
@@ -8,25 +8,28 @@ import { EditCampaignModal } from "./edit-campaign-modal";
 import { DeleteCampaignDialog } from "./delete-campaign-dialog";
 import { Campaign } from "@/types/campaign.type";
 import {
-  createCampaignAction,
-  listCampaignsAction,
-  updateCampaignAction,
-  deleteCampaignAction,
-} from "@/actions/campaign.action";
+  useCampaignsList,
+  useCreateCampaign,
+  useUpdateCampaign,
+  useDeleteCampaign,
+} from "@/hooks/server-state/useCampaigns";
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 
 export default function CampaignsClient() {
   const searchParams = useSearchParams();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    total: 0,
-    page: 1,
-    limit: 10,
-    totalPages: 0,
-  });
+
+  const query = {
+    page: Number(searchParams.get("page")) || 1,
+    limit: Number(searchParams.get("limit")) || 10,
+    search: searchParams.get("search") || undefined,
+    sortBy:
+      (searchParams.get("sortBy") as "createdAt" | "name") || "createdAt",
+    sortOrder: (searchParams.get("sortOrder") as "asc" | "desc") || "desc",
+  };
+
+  const { data, isLoading, isError, error } = useCampaignsList(query);
+  const campaigns = data?.data ?? [];
+  const pagination = data?.pagination;
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -43,43 +46,10 @@ export default function CampaignsClient() {
     description: "",
   });
 
-  // Fetch campaigns
-  const fetchCampaigns = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const query = {
-        page: Number(searchParams.get("page")) || 1,
-        limit: Number(searchParams.get("limit")) || 10,
-        search: searchParams.get("search") || undefined,
-        sortBy:
-          (searchParams.get("sortBy") as "createdAt" | "name") || "createdAt",
-        sortOrder: (searchParams.get("sortOrder") as "asc" | "desc") || "desc",
-      };
+  const createMutation = useCreateCampaign();
+  const updateMutation = useUpdateCampaign();
+  const deleteMutation = useDeleteCampaign();
 
-      const result = await listCampaignsAction(query);
-
-      if (result.error) {
-        setError(result.error);
-        toast.error(result.error);
-      } else if (result.data) {
-        setCampaigns(result.data.data);
-        setPagination(result.data.pagination);
-      }
-    } catch {
-      const message = "Failed to fetch campaigns";
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    fetchCampaigns();
-  }, [fetchCampaigns]);
-
-  // Handlers
   const handleCreate = () => {
     setSelectedCampaign(null);
     setFormData({ name: "", description: "" });
@@ -104,20 +74,11 @@ export default function CampaignsClient() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const result = await createCampaignAction(formData);
-      if (result.error) {
-        setError(result.error);
-        toast.error(result.error);
-        return;
-      }
+      await createMutation.mutateAsync(formData);
       setIsCreateModalOpen(false);
       setFormData({ name: "", description: "" });
-      toast.success(result.message || "Campaign created successfully");
-      await fetchCampaigns();
     } catch {
-      const message = "Failed to create campaign";
-      setError(message);
-      toast.error(message);
+      // Toast already shown by the mutation hook.
     } finally {
       setIsSubmitting(false);
     }
@@ -128,21 +89,15 @@ export default function CampaignsClient() {
     if (!selectedCampaign) return;
     setIsSubmitting(true);
     try {
-      const result = await updateCampaignAction(selectedCampaign.id, formData);
-      if (result.error) {
-        setError(result.error);
-        toast.error(result.error);
-        return;
-      }
+      await updateMutation.mutateAsync({
+        id: selectedCampaign.id,
+        payload: formData,
+      });
       setIsEditModalOpen(false);
       setSelectedCampaign(null);
       setFormData({ name: "", description: "" });
-      toast.success(result.message || "Campaign updated successfully");
-      await fetchCampaigns();
     } catch {
-      const message = "Failed to update campaign";
-      setError(message);
-      toast.error(message);
+      // Toast already shown by the mutation hook.
     } finally {
       setIsSubmitting(false);
     }
@@ -152,30 +107,27 @@ export default function CampaignsClient() {
     if (!selectedCampaign) return;
     setIsSubmitting(true);
     try {
-      const result = await deleteCampaignAction(selectedCampaign.id);
-      if (result.error) {
-        setError(result.error);
-        toast.error(result.error);
-        return;
-      }
+      await deleteMutation.mutateAsync(selectedCampaign.id);
       setIsDeleteDialogOpen(false);
       setSelectedCampaign(null);
-      toast.success(result.message || "Campaign deleted successfully");
-      await fetchCampaigns();
     } catch {
-      const message = "Failed to delete campaign";
-      setError(message);
-      toast.error(message);
+      // Toast already shown by the mutation hook.
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const errorMessage = isError
+    ? error instanceof Error
+      ? error.message
+      : "Failed to fetch campaigns"
+    : null;
+
   return (
     <div className="space-y-6">
-      {error && (
+      {errorMessage && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-          {error}
+          {errorMessage}
         </div>
       )}
       <CampaignsHeader onCreate={handleCreate} />
@@ -184,7 +136,7 @@ export default function CampaignsClient() {
         campaigns={campaigns}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        loading={loading}
+        loading={isLoading}
         pagination={pagination}
       />
 

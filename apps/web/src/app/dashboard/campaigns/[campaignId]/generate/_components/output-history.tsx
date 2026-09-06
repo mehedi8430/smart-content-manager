@@ -21,7 +21,6 @@ import {
 } from "@/hooks/server-state/useAiOutputs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { jsPDF } from "jspdf";
 import OutputCard from "./output-card";
 import HistoryLoadingSkeleton from "./history-loading-skeleton";
 
@@ -62,8 +61,11 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
     }
   };
 
-  const handleExport = (output: AiOutput) => {
+  const handleExport = async (output: AiOutput) => {
     try {
+      // Load jsPDF only on demand so the ~300KB library is excluded from the
+      // initial bundle and downloaded only when a user actually exports a PDF.
+      const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({ unit: "pt", format: "a4" });
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();

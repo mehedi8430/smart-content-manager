@@ -1,5 +1,6 @@
 import { prisma } from '@/config/db.config';
 import { ApiError } from '@/utils/apiResponse';
+import TTLCache from '@/utils/cache';
 import logger from '@/config/logger.config';
 import type {
   CreateCampaignInput,
@@ -10,6 +11,39 @@ import type {
 /**
  * Campaign service layer - handles all business logic and Prisma operations
  */
+
+/**
+ * In-memory caches for read-heavy campaign data. Keyed by the owning user so
+ * cached rows are never served across tenants. Writes invalidate explicitly
+ * to keep the cache coherent within this process.
+ */
+const campaignCache = new TTLCache<string, unknown>(60_000, 2000);
+const userListKeys = new Map<string, Set<string>>();
+
+/** Invalidate every cached campaign list for a user on any write. */
+function invalidateUserLists(userId: string) {
+  const keys = userListKeys.get(userId);
+  if (!keys) return;
+  keys.forEach((key) => campaignCache.del(key));
+  userListKeys.delete(userId);
+}
+
+/** Remember a list key so a later write can invalidate it. */
+function trackListKey(userId: string, key: string) {
+  const keys = userListKeys.get(userId) ?? new Set<string>();
+  keys.add(key);
+  userListKeys.set(userId, keys);
+}
+
+type CampaignListResult = {
+  data: Awaited<ReturnType<typeof prisma.campaign.findMany>>;
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
 
 /**
  * Create a new campaign for a user
@@ -25,6 +59,7 @@ export const createCampaign = async (userId: string, data: CreateCampaignInput) 
     });
 
     logger.info(`Campaign created: ${campaign.id} for user: ${userId}`);
+    invalidateUserLists(userId);
     return campaign;
   } catch (error) {
     logger.error('Error creating campaign:', error);
@@ -40,6 +75,10 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
   const isAll = limit === 'all';
   const pageLimit = isAll ? undefined : Number(limit);
   const skip = isAll ? 0 : (page - 1) * (pageLimit ?? 0);
+
+  const cacheKey = `campaigns:${userId}:${JSON.stringify(query)}`;
+  const cached = campaignCache.get(cacheKey);
+  if (cached) return cached as CampaignListResult;
 
   try {
     const where = {
@@ -73,7 +112,7 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
 
     const totalPages = isAll ? 1 : Math.ceil(total / (pageLimit ?? 1));
 
-    return {
+    const result = {
       data: campaigns,
       pagination: {
         total,
@@ -82,6 +121,11 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
         totalPages,
       },
     };
+
+    trackListKey(userId, cacheKey);
+    campaignCache.set(cacheKey, result);
+
+    return result;
   } catch (error) {
     logger.error('Error listing campaigns:', error);
     throw new ApiError(500, 'Failed to list campaigns');
@@ -92,6 +136,10 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
  * Get a single campaign by ID (must belong to the user)
  */
 export const getCampaignById = async (id: string, userId: string) => {
+  const cacheKey = `campaign:${id}:${userId}`;
+  const cached = campaignCache.get(cacheKey);
+  if (cached) return cached;
+
   try {
     const campaign = await prisma.campaign.findUnique({
       where: { id },
@@ -114,6 +162,7 @@ export const getCampaignById = async (id: string, userId: string) => {
       throw new ApiError(404, 'Campaign not found');
     }
 
+    campaignCache.set(cacheKey, campaign);
     return campaign;
   } catch (error) {
     if (error instanceof ApiError) {
@@ -170,6 +219,8 @@ export const updateCampaign = async (
       },
     });
 
+    invalidateUserLists(userId);
+    campaignCache.del(`campaign:${campaign.id}:${userId}`);
     logger.info(`Campaign updated: ${campaign.id} by user: ${userId}`);
     return campaign;
   } catch (error) {
@@ -204,6 +255,8 @@ export const deleteCampaign = async (id: string, userId: string) => {
       where: { id },
     });
 
+    invalidateUserLists(userId);
+    campaignCache.del(`campaign:${id}:${userId}`);
     logger.info(`Campaign deleted: ${id} by user: ${userId}`);
     return { success: true };
   } catch (error) {

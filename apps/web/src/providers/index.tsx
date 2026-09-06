@@ -14,6 +14,9 @@ export function Providers({ children }: { children: ReactNode }) {
           queries: {
             staleTime: 30 * 1000, // sensible project-wide default; override per-query where needed
             retry: 1,
+            // Data is user-scoped and not real-time; avoid surprise refetches when
+            // the window regains focus (reduces unnecessary network + CPU churn).
+            refetchOnWindowFocus: false,
           },
         },
       }),

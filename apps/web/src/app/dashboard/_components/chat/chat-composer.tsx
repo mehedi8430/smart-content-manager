@@ -45,6 +45,7 @@ export function ChatComposer({
       <div className="flex items-end gap-2">
         <Textarea
           ref={textareaRef}
+          id="chat-composer"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}

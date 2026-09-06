@@ -25,6 +25,9 @@ import { Post, PostStatus } from "@/types/post.type";
 import { bulkUpdatePostsAction } from "@/actions/post.action";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/empty-state";
+import { FileText, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface KanbanBoardProps {
   campaignName: string;
@@ -154,25 +157,42 @@ export function KanbanBoard({
         />
 
         {/* Kanban Columns */}
-        <ScrollArea className="w-full">
-          <div className="flex flex-col md:flex-row gap-4 py-4 w-full">
-            <KanbanColumn
-              status="todo"
-              onAddClick={() => handleAddPost("todo")}
-              posts={posts}
-            />
-            <KanbanColumn
-              status="in_progress"
-              onAddClick={() => handleAddPost("in_progress")}
-              posts={posts}
-            />
-            <KanbanColumn
-              status="done"
-              onAddClick={() => handleAddPost("done")}
-              posts={posts}
-            />
-          </div>
-        </ScrollArea>
+        {posts.length === 0 ? (
+          <EmptyState
+            icon={<FileText className="size-6" />}
+            title="No posts or tasks yet"
+            description="Add your first piece of content to start planning and tracking this campaign."
+            action={
+              <Button
+                variant="default"
+                onClick={() => handleAddPost("todo")}
+              >
+                <Plus className="size-4" />
+                Add your first post
+              </Button>
+            }
+          />
+        ) : (
+          <ScrollArea className="w-full">
+            <div className="flex flex-col md:flex-row gap-4 py-4 w-full">
+              <KanbanColumn
+                status="todo"
+                onAddClick={() => handleAddPost("todo")}
+                posts={posts}
+              />
+              <KanbanColumn
+                status="in_progress"
+                onAddClick={() => handleAddPost("in_progress")}
+                posts={posts}
+              />
+              <KanbanColumn
+                status="done"
+                onAddClick={() => handleAddPost("done")}
+                posts={posts}
+              />
+            </div>
+          </ScrollArea>
+        )}
 
         {/* Post Sheet */}
         <PostSheet />

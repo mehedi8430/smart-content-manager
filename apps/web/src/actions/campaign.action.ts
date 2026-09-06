@@ -1,6 +1,7 @@
 "use server";
 
 import fetcher from "@/lib/fetcher";
+import { revalidateTag } from "next/cache";
 import {
   CampaignListResponse,
   CampaignResponse,
@@ -21,6 +22,8 @@ export async function createCampaignAction(payload: CreateCampaignPayload) {
       method: "POST",
       body: JSON.stringify(payload),
     });
+
+    revalidateTag("campaigns", "max");
 
     return {
       success: response.success,
@@ -105,6 +108,8 @@ export async function updateCampaignAction(id: string, payload: UpdateCampaignPa
       body: JSON.stringify(payload),
     });
 
+    revalidateTag("campaigns", "max");
+
     return {
       success: response.success,
       message: response.message,
@@ -127,6 +132,8 @@ export async function deleteCampaignAction(id: string) {
     const response = await fetcher<DeleteCampaignResponse>(`/campaigns/${id}`, {
       method: "DELETE",
     });
+
+    revalidateTag("campaigns", "max");
 
     return {
       success: response.success,

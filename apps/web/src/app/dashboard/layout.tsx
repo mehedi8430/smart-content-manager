@@ -4,6 +4,7 @@ import Header from "./_components/header";
 import { AppSidebar } from "./_components/app-sidebar/app-sidebar";
 import { ChatDrawerLazy } from "./_components/chat/chat-drawer-lazy";
 import { listCampaignsAction } from "@/actions/campaign.action";
+import { OnboardingProvider } from "@/providers/onboarding-provider";
 
 export default async function DashboardLayout({
   children,
@@ -19,7 +20,8 @@ export default async function DashboardLayout({
 
   return (
     <main>
-      <TooltipProvider>
+      <OnboardingProvider>
+        <TooltipProvider>
         <SidebarProvider>
           <AppSidebar recentCampaigns={recentCampaigns} />
           <SidebarInset>
@@ -33,7 +35,8 @@ export default async function DashboardLayout({
           {/* Chat Drawer - lazy-loaded on first open */}
           <ChatDrawerLazy />
         </SidebarProvider>
-      </TooltipProvider>
+        </TooltipProvider>
+      </OnboardingProvider>
     </main>
   );
 }

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { OnboardingHint } from "@/components/onboarding-hint";
 
 interface CampaignsHeaderProps {
   onCreate: () => void;
@@ -14,14 +15,19 @@ export function CampaignsHeader({ onCreate }: CampaignsHeaderProps) {
           Manage your content campaigns and track their performance
         </p>
       </div>
-      <Button
-        variant="outline"
-        className="border-sidebar-primary/50! text-sidebar-primary hover:text-sidebar-primary/80 cursor-pointer"
-        onClick={onCreate}
+      <OnboardingHint
+        id="create-campaign"
+        message="Start here: create a campaign to organize posts, tasks, and AI content."
       >
-        <Plus className="h-4 w-4" />
-        Create Campaign
-      </Button>
+        <Button
+          variant="outline"
+          className="border-sidebar-primary/50! text-sidebar-primary hover:text-sidebar-primary/80 cursor-pointer"
+          onClick={onCreate}
+        >
+          <Plus className="h-4 w-4" />
+          Create Campaign
+        </Button>
+      </OnboardingHint>
     </div>
   );
 }

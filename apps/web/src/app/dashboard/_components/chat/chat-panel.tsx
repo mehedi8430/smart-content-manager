@@ -188,7 +188,13 @@ export function ChatPanel() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <ChatThread messages={messages} isSessionPending={isSessionPending} />
+      <ChatThread
+        messages={messages}
+        isSessionPending={isSessionPending}
+        onStart={() =>
+          document.querySelector<HTMLTextAreaElement>("#chat-composer")?.focus()
+        }
+      />
 
       {streamError && (
         <div className="shrink-0 mx-4 mb-2 flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">

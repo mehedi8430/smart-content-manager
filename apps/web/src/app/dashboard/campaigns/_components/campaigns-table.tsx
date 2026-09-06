@@ -24,13 +24,17 @@ import {
   Eye,
   MoreVertical,
   Pencil,
+  FileText,
+  Plus,
   Sparkle,
   Trash2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/empty-state";
 
 interface CampaignsTableProps {
   campaigns: Campaign[];
+  onCreate: () => void;
   onEdit: (campaign: Campaign) => void;
   onDelete: (campaign: Campaign) => void;
   loading?: boolean;
@@ -44,6 +48,7 @@ interface CampaignsTableProps {
 
 export function CampaignsTable({
   campaigns,
+  onCreate,
   onEdit,
   onDelete,
   loading = false,
@@ -158,10 +163,19 @@ export function CampaignsTable({
                 <tr>
                   <td
                     colSpan={6}
-                    className="py-12 text-center text-muted-foreground"
+                    className="py-8"
                   >
-                    No campaigns found. Create your first campaign to get
-                    started.
+                    <EmptyState
+                      icon={<FileText className="size-6" />}
+                      title="No campaigns yet"
+                      description="Campaigns keep your content, tasks, and AI outputs organized in one place."
+                      action={
+                        <Button variant="default" onClick={onCreate}>
+                          <Plus className="size-4" />
+                          Create your first campaign
+                        </Button>
+                      }
+                    />
                   </td>
                 </tr>
               ) : (

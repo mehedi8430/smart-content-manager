@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FileText } from "lucide-react";
+import { FileText, Sparkles } from "lucide-react";
 import { AiOutput } from "@/types/ai-output.type";
 import {
   useAiOutputsList,
@@ -23,6 +23,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import OutputCard from "./output-card";
 import HistoryLoadingSkeleton from "./history-loading-skeleton";
+import { EmptyState } from "@/components/empty-state";
+import Link from "next/link";
 
 interface OutputHistoryProps {
   campaignId: string;
@@ -172,15 +174,19 @@ export function OutputHistory({ campaignId }: OutputHistoryProps) {
 
   if (outputs.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-12 text-center">
-          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">No generated content yet</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Your generated content history will appear here
-          </p>
-        </CardContent>
-      </Card>
+      <EmptyState
+        icon={<FileText className="size-6" />}
+        title="No AI outputs yet"
+        description="Generate captions, ideas, and campaign content here, then reuse the best pieces on your board."
+        action={
+          <Button asChild>
+            <Link href={`/dashboard/campaigns/${campaignId}/generate`}>
+              <Sparkles className="size-4" />
+              Generate your first output
+            </Link>
+          </Button>
+        }
+      />
     );
   }
 

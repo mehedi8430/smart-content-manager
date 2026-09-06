@@ -134,6 +134,7 @@ export default function CampaignsClient() {
 
       <CampaignsTable
         campaigns={campaigns}
+        onCreate={handleCreate}
         onEdit={handleEdit}
         onDelete={handleDelete}
         loading={isLoading}

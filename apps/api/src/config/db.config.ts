@@ -21,7 +21,22 @@ const connectionStringWithSSL = (() => {
   return connectionString;
 })();
 
-const pool = new Pool({ connectionString: connectionStringWithSSL });
+// Connection pool config: tuned for Neon serverless PostgreSQL.
+// - max: 5 prevents exhausting Neon's connection limit on free tier
+// - idleTimeoutMillis: closes idle connections after 30s to free resources
+// - connectionTimeoutMillis: fails fast (10s) instead of hanging on cold starts
+const pool = new Pool({
+  connectionString: connectionStringWithSSL,
+  max: 5,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+});
+
+// Prevent unhandled pool errors from crashing the server
+pool.on('error', (err) => {
+  console.error('Unexpected pool error:', err.message);
+});
+
 const adapter = new PrismaPg(pool);
 
 const prisma = new PrismaClient({

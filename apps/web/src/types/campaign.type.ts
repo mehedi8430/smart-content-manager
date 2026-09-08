@@ -27,6 +27,12 @@ export interface CampaignCount {
   outputs: number;
 }
 
+export interface CampaignPost {
+  id: string;
+  title: string;
+  status: string;
+}
+
 export interface Campaign {
   id: string;
   name: string;
@@ -35,6 +41,7 @@ export interface Campaign {
   updatedAt: string;
   userId: string;
   _count: CampaignCount;
+  posts?: CampaignPost[];
 }
 
 export interface PaginationMeta {

@@ -107,6 +107,17 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
             outputs: true,
           },
         },
+        // Include latest 5 posts per campaign to eliminate N+1 queries
+        // from the dashboard page (previously fetched posts per campaign separately)
+        posts: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+          },
+          orderBy: { order: 'asc' },
+          take: 5,
+        },
       },
     });
 

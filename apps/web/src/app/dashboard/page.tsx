@@ -1,5 +1,5 @@
 import { listCampaignsAction } from "@/actions/campaign.action";
-import { listPostsAction } from "@/actions/post.action";
+import type { CampaignPost } from "@/types/campaign.type";
 import { formatDistanceToNow } from "date-fns";
 
 function formatMetricValue(value: number) {
@@ -19,20 +19,16 @@ export default async function DashboardPage() {
 
   const campaigns = campaignsResult.data?.data ?? [];
 
-  const campaignPosts = await Promise.all(
-    campaigns.map(async (campaign) => ({
-      campaignId: campaign.id,
-      campaignName: campaign.name,
-      posts: (await listPostsAction(campaign.id)).data ?? [],
-    })),
-  );
-
-  const allPosts = campaignPosts.flatMap((entry) =>
-    entry.posts.map((post) => ({
-      ...post,
-      campaignName: entry.campaignName,
-      campaignId: entry.campaignId,
-    })),
+  // Flatten included posts from the campaign list API response.
+  // This eliminates the N+1 problem where the dashboard previously
+  // made a separate listPostsAction request per campaign.
+  const allPosts: (CampaignPost & { campaignName: string; campaignId: string })[] = campaigns.flatMap(
+    (campaign) =>
+      (campaign.posts ?? []).map((post) => ({
+        ...post,
+        campaignName: campaign.name,
+        campaignId: campaign.id,
+      })),
   );
 
   const totalPosts = allPosts.length;
@@ -44,26 +40,22 @@ export default async function DashboardPage() {
   const completedPosts = allPosts.filter((post) => post.status === "done").length;
   const completionRate = totalPosts > 0 ? Math.round((completedPosts / totalPosts) * 100) : 0;
 
-  const recentActivity = [...campaigns, ...allPosts]
-    .map((item) => {
-      if ("description" in item && "campaignId" in item && "status" in item) {
-        return {
-          id: item.id,
-          title: `${item.campaignName ?? "Post"}: ${item.title}`,
-          description: item.status,
-          timestamp: item.updatedAt ?? item.createdAt ?? new Date().toISOString(),
-          type: "post",
-        };
-      }
-
-      return {
-        id: item.id,
-        title: `${item.name} campaign`,
-        description: item.description ?? "Campaign updated",
-        timestamp: item.updatedAt ?? item.createdAt,
-        type: "campaign",
-      };
-    })
+  const recentActivity = [
+    ...campaigns.map((c) => ({
+      id: c.id,
+      title: `${c.name} campaign`,
+      description: c.description ?? "Campaign updated",
+      timestamp: c.updatedAt ?? c.createdAt,
+      type: "campaign" as const,
+    })),
+    ...allPosts.map((p) => ({
+      id: p.id,
+      title: `${p.campaignName ?? "Post"}: ${p.title}`,
+      description: p.status,
+      timestamp: new Date().toISOString(),
+      type: "post" as const,
+    })),
+  ]
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, 5);
 

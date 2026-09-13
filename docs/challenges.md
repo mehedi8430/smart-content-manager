@@ -8,9 +8,18 @@
 
 ## Challenge 1: Slow Login Due to Render Cold Starts
 
-The backend API on Render's free tier sleeps after inactivity, so the first login after idle time could take 30-60 seconds while the service boots and reconnects to the database. This is a poor first impression for any production app.
+The backend API on Render's free tier sleeps after ~15 minutes of inactivity, so the first login after idle time could take 30–60+ seconds while the service boots and reconnects to the database. Neon's serverless Postgres compute also auto-suspends after ~5 minutes of inactivity, so a cold Render boot often also has to wait on a cold Neon wake-up, compounding the delay.
 
-**Resolution:** I tuned the database connection pool to fail fast and stay efficient — capping max connections (prevents exhausting Neon's free-tier limit), closing idle connections after 30s, and adding a 10s connection timeout so the app never hangs on a dead connection. I also upgraded the `/health` endpoint to ping the database with a `SELECT 1` query, so an external uptime monitor (cron-job.org, UptimeRobot, or Render's own cron) can hit it every 10 minutes and keep the service warm — eliminating the cold-start penalty entirely.
+Status as of Sep 8: Partially resolved. Connection pool tuning and a DB-aware /health endpoint were built, but no external monitor was actually configured to call it — so the service kept sleeping and the cold-start delay was unchanged. Corrected below.
+
+Resolution:
+
+Connection pool tuning (done, Sep 8): capped max: 5 connections to stay under Neon's free-tier limit, close idle connections after 30s, and fail fast with a 10s connection timeout instead of hanging on a cold/dead connection.
+DB-aware /health endpoint (done, Sep 8): runs SELECT 1 against Postgres and reports db: connected / disconnected, so a monitor can verify the full stack (API + DB), not just that the process is alive.
+External keep-alive ping (done, Sep 13): added a GitHub Actions scheduled workflow (.github/workflows/keep-alive.yml) that hits /health every 10 minutes, 24/7. This keeps Render's instance from spinning down and keeps Neon's compute endpoint active, eliminating the cold-start penalty in practice rather than just in theory.
+Reverted sslmode to require (done, Sep 13): the pool config had been changed to sslmode=verify-full to silence a pg deprecation warning, but verify-full requires validating the server cert against a trusted CA chain, which Node's pg driver doesn't bundle by default. This risked intermittent self-signed certificate in certificate chain errors that could look like cold-start flakiness. Reverted to sslmode=require, which Neon's own docs recommend for pooled connections.
+
+Verification: After ~20 minutes idle (no traffic, no manual pings), login response time was re-measured and confirmed to no longer show the 30–60s spin-up delay. GitHub Actions run history and Render request logs confirm pings are landing every 10 minutes as expected.
 
 ---
 

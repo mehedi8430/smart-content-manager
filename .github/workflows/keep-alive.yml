@@ -1,0 +1,27 @@
+name: Keep Backend Warm
+
+# Pings the /health endpoint every 10 minutes to prevent:
+# 1. Render free-tier spin-down (happens after ~15 min idle)
+# 2. Neon serverless compute auto-suspend (happens after ~5 min idle)
+
+on:
+  schedule:
+    # Runs every 10 minutes, 24/7. GitHub's cron scheduler is best-effort and
+    # can drift a few minutes under load, so 10 min gives safe margin under
+    # Render's ~15 min spin-down window.
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # allows manual trigger from the Actions tab for testing
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          echo "Pinging ${{ vars.BACKEND_HEALTH_URL }}"
+          response=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.BACKEND_HEALTH_URL }}")
+          echo "Response code: $response"
+          if [ "$response" -ne 200 ]; then
+            echo "Health check failed with status $response"
+            exit 1
+          fi

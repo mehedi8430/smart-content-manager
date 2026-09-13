@@ -63,13 +63,9 @@ if (process.env.NODE_ENV !== 'production') {
 // Routes
 app.use('/api/v1', routes);
 
-// Health check - also pings the database so external uptime monitors
-// (cron-job.org, UptimeRobot, GitHub Actions) can keep this service warm
-// and avoid Render's cold start lag on the first login after idle.
+// Health check - also pings the database so external uptime monitors (cron-job.org, UptimeRobot, GitHub Actions) can keep this service warm and avoid Render's cold start lag on the first login after idle.
 // IMPORTANT: this must be registered BEFORE the 404 handler below,
-// since Express matches middleware/routes in registration order —
-// putting it in server.ts after app.listen() meant it was added too
-// late and always fell through to the 404 handler instead.
+// since Express matches middleware/routes in registration order
 app.get('/health', async (_req: Request, res: Response) => {
   try {
     await prisma.$queryRaw`SELECT 1`;

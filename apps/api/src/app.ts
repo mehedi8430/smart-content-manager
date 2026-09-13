@@ -8,6 +8,7 @@ import routes from './routes';
 import errorHandler from './middleware/errorHandler.middleware';
 import logger from './config/logger.config';
 import cookieParser from 'cookie-parser';
+import { prisma } from './config/db.config';
 
 const app: Application = express();
 
@@ -61,6 +62,33 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Routes
 app.use('/api/v1', routes);
+
+// Health check - also pings the database so external uptime monitors
+// (cron-job.org, UptimeRobot, GitHub Actions) can keep this service warm
+// and avoid Render's cold start lag on the first login after idle.
+// IMPORTANT: this must be registered BEFORE the 404 handler below,
+// since Express matches middleware/routes in registration order —
+// putting it in server.ts after app.listen() meant it was added too
+// late and always fell through to the 404 handler instead.
+app.get('/health', async (_req: Request, res: Response) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+
+    res.status(200).json({
+      success: true,
+      message: 'Api is healthy',
+      db: 'connected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    res.status(503).json({
+      success: false,
+      message: 'Api is unhealthy',
+      db: 'disconnected',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
 
 // 404 handler
 app.use((req: Request, res: Response) => {

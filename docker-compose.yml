@@ -1,0 +1,14 @@
+services:
+
+ server:
+  build: ./apps/api
+  ports:
+   - "3001:3001"
+  restart: always
+
+ client:
+  build: ./apps/web
+  ports:
+   - "3000:80"
+  depends_on: 
+    - server

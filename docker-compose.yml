@@ -2,13 +2,20 @@ services:
 
  server:
   build: ./apps/api
+  env_file:
+   - ./apps/api/.env
+  environment:
+   PORT: 3001
   ports:
    - "3001:3001"
   restart: always
 
  client:
-  build: ./apps/web
+  build:
+   context: ./apps/web
+   args:
+    NEXT_PUBLIC_API_BASE_URL: http://server:3001/api/v1
   ports:
-   - "3000:80"
+   - "3000:3000"
   depends_on: 
     - server

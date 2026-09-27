@@ -10,6 +10,8 @@ RUN npm install
 
 COPY . .
 
+RUN DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder npm run build
+
 EXPOSE 3001
 
-CMD ["node", "src/server.ts"]
+CMD ["node", "dist/server.js"]

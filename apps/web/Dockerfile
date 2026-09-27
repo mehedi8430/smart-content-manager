@@ -1,5 +1,5 @@
 # --- Stage 1: Build the Next.js application ---
-FROM node:24-alpine AS  builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -9,16 +9,25 @@ RUN npm install && npm rebuild esbuild
 
 COPY . .
 
-RUN npm run build # /app/.next
+ARG NEXT_PUBLIC_API_BASE_URL=http://server:3001/api/v1
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 
-# --- Stage 2: Serve with Nginx ---
-FROM nginx:alpine
+RUN npm run build
 
-COPY --from=builder /app/.next /usr/share/nginx/html
+# --- Stage 2: Run the standalone Next.js server ---
+FROM node:24-alpine AS runner
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-EXPOSE 80
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
-CMD [ "nginx", "-g", "daemon off;" ]
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
 

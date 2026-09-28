@@ -1,7 +1,12 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingRoot: path.resolve(process.cwd(), "../.."),
+  turbopack: {
+    root: path.resolve(process.cwd(), "../.."),
+  },
   async rewrites() {
     const apiBaseUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";

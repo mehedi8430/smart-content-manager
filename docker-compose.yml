@@ -1,21 +1,59 @@
+name: smart-content-manager
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
+  server:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runner
+    env_file: ./apps/api/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "3001:3001"
+    volumes:
+      - api-logs:/app/logs
+    init: true
+    restart: unless-stopped
+    logging: *default-logging
 
- server:
-  build: ./apps/api
-  env_file:
-   - ./apps/api/.env
-  environment:
-   PORT: 3001
-  ports:
-   - "3001:3001"
-  restart: always
+  client:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://server:3001/api/v1
+        NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: "${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:?generate with: openssl rand -base64 32}"
+    environment:
+      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY}
+    ports:
+      - "3000:3000"
+    depends_on:
+      server:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+    logging: *default-logging
 
- client:
-  build:
-   context: ./apps/web
-   args:
-    NEXT_PUBLIC_API_BASE_URL: http://server:3001/api/v1
-  ports:
-   - "3000:3000"
-  depends_on: 
-    - server
+  # One-off tool, not started by `up`. Run: docker compose run --rm migrate
+  migrate:
+    profiles: [ "tools" ]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: builder
+    env_file: ./apps/api/.env
+    working_dir: /app/apps/api
+    command: [ "bun", "x", "prisma", "migrate", "deploy" ]
+    restart: "no"
+
+volumes:
+  api-logs:

@@ -57,7 +57,7 @@ Seed script (`prisma/seed.ts`) creates demo users (`demo@smartcontent.test`, `sa
 
 ## 5. AI Content Generation
 
-Endpoint: `POST /campaigns/:campaignId/ai-outputs/generate`, `POST .../ai-outputs/:id/regenerate`, plus list/get/delete. Rate-limited (5/min).
+Endpoint: `POST /campaigns/:campaignId/ai-outputs/generate`, `POST .../ai-outputs/:id/regenerate`, plus list/get/delete. Rate-limited per IP (`AI_RATE_LIMIT_MAX`, default 5 requests/minute).
 
 - **Content types**: Ad, Caption, Email — each with a dedicated prompt builder (CTA, subject line, hashtags, platform best practices)
 - **Options**: tone (Professional/Playful/Urgent/Friendly/Bold), length (Short/Medium/Long), comma-separated keywords; campaign name + description injected as context

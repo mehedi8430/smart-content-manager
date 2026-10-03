@@ -1,0 +1,12 @@
+# Keep local dependencies, build artifacts, VCS data, and secrets out of builds.
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/coverage
+**/logs
+**/.env
+**/.env.*
+**/*.log
+.git
+.github

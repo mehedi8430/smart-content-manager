@@ -34,6 +34,18 @@ bun run dev --filter=api
 
 Prisma commands (`generate`, `migrate dev`, `db seed`) run from `apps/api`, since that's where `schema.prisma` and `prisma/seed.ts` live — don't add a duplicate Prisma setup under `apps/web`.
 
+### E2E testing
+
+Use the isolated `docker-compose.e2e.yml` stack for browser tests so the app is exercised against a clean database and mock AI mode:
+
+```bash
+bun run e2e:up
+bun run --cwd apps/e2e test
+bun run e2e:down
+```
+
+The Playwright workspace lives under `apps/e2e` and is intentionally separate from the dev stack so local work and CI can run against the same Dockerized `web` + `api` services without cross-contamination.
+
 ## Source of truth: the Prisma schema
 
 `apps/api/prisma/schema.prisma` is the single source of truth for data shapes — `User`, `Campaign`, `Post`, `AiOutput`, `ChatSession`, `ChatMessage`. Frontend types/interfaces must mirror this, not redefine it independently. When a field changes on the API side, treat frontend type drift as a bug, not a separate concern.

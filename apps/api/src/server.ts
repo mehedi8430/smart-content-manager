@@ -1,10 +1,14 @@
-import { config } from 'dotenv';
+// Load environment variables first
+// import { config } from 'dotenv';
+import 'dotenv/config';
+
 import app from './app';
 import logger from './config/logger.config';
 import { connectDB, disconnectDB } from './config/db.config';
 
 // Load environment variables first
-config();
+// config();
+
 // Connect to database
 connectDB();
 

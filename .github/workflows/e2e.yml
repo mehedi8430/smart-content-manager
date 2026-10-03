@@ -1,0 +1,48 @@
+name: E2E
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  playwright:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Install workspace dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Start E2E stack
+        run: docker compose -f docker-compose.e2e.yml up --build -d
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Run Playwright specs
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3002
+        run: bun run --cwd apps/e2e test
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report
+          if-no-files-found: ignore
+
+      - name: Tear down E2E stack
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down -v --remove-orphans

@@ -70,7 +70,7 @@ Creates demo users (`demo@smartcontent.test`, `sarah@freelance.test`) with campa
 
 `POST /campaigns/:campaignId/ai-outputs/generate`, `POST .../ai-outputs/:id/regenerate`, plus list/get/delete.
 
-- Rate-limited separately at 5/min — this is stricter than the global limiter and route-specific, don't fold it into the global one.
+- Rate-limited separately from the global limiter using `AI_RATE_LIMIT_MAX` (default 5 requests/minute per IP); keep it route-specific rather than folding it into the global limiter.
 - Each content type (`ad|caption|email`) has its own dedicated prompt builder — CTA/subject-line/hashtag/platform logic lives there, not inlined in the route handler.
 - Options: tone (Professional/Playful/Urgent/Friendly/Bold), length (Short/Medium/Long), comma-separated keywords; campaign name + description are injected as context — keep these as the canonical option sets if you extend generation.
 - Responses **stream via SSE**, chunk-by-chunk. Must be disconnect-safe: if the client aborts, don't leave a half-written DB row — persist only after the stream completes, with an auto-generated title (first 8 words), model, and token usage.

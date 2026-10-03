@@ -3,25 +3,37 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
 const connectionString = process.env.DATABASE_URL || '';
-// Normalize sslmode to 'require' for pooled Neon connections.
-// NOTE: we intentionally do NOT use 'verify-full' here. It forces validation
-// of the server cert against a trusted CA chain, and Node's pg driver doesn't
-// bundle CA certs by default - that can throw intermittent
-// "self-signed certificate in certificate chain" errors that look like
-// cold-start flakiness. Neon's own docs recommend 'require' for pooled
-// connections, so we standardize on that instead of chasing the deprecation
-// warning by switching to the stricter mode.
-const connectionStringWithSSL = (() => {
-  if (!connectionString) return connectionString;
 
-  // Replace any existing sslmode value with 'require'
-  if (/[?&]sslmode=[^&#]*/.test(connectionString)) {
-    return connectionString.replace(/sslmode=[^&#]*/, 'sslmode=require');
+export const normalizeDatabaseUrl = (url: string): string => {
+  if (!url) return url;
+
+  if (/[?&]sslmode=/i.test(url)) {
+    return url;
   }
 
-  // If no sslmode parameter exists, add it
-  return `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
-})();
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+
+    const isLocalHost = ['localhost', '127.0.0.1', 'db', 'postgres', '::1'].includes(host)
+      || host.endsWith('.local')
+      || host.endsWith('.internal');
+
+    if (isLocalHost) {
+      return url;
+    }
+
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}sslmode=require`;
+  } catch {
+    return url;
+  }
+};
+
+// Preserve explicit sslmode values from the environment and only add a default
+// for remote non-local Postgres hosts (for example Neon). This lets local Docker
+// Postgres instances keep `sslmode=disable` without forcing TLS on startup.
+const connectionStringWithSSL = normalizeDatabaseUrl(connectionString);
 
 // Connection pool config: tuned for Neon serverless PostgreSQL.
 // - max: 5 prevents exhausting Neon's connection limit on free tier

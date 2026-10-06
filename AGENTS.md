@@ -1,42 +1,34 @@
 <!-- BEGIN:smart-content-manager-root -->
-# Smart Content Manager — Monorepo
+# Smart Content Manager
 
-AI-powered content and campaign management platform. Small businesses / solo marketers / freelancers go from brief to publishable content by combining a kanban workflow with an Anthropic Claude–backed content studio and a campaign-aware marketing copilot.
+AI content and campaign management platform: brief → publishable content via a kanban workflow, a Claude-backed content studio, and a campaign-aware marketing copilot.
 
-Full context: `docs/project-brief.md` (or wherever the project brief lives in-repo) for product scope, milestones, and success criteria.
+Product scope, roadmap, and what's explicitly out of scope: `docs/project-brief.md`.
 
-## Repo layout
+## Packages
 
 ```text
 apps/web    Next.js 16 (App Router, React 19, Tailwind 4, shadcn/ui) frontend
-apps/api    Express 5 + TypeScript backend, REST API under /api/v1
+apps/api    Express 5 + TypeScript REST API under /api/v1
+apps/e2e    Playwright browser tests
 ```
 
-- Turborepo + Bun workspaces. No shared `packages/` yet — if you add one (e.g. shared types/zod schemas), document it here.
-- **Read the package-level file for the area you're touching:**
-  - Frontend work (Next.js, React, UI, Server Actions, SSE clients) → `apps/web/agents.md`
-  - Backend work (Express, Prisma, routes, middleware, SSE endpoints) → `apps/api/agents.md`
-  - This file covers what's true across both, or what you need to know before picking a package.
-
-- Before making any change in `apps/web`, open and follow `apps/web/agents.md`.
-- Before making any change in `apps/api`, open and follow `apps/api/agents.md`.
+Bun + Turborepo workspaces. There is no shared `packages/` — if you add one, document it here.
 
 ## Commands
 
-Run from the repo root using Turborepo, not by `cd`-ing into a package:
+Run from the repo root, not from inside a package:
 
 ```bash
 bun run dev              # both apps
 bun run build            # both apps, respects build dependency order
-bun run dev --filter=web
-bun run dev --filter=api
+bun run lint
+bun run dev --filter=web # or --filter=api
 ```
 
-Prisma commands (`generate`, `migrate dev`, `db seed`) run from `apps/api`, since that's where `schema.prisma` and `prisma/seed.ts` live — don't add a duplicate Prisma setup under `apps/web`.
+Prisma commands (`generate`, `migrate dev`, `db seed`) run from `apps/api`, where `schema.prisma` and the seed script live.
 
-### E2E testing
-
-Use the isolated `docker-compose.e2e.yml` stack for browser tests so the app is exercised against a clean database and mock AI mode:
+E2E runs against an isolated Docker stack with mock AI mode:
 
 ```bash
 bun run e2e:up
@@ -44,37 +36,20 @@ bun run --cwd apps/e2e test
 bun run e2e:down
 ```
 
-The Playwright workspace lives under `apps/e2e` and is intentionally separate from the dev stack so local work and CI can run against the same Dockerized `web` + `api` services without cross-contamination.
+## Before you edit
 
-## Source of truth: the Prisma schema
+- `apps/web` → read `apps/web/AGENTS.md`
+- `apps/api` → read `apps/api/AGENTS.md`
+- Data shapes come from `apps/api/prisma/schema.prisma`. Frontend types mirror it rather than redefining it; type drift is a bug.
+- How to work in this repo (think before coding, simplicity, surgical changes, verify) → `GUIDE_AGENTs.md`
 
-`apps/api/prisma/schema.prisma` is the single source of truth for data shapes — `User`, `Campaign`, `Post`, `AiOutput`, `ChatSession`, `ChatMessage`. Frontend types/interfaces must mirror this, not redefine it independently. When a field changes on the API side, treat frontend type drift as a bug, not a separate concern.
+## Invariants across both apps
 
-## Cross-cutting conventions (apply to both apps)
+- Every API response is `{ success, message?, data? }`, errors included. The axios layer, Server Actions, and SSE parsers all assume it.
+- Owner-scoped resources the caller doesn't own return 404, not 403. The frontend should read that as "not accessible."
+- Auth tokens live in `httpOnly` cookies. Never read or write them from client code.
+- The two SSE streaming endpoints must stay in sync on framing and disconnect behavior: persist only after the stream completes, never incrementally, on either side. If you change the event format on one side, update the client parser on the other.
+- Env vars are per app, not shared: `NEXT_PUBLIC_*` belongs to `apps/web`, DB/JWT/Anthropic/rate-limit vars to `apps/api`. Don't consolidate them into a root `.env`.
 
-- **API response shape**: every API response is `{ success: boolean, message?: string, data?: ... }`, including errors. Frontend code (axios layer, Server Actions, SSE parsers) should assume this shape uniformly.
-- **Ownership → 404, not 403**: resources the current user doesn't own return 404 (no existence leak). This is intentional on the API side; the frontend should treat 404 on owner-scoped resources as "not accessible," not "definitely doesn't exist anywhere."
-- **Auth**: JWT access + refresh tokens as `httpOnly` cookies. Never introduce client-side token storage/reading — this breaks the security model both apps rely on.
-- **SSE streaming endpoints** — these are the two places both apps must stay in sync on framing/disconnect behavior:
-  - `POST /campaigns/:campaignId/ai-outputs/generate` (+ `/regenerate`)
-  - `POST /chat/sessions/messages/stream`
-  Both are cancelable via `AbortController` on the client and disconnect-safe on the server (no partial/corrupt persisted state). If you change the chunk framing or event format on one side, update the corresponding client/parser on the other.
-- **Env vars split by app, not shared**: `NEXT_PUBLIC_API_BASE_URL` and `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` belong to `apps/web`; DB/JWT/Anthropic/rate-limit vars belong to `apps/api`. Don't consolidate into a single root `.env` — each app loads its own.
-
-## Deployment
-
-- `apps/api` → Render, behind `https://smart-content-manager.onrender.com`. Build: `prisma generate && tsc && tsc-alias`. Prod start runs `prisma migrate deploy` automatically.
-- `apps/web` → connects via `NEXT_PUBLIC_API_BASE_URL` pointed at the Render URL above.
-- Changing the API's deployed URL means updating `apps/web`'s env config — these aren't auto-synced.
-
-## Roadmap / out of scope
-
-| Phase | Scope | Status |
-|---|---|---|
-| 1 — Foundation | Auth, user management, campaign CRUD | ✅ Done |
-| 2 — AI Content | AI generation, output/history management | ✅ Done |
-| 3 — Productivity | Marketing copilot chat, kanban board, PDF export, UX polish | ✅ Done |
-| 4 — Growth | Subscriptions, team collaboration, analytics, integrations | 🚧 Planned |
-
-Phase 4 items (subscriptions, team collaboration, analytics, third-party integrations) are **not implemented**. Don't scaffold routes, middleware, UI, or DB schema for them speculatively — ask first if a task seems to assume they exist.
+`apps/api` deploys to Render; its prod start runs `prisma migrate deploy` automatically.
 <!-- END:smart-content-manager-root -->

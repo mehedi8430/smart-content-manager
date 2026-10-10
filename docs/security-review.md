@@ -181,3 +181,15 @@ campaign create/update, post create, chat session create, SSE generate with mock
   needs them; development still returns the raw message and details for debugging.
 - Oversized bodies → 413 and malformed JSON → 400 with clean messages (see item 5).
 - Verified with a handler harness: prod 500 generic, dev 500 detailed, prod 400 detailed.
+
+### 10. Security smoke test (added)
+
+- `scripts/security-smoke-test.sh` (`bun run security:smoke`) exercises the hardening against
+  a running API with curl: health + rate-limit headers, auth validation, body-size limits
+  (413/400), 401, campaign query bounds, chat/AI validation, and the 404 ownership rule.
+- It logs in as the seeded demo user (`SMOKE_EMAIL`/`SMOKE_PASSWORD` overridable) and creates
+  + deletes a temporary campaign so it leaves no data behind.
+- Each run uses a random `X-Forwarded-For` so the auth limiter (which counts failures)
+  doesn't make repeated local runs fail; behind a real edge proxy the header is replaced and
+  a run may report 429 instead.
+- Verified: 23/23 checks pass, three consecutive runs.

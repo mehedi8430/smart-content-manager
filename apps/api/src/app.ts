@@ -15,22 +15,6 @@ const app: Application = express();
 
 app.set('trust proxy', 1);
 
-// TEMPORARY (security review): enable DEBUG_REQUEST_IP=true to log how the
-// client IP arrives. Used to work out the correct `trust proxy` hop count
-// behind the Next.js rewrite + Render proxy. Remove once verified.
-if (process.env.DEBUG_REQUEST_IP === 'true') {
-  app.use((req: Request, _res: Response, next) => {
-    logger.info('request-ip-debug', {
-      ip: req.ip,
-      ips: req.ips,
-      xForwardedFor: req.headers['x-forwarded-for'],
-      xRealIp: req.headers['x-real-ip'],
-      path: req.originalUrl,
-    });
-    next();
-  });
-}
-
 // Security middleware
 app.use(helmet());
 

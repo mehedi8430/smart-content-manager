@@ -51,7 +51,7 @@ Global limiter (baseline): 100 req / 15 min per IP on `/api`, env `RATE_LIMIT_MA
 AI limiter (baseline): 5 req / min per IP on routes 17–18, env `AI_RATE_LIMIT_MAX`.
 Chat stream (route 27) costs real money (Claude) and had **no dedicated limiter**.
 
-### Baseline validation gaps (to-do list from the table)
+### Baseline validation gaps (all addressed — see Findings below)
 
 - No body schema is `.strict()` → unknown fields (e.g. `role: "admin"`) are silently stripped.
 - Password: min 6, no max (needs 8–72, bcrypt cap) — routes 1, 2.
@@ -98,7 +98,10 @@ Conclusions:
    share one bucket** (the Next/Vercel egress IP) when `trust proxy = 1`.
 3. We therefore cannot guess the correct hop count; it must be measured on Render.
 
-**How to verify on Render (temporary, removed before final commit):**
+**How to verify on Render:** the debug middleware was removed before the final commit as
+planned. To run the check, first re-apply commit `72df67a`
+(`chore(api): add temporary client-IP debug logging for proxy verification`) — or re-add the
+gated middleware — then:
 
 1. Set `DEBUG_REQUEST_IP=true` on the Render service and deploy.
 2. Hit the API through the web app a few times from different networks:
@@ -193,3 +196,51 @@ campaign create/update, post create, chat session create, SSE generate with mock
   doesn't make repeated local runs fail; behind a real edge proxy the header is replaced and
   a run may report 429 instead.
 - Verified: 23/23 checks pass, three consecutive runs.
+
+---
+
+## Follow-ups and decisions needed
+
+1. **`trust proxy` hop count (item 4)** — unverified until measured on Render; `1` is kept
+   for now (no guessing). Risk while unverified: the client IP may resolve to the Next/Vercel
+   egress, putting all users in one rate-limit bucket. Follow the verification steps above,
+   then set the exact hop count; never `true`. If it's unstable, have the Next rewrite set a
+   dedicated header and trust only that.
+2. **Existing refresh tokens** — stored plaintext before this change, so those sessions will
+   fail to refresh and users must log in again. Optional deploy step:
+   `UPDATE users SET "refreshToken" = NULL;`.
+3. **Email normalization** — register/login now lowercase emails. If any existing account has
+   a mixed-case email, it can no longer log in. Decide between a one-time
+   `UPDATE users SET email = lower(email);` or a case-insensitive login lookup.
+4. **`SameSite=Lax`** — valid because all browser traffic goes through the same-origin Next
+   rewrite (verified for axios and both SSE clients). If a browser is ever pointed directly at
+   the API cross-site, cookies won't be sent and this must be revisited.
+5. **Search length** — search strings over 100 chars now return 400; consider adding
+   `maxLength` to the web search inputs so users don't hit it.
+6. **Limiter keying / store** — AI generate/regenerate are per-IP (5/min), chat and the rest
+   per-user/IP on top of the global limiter. The store is in-memory, so limits are per
+   instance and reset on restart — fine for a single Render instance, needs Redis if scaled
+   horizontally. Commented in `rateLimit.middleware.ts`.
+7. **Tone enum** — canonical set is `Professional|Playful|Urgent|Friendly|Bold`; external
+   consumers sending other casings now get 400.
+8. **Web lint** — root `bun run lint` still fails on 5 pre-existing errors
+   (`react-hooks/set-state-in-effect`, `react/no-unescaped-entities`) in untouched web files;
+   left out of scope.
+9. **Orphaned test** — `apps/api/src/config/db.config.test.ts` uses `node:test` with no runner
+   wired; `scripts/security-smoke-test.sh` is the API behavior check instead.
+
+## Commits on this branch
+
+- `docs: add route inventory baseline for security review`
+- `chore(api): restore ESLint flat config and fix pre-existing lint errors`
+- `fix(api): validate env on startup and keep dotenv loading first`
+- `fix(api): restrict CORS to an explicit origin allowlist`
+- `feat(api): consolidate rate limiters and add auth/refresh/chat limiters`
+- `chore(api): add temporary client-IP debug logging for proxy verification`
+- `fix(api): cap body size at 100kb and return proper 413/400`
+- `fix(api): harden zod schemas with strict objects, bounds and enums`
+- `fix(api): 404 cross-campaign bulk updates and cap limit=all listing`
+- `fix(auth): hash refresh tokens and use SameSite=Lax cookies`
+- `fix(api): return generic 500s in production without internal detail`
+- `test(scripts): add curl security smoke test`
+- final cleanup: remove temporary client-IP debug middleware

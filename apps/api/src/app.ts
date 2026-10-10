@@ -9,6 +9,7 @@ import errorHandler from './middleware/errorHandler.middleware';
 import logger from './config/logger.config';
 import cookieParser from 'cookie-parser';
 import { prisma } from './config/db.config';
+import { env, corsOrigins } from './config/env.config';
 
 const app: Application = express();
 
@@ -17,15 +18,31 @@ app.set('trust proxy', 1);
 // Security middleware
 app.use(helmet());
 
-// CORS
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-      : '*',
-    credentials: true,
-  })
-);
+// CORS: only ever allow the explicit CORS_ORIGIN allowlist. Never fall back to
+// `*` — that is invalid with `credentials: true` and would let any site call
+// the API with the user's cookies. In production env.config.ts already fails
+// fast when CORS_ORIGIN is missing; the guard below also covers a value that
+// parses down to an empty list.
+if (env.NODE_ENV === 'production' && corsOrigins.length === 0) {
+  throw new Error('CORS_ORIGIN must contain at least one origin in production');
+}
+
+if (corsOrigins.length > 0) {
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        // Requests without an Origin header (curl, server-to-server) are not
+        // subject to CORS; allow them through and let auth guard the route.
+        if (!origin || corsOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(null, false);
+      },
+      credentials: true,
+    })
+  );
+}
 
 // Cookie parsing middleware
 app.use(cookieParser());

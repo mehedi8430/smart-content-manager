@@ -146,3 +146,13 @@ git history (`chore(api): add temporary client-IP debug logging for proxy verifi
 
 Verified by curl against the local API (400 cases above, plus happy paths: register, login,
 campaign create/update, post create, chat session create, SSE generate with mock AI).
+
+### 7. Ownership and list limits in services (confirmed and fixed)
+
+- `bulkUpdatePosts` now returns **404** (`One or more posts not found`) instead of 400 when
+  any requested post id isn't in the campaign — consistent with the repo's owner-scoped
+  404-not-403/400 invariant. The check also uses a `Set` now, so duplicate ids in one
+  request no longer produce a false mismatch.
+- `listCampaigns` with `limit=all` was unbounded (`take` omitted) → hard server-side cap of
+  500; `pagination.limit` reports `min(total, 500)`.
+- Verified by curl: ghost id in bulk → 404, duplicate real ids → 200, `limit=all` → capped.

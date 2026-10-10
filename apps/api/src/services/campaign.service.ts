@@ -73,7 +73,9 @@ export const createCampaign = async (userId: string, data: CreateCampaignInput) 
 export const listCampaigns = async (userId: string, query: ListCampaignsQuery) => {
   const { page, limit, search, sortBy, sortOrder } = query;
   const isAll = limit === 'all';
+  const LIST_ALL_MAX = 500;
   const pageLimit = isAll ? undefined : Number(limit);
+  const take = isAll ? LIST_ALL_MAX : pageLimit;
   const skip = isAll ? 0 : (page - 1) * (pageLimit ?? 0);
 
   const cacheKey = `campaigns:${userId}:${JSON.stringify(query)}`;
@@ -96,7 +98,7 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
     const campaigns = await prisma.campaign.findMany({
       where,
       skip,
-      take: pageLimit,
+      take,
       orderBy: {
         [sortBy]: sortOrder,
       },
@@ -128,7 +130,7 @@ export const listCampaigns = async (userId: string, query: ListCampaignsQuery) =
       pagination: {
         total,
         page,
-        limit: isAll ? total : (pageLimit ?? total),
+        limit: isAll ? Math.min(total, LIST_ALL_MAX) : (pageLimit ?? total),
         totalPages,
       },
     };

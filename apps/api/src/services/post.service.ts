@@ -236,8 +236,9 @@ export const bulkUpdatePosts = async (
       }
     });
 
-    if (existing.length !== ids.length) {
-      throw new ApiError(400, 'One or more posts are invalid for this campaign');
+    const foundIds = new Set(existing.map((p) => p.id));
+    if (ids.some((id) => !foundIds.has(id))) {
+      throw new ApiError(404, 'One or more posts not found');
     }
 
     const updates = posts.map((p) => {

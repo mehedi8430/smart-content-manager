@@ -49,9 +49,18 @@ const errorHandler = (
   }
 
   // Handle ApiError details if present
+  const statusCode = error.statusCode || 500;
+
+  // Never leak internals on a server error in production — the real error is
+  // already in the logs; the client only needs to know it failed.
+  if (statusCode >= 500 && process.env.NODE_ENV === 'production') {
+    sendError(res, statusCode, 'Internal server error');
+    return;
+  }
+
   const details = err.details ? err.details : undefined;
 
-  sendError(res, error.statusCode || 500, error.message || 'Server Error', details);
+  sendError(res, statusCode, error.message || 'Server Error', details);
 };
 
 export default errorHandler;

@@ -172,3 +172,12 @@ campaign create/update, post create, chat session create, SSE generate with mock
 - **Deploy note:** existing sessions have a plaintext refresh token in the DB and will fail
   to refresh after this change (users must log in again). Optionally
   `UPDATE users SET "refreshToken" = NULL;` at deploy time to force a clean re-login.
+
+### 9. Error responses (confirmed and fixed)
+
+- In production, any response with status ≥ 500 is now `{ success: false, message:
+  "Internal server error" }` with no `error`/details — the real error (and stack) stays in
+  the winston logs only. 4xx messages and validation details are unchanged, since the client
+  needs them; development still returns the raw message and details for debugging.
+- Oversized bodies → 413 and malformed JSON → 400 with clean messages (see item 5).
+- Verified with a handler harness: prod 500 generic, dev 500 detailed, prod 400 detailed.

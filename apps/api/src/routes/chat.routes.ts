@@ -9,6 +9,7 @@ import {
 import { streamMessageHandler } from '@/controllers/chat.stream.controller';
 import { validate } from '@/middleware/validate.middleware';
 import { protect } from '@/middleware/auth.middleware';
+import { chatLimiter } from '@/middleware/rateLimit.middleware';
 import {
   createChatSessionSchema,
   listChatSessionsQuerySchema,
@@ -60,6 +61,7 @@ router.delete(
 // POST /api/v1/chat/sessions/:id/messages/stream - Stream a chat reply (SSE)
 router.post(
   '/sessions/:id/messages/stream',
+  chatLimiter,
   validate({ params: chatSessionIdSchema, body: sendChatMessageSchema }),
   streamMessageHandler
 );

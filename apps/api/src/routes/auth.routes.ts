@@ -9,13 +9,14 @@ import {
 import { validate } from '@/middleware/validate.middleware';
 import { loginSchema, registerSchema } from '@/validators/auth.validator';
 import { protect } from '@/middleware/auth.middleware';
+import { authLimiter, refreshLimiter } from '@/middleware/rateLimit.middleware';
 
 const router: Router = createRouter();
 
-router.post('/register', validate({ body: registerSchema }), register);
-router.post('/login', validate({ body: loginSchema }), login);
+router.post('/register', authLimiter, validate({ body: registerSchema }), register);
+router.post('/login', authLimiter, validate({ body: loginSchema }), login);
 router.post('/logout', protect, logout);
 router.get('/me', protect, getMe);
-router.post('/refresh-token', refreshAccessToken);
+router.post('/refresh-token', refreshLimiter, refreshAccessToken);
 
 export default router;

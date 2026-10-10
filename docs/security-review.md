@@ -156,3 +156,19 @@ campaign create/update, post create, chat session create, SSE generate with mock
 - `listCampaigns` with `limit=all` was unbounded (`take` omitted) → hard server-side cap of
   500; `pagination.limit` reports `min(total, 500)`.
 - Verified by curl: ghost id in bulk → 404, duplicate real ids → 200, `limit=all` → capped.
+
+### 8. Session / cookies / refresh tokens (confirmed and fixed)
+
+- Refresh tokens are now stored as a SHA-256 hash (`utils/hashToken.ts`) instead of the
+  plaintext JWT; refresh compares the hash of the presented cookie. Verified against the DB:
+  stored value is 64-hex, not a JWT; a garbage cookie still returns 401.
+- Cookies (`accessToken`, `refreshToken`, and the logout clear) are `httpOnly`,
+  `secure` in production, `path=/`, and **`SameSite=Lax`** (was `SameSite=None`). All
+  browser traffic reaches the API through the same-origin Next rewrite
+  (`axios.ts` uses `/api/v1` in the browser), so `Lax` is sufficient and adds CSRF
+  protection that `None` did not. Applied consistently in `apps/api` and the web cookie
+  writes (`auth.action.ts`, `lib/fetcher.ts`). The web now also derives `secure` from
+  `NODE_ENV` instead of always `true`, so cookies work over plain http in local dev.
+- **Deploy note:** existing sessions have a plaintext refresh token in the DB and will fail
+  to refresh after this change (users must log in again). Optionally
+  `UPDATE users SET "refreshToken" = NULL;` at deploy time to force a clean re-login.

@@ -105,7 +105,7 @@ export async function fetcher<T = unknown>(
                 cookieStore.set('accessToken', refreshData.data.accessToken, {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'none',
+                    sameSite: 'lax',
                     path: '/',
                 });
             }

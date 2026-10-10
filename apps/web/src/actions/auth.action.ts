@@ -31,14 +31,14 @@ export async function loginAction(values: TLoginPayload) {
 
     cookieStore.set("accessToken", response?.data?.accessToken || "", {
       httpOnly: true,
-      secure: true,
-      sameSite: "none" as const,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
       path: "/",
     });
     cookieStore.set("refreshToken", response?.data?.refreshToken || "", {
       httpOnly: true,
-      secure: true,
-      sameSite: "none" as const,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
       path: "/",
     });
 

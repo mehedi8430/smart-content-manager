@@ -66,9 +66,11 @@ app.use(cookieParser());
 // Rate limiting
 app.use('/api', globalLimiter);
 
-// Body parsing middlewares
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing middlewares. 100kb is plenty for this API's JSON payloads
+// (longest realistic input is an AI prompt / chat message well under that).
+// Raise per-route only if a route provably needs more.
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
 // Compression middleware
 app.use(compression());

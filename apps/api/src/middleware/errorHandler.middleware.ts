@@ -4,6 +4,8 @@ import { Request, Response, NextFunction } from 'express';
 
 interface CustomError extends Error {
   statusCode?: number;
+  status?: number;
+  type?: string;
   code?: string;
   details?: string;
 }
@@ -16,6 +18,20 @@ const errorHandler = (
 ): void => {
   let error = { ...err };
   error.message = err.message;
+
+  // body-parser / http-errors put the status on `status` (and it may not survive
+  // the spread above). Without this, a 413 payload and a 400 bad-JSON request
+  // would both fall through to 500.
+  if (typeof error.statusCode !== 'number' && typeof err.status === 'number') {
+    error.statusCode = err.status;
+  }
+
+  // Clean up body-parser messages — no raw parser internals in the response.
+  if (err.type === 'entity.too.large') {
+    error.message = 'Request body too large';
+  } else if (err.type === 'entity.parse.failed') {
+    error.message = 'Invalid JSON payload';
+  }
 
   logger.error(err);
 

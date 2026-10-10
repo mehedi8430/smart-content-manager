@@ -99,7 +99,7 @@ const generateStream = async (req: Request, res: Response) => {
         for await (const chunk of generator) {
             if (isDisconnected) {
                 logger.info('Client disconnected during generation');
-                await generator.return(undefined as any); // let the generator clean up
+                await generator.return(undefined as never); // let the generator clean up
                 break;
             }
 
@@ -220,7 +220,6 @@ const regenerateStream = async (req: Request, res: Response) => {
 
         // Stream generation
         const generator = streamGenerateContent(mergedData, campaignContext);
-        let result: { content: string; tokensUsed: number; model: string } | null = null;
 
         for await (const chunk of generator) {
             if (isDisconnected) {

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { z, ZodSchema } from 'zod';
+import { z } from 'zod';
 import { ApiError } from '@/utils/apiResponse';
 
 type RequestSource = 'body' | 'query' | 'params';

@@ -1,5 +1,5 @@
 import logger from '@/config/logger.config';
-import { sendError, ApiError } from '@/utils/apiResponse';
+import { sendError } from '@/utils/apiResponse';
 import { Request, Response, NextFunction } from 'express';
 
 interface CustomError extends Error {

@@ -38,8 +38,8 @@ export async function* generateChatReply(
   }
 
   let fullContent = '';
-  let inputTokens = 0;
-  let outputTokens = 0;
+  let _inputTokens = 0;
+  let _outputTokens = 0;
 
   try {
     const stream = await anthropic.messages.stream({
@@ -59,9 +59,9 @@ export async function* generateChatReply(
         fullContent += delta;
         yield delta;
       } else if (event.type === 'message_start') {
-        inputTokens = event.message.usage.input_tokens;
+        _inputTokens = event.message.usage.input_tokens;
       } else if (event.type === 'message_delta') {
-        outputTokens = event.usage.output_tokens;
+        _outputTokens = event.usage.output_tokens;
       }
     }
 

@@ -1,4 +1,4 @@
-import { sendResponse, sendError } from '@/utils/apiResponse';
+import { sendResponse } from '@/utils/apiResponse';
 import catchAsync from '@/utils/catchAsync';
 import { Request, Response } from 'express';
 import {
@@ -8,7 +8,7 @@ import {
   updateCampaign,
   deleteCampaign,
 } from '@/services/campaign.service';
-import type { CreateCampaignInput, UpdateCampaignInput } from '@/validators/campaign.validator';
+import type { CreateCampaignInput, UpdateCampaignInput, ListCampaignsQuery } from '@/validators/campaign.validator';
 
 /**
  * Campaign Controller
@@ -47,7 +47,7 @@ const listCampaignsHandler = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user!.id;
   const query = req.query;
 
-  const result = await listCampaigns(userId, query as any);
+  const result = await listCampaigns(userId, query as unknown as ListCampaignsQuery);
 
   sendResponse(
     res,

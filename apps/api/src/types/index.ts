@@ -1,4 +1,4 @@
-export interface TApiResponse<T = any> {
+export interface TApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;

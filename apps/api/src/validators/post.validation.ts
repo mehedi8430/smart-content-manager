@@ -2,22 +2,25 @@ import { z } from 'zod';
 
 export const postStatusEnum = z.enum(['todo', 'in_progress', 'done']);
 
-export const createPostSchema = z.object({
-  title: z.string().trim().min(1, 'Title is required').max(100, 'Title is too long'),
-  description: z.string().max(2000, 'Description is too long').optional(),
-  dueDate: z.string().datetime().optional(),
-  order: z.coerce.number().int().nonnegative().optional(),
-  status: postStatusEnum.optional(),
-});
+export const createPostSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Title is required').max(100, 'Title is too long'),
+    description: z.string().max(2000, 'Description is too long').optional(),
+    dueDate: z.string().datetime('dueDate must be a valid ISO datetime').optional(),
+    order: z.coerce.number().int().nonnegative().optional(),
+    status: postStatusEnum.optional(),
+  })
+  .strict();
 
 export const updatePostSchema = z
   .object({
     title: z.string().trim().min(1, 'Title is required').max(100, 'Title is too long').optional(),
     description: z.string().max(2000, 'Description is too long').optional(),
-    dueDate: z.string().datetime().optional(),
+    dueDate: z.string().datetime('dueDate must be a valid ISO datetime').optional(),
     order: z.coerce.number().int().nonnegative().optional(),
     status: postStatusEnum.optional(),
   })
+  .strict()
   .refine(
     (data) =>
       data.title !== undefined ||
@@ -30,37 +33,47 @@ export const updatePostSchema = z
     }
   );
 
-export const updatePostStatusSchema = z.object({
-  status: postStatusEnum,
-});
+export const updatePostStatusSchema = z
+  .object({
+    status: postStatusEnum,
+  })
+  .strict();
 
 export const listPostsQuerySchema = z.object({
   status: postStatusEnum.optional(),
-  search: z.string().optional(),
+  search: z
+    .string()
+    .trim()
+    .max(100, 'Search must be at most 100 characters')
+    .optional(),
 });
 
-export const bulkUpdatePostsSchema = z.object({
-  posts: z
-    .array(
-      z
-        .object({
-          id: z.string().uuid('Invalid post ID'),
-          status: postStatusEnum.optional(),
-          order: z.coerce.number().int().nonnegative().optional(),
-        })
-        .refine((p) => p.status !== undefined || p.order !== undefined, {
-          message: 'Each post must include at least one of status or order',
-        })
-    )
-    .min(1, 'Posts array must contain at least one item'),
-});
+export const bulkUpdatePostsSchema = z
+  .object({
+    posts: z
+      .array(
+        z
+          .object({
+            id: z.uuid('Invalid post ID'),
+            status: postStatusEnum.optional(),
+            order: z.coerce.number().int().nonnegative().optional(),
+          })
+          .strict()
+          .refine((p) => p.status !== undefined || p.order !== undefined, {
+            message: 'Each post must include at least one of status or order',
+          })
+      )
+      .min(1, 'Posts array must contain at least one item')
+      .max(200, 'Posts array must contain at most 200 items'),
+  })
+  .strict();
 
 export const campaignIdParamSchema = z.object({
-  campaignId: z.string().uuid('Invalid campaign ID format'),
+  campaignId: z.uuid('Invalid campaign ID format'),
 });
 
 export const postIdParamSchema = z.object({
-  postId: z.string().uuid('Invalid post ID format'),
+  postId: z.uuid('Invalid post ID format'),
 });
 
 export type CreatePostInput = z.infer<typeof createPostSchema>;

@@ -115,4 +115,34 @@ alternative is to have the Next rewrite set a dedicated header (e.g. `x-client-i
 
 Until verified, `trust proxy` stays at `1` (no guessing). The debug middleware is gated by
 `DEBUG_REQUEST_IP` and is removed in the final cleanup commit; the snippet is preserved in
-git history (`fix(api): client-ip debug logging`).
+git history (`chore(api): add temporary client-IP debug logging for proxy verification`).
+
+### 6. Input validation (confirmed and fixed)
+
+- All body schemas are now `.strict()` — unknown fields (e.g. `role: "admin"`) are rejected
+  with 400 instead of silently stripped. Verified: `register`, `campaign create/update`,
+  `post create`, `bulk-update` (including per-item), `chat session create`, `generate`.
+- Register password: `min 8`, `max 72` (bcrypt cap). Login keeps `min 1` with no max so a
+  pre-existing long password still works (bcrypt truncates at 72 bytes anyway).
+- Email: `.trim().toLowerCase().max(254)` on register **and** login — verified mixed-case
+  register stores lowercase and mixed-case login matches.
+- `listCampaignsSchema`: `page >= 1`, `limit` 1–100 or `all`, `search` max 100, `sortBy`/
+  `sortOrder` enums (last two already existed). `listPostsQuerySchema.search` max 100.
+- Every string field now has an explicit `.max()`; `bulkUpdatePostsSchema.posts` capped at
+  200 items; `keywords` items capped at 200 chars (array max 10 already existed).
+- ID params use `z.uuid()` (zod v4, replaces deprecated `z.string().uuid()`).
+- AI: `tone` is now an enum — `Professional|Playful|Urgent|Friendly|Bold` (matches the web
+  option set); `length` enum already existed. Regenerate uses the same field definitions as
+  generate, all optional, accepts `{}` (the web's "use original parameters" call).
+- Chat message content: max 8000 → 4000.
+- Validation failures now return a readable message
+  (`Validation failed: <first 3 issues>` + full list in `error`) instead of bare
+  `Validation failed`.
+- AI model/max-tokens confirmed server-env only (`config/ai.config.ts`); the strict body
+  schema makes it impossible to pass them from the client.
+- Collateral fix: `signupAction` was sending the whole form object, including
+  `confirmPassword`, which `.strict()` would now reject — it now sends only
+  `{ email, password }`.
+
+Verified by curl against the local API (400 cases above, plus happy paths: register, login,
+campaign create/update, post create, chat session create, SSE generate with mock AI).

@@ -64,7 +64,7 @@ export async function signupAction(payload: TSignupPayload) {
   try {
     const response = await fetcher<TSignupResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ email: payload.email, password: payload.password }),
     });
 
     return {

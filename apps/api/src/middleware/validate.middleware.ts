@@ -37,7 +37,9 @@ export const validate = (schemas: ValidationSchemas) => {
     }
 
     if (errors.length > 0) {
-      throw new ApiError(400, 'Validation failed', errors.join(', '));
+      const summary = errors.slice(0, 3).join('; ');
+      const suffix = errors.length > 3 ? ` (+${errors.length - 3} more)` : '';
+      throw new ApiError(400, `Validation failed: ${summary}${suffix}`, errors.join(', '));
     }
 
     next();

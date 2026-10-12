@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
-# Stage 1: Install the locked Bun workspace dependencies.
+# Stage 1: deps ----
+# Install the locked Bun workspace dependencies.
 FROM oven/bun:1.4.0 AS deps
 
 WORKDIR /app
@@ -11,7 +12,8 @@ COPY apps/web/package.json ./apps/web/package.json
 
 RUN bun install --frozen-lockfile
 
-# Stage 2: Build the Next.js app and generate its standalone output.
+# Stage 2: builder ----
+# Build the Next.js app and generate its standalone output.
 FROM deps AS builder
 
 WORKDIR /app
@@ -27,7 +29,8 @@ ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
 
 RUN cd apps/web && bun run build
 
-# Stage 3: Run the minimal standalone Next.js server image.
+# Stage 3: runner ----
+# Run the minimal standalone Next.js server image.
 FROM node:24-slim AS runner
 
 WORKDIR /app

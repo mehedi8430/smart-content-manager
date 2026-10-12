@@ -1,5 +1,6 @@
 name: smart-content-manager
 
+# This logging configuration is defined as a reusable anchor for both services.
 x-logging: &default-logging
   driver: json-file
   options:
@@ -7,6 +8,7 @@ x-logging: &default-logging
     max-file: "3"
 
 services:
+  # The server service is built from the Dockerfile located in apps/api. It uses an environment file for configuration and sets environment variables for production mode, port, and CORS origin. The service exposes port 3001 and mounts a volume for logs. It is configured to restart unless stopped and has logging configured.
   server:
     build:
       context: .
@@ -25,6 +27,7 @@ services:
     restart: unless-stopped
     logging: *default-logging
 
+  # The client service is built from the Dockerfile located in apps/web. It uses build arguments to set environment variables for the API base URL and an encryption key for server actions. The service exposes port 3000 and depends on the server service being healthy before starting. It also has logging configured and will restart unless stopped.
   client:
     build:
       context: .

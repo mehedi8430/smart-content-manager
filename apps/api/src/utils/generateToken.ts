@@ -2,6 +2,7 @@ import { prisma } from '@/config/db.config';
 import { CookieOptions, Response } from 'express';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { ApiError } from './apiResponse';
+import { hashToken } from './hashToken';
 
 export const generateAccessToken = (userId: string, res: Response): string => {
     const secret = process.env.ACCESS_TOKEN_SECRET;
@@ -19,7 +20,7 @@ export const generateAccessToken = (userId: string, res: Response): string => {
     const options: CookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none' as const,
+        sameSite: 'lax' as const,
         path: '/',
         maxAge: 1000 * 60 * 60 * 24 * 1, // 1 day
     };
@@ -48,17 +49,17 @@ export const generateRefreshToken = async (
         const options: CookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'none' as const,
+            sameSite: 'lax' as const,
             path: '/',
             maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         };
 
         res.cookie('refreshToken', refreshToken, options);
 
-        // save refresh token in db
+        // store only a hash of the refresh token so a DB leak can't be replayed
         await prisma.user.update({
             where: { id: userId },
-            data: { refreshToken },
+            data: { refreshToken: hashToken(refreshToken) },
         });
 
         return refreshToken;

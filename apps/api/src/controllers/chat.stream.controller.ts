@@ -110,7 +110,7 @@ const streamMessageHandler = async (req: Request, res: Response) => {
 
       if (isDisconnected) {
         logger.info('Client disconnected during chat stream');
-        await generator.return(undefined as any); // let the generator clean up
+        await generator.return(undefined as never); // let the generator clean up
         res.end();
         return;
       }

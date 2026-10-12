@@ -8,7 +8,7 @@ import {
     createAiOutput,
     updateAiOutput,
 } from '@/services/aiOutput.service';
-import type { GenerateContentInput, RegenerateContentInput } from '@/validators/aiOutput.validator';
+import type { GenerateContentInput, RegenerateContentInput, Tone } from '@/validators/aiOutput.validator';
 import logger from '@/config/logger.config';
 
 // This implementation uses Async Generators + Server-Sent Events (SSE) to stream AI responses from Anthropic to the browser in real time while saving the final result to the database
@@ -99,7 +99,7 @@ const generateStream = async (req: Request, res: Response) => {
         for await (const chunk of generator) {
             if (isDisconnected) {
                 logger.info('Client disconnected during generation');
-                await generator.return(undefined as any); // let the generator clean up
+                await generator.return(undefined as never); // let the generator clean up
                 break;
             }
 
@@ -187,14 +187,14 @@ const regenerateStream = async (req: Request, res: Response) => {
     // Get existing AI output
     const existingOutput = await getAiOutput(id, campaignId, userId);
 
-    // Merge with existing data (body can override)
-    const mergedData: GenerateContentInput = {
-        type: data.type || (existingOutput.type as 'ad' | 'caption' | 'email'),
-        prompt: data.prompt || existingOutput.prompt,
-        tone: data.tone !== undefined ? data.tone : existingOutput.tone || undefined,
-        keywords: data.keywords,
-        length: data.length,
-    };
+        // Merge with existing data (body can override)
+        const mergedData: GenerateContentInput = {
+            type: data.type || (existingOutput.type as 'ad' | 'caption' | 'email'),
+            prompt: data.prompt || existingOutput.prompt,
+            tone: data.tone ?? ((existingOutput.tone as Tone | null) ?? undefined),
+            keywords: data.keywords,
+            length: data.length,
+        };
 
     // Set SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
@@ -220,7 +220,6 @@ const regenerateStream = async (req: Request, res: Response) => {
 
         // Stream generation
         const generator = streamGenerateContent(mergedData, campaignContext);
-        let result: { content: string; tokensUsed: number; model: string } | null = null;
 
         for await (const chunk of generator) {
             if (isDisconnected) {

@@ -1,6 +1,7 @@
 import { prisma } from '@/config/db.config';
 import { ApiError } from '@/utils/apiResponse';
 import logger from '@/config/logger.config';
+import type { Prisma } from '@prisma/client';
 import type { CreatePostInput, UpdatePostInput } from '@/validators/post.validation';
 
 /**
@@ -28,7 +29,7 @@ export const listPosts = async (
       throw new ApiError(404, 'Campaign not found');
     }
 
-    const where: any = { campaignId };
+    const where: Prisma.PostWhereInput = { campaignId };
     if (status) where.status = status;
     if (search) where.title = { contains: search, mode: 'insensitive' };
 
@@ -110,7 +111,7 @@ export const updatePost = async (
 
     if (post.campaign.userId !== userId) throw new ApiError(404, 'Post not found');
 
-    const updateData: any = {};
+    const updateData: Prisma.PostUpdateInput = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.description !== undefined) updateData.description = data.description;
@@ -235,12 +236,13 @@ export const bulkUpdatePosts = async (
       }
     });
 
-    if (existing.length !== ids.length) {
-      throw new ApiError(400, 'One or more posts are invalid for this campaign');
+    const foundIds = new Set(existing.map((p) => p.id));
+    if (ids.some((id) => !foundIds.has(id))) {
+      throw new ApiError(404, 'One or more posts not found');
     }
 
     const updates = posts.map((p) => {
-      const data: any = {};
+      const data: Prisma.PostUpdateInput = {};
 
       if (p.status !== undefined) data.status = p.status;
       if (p.order !== undefined) data.order = p.order;

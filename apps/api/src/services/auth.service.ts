@@ -1,6 +1,7 @@
 import { prisma } from '@/config/db.config';
 import { ApiError } from '@/utils/apiResponse';
 import logger from '@/config/logger.config';
+import { hashToken } from '@/utils/hashToken';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { RegisterInput, LoginInput } from '@/validators/auth.validator';
@@ -112,7 +113,7 @@ export const refreshAccessToken = async (token: string) => {
     // Get user
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
 
-    if (!user || user.refreshToken !== token) {
+    if (!user || user.refreshToken !== hashToken(token)) {
       throw new ApiError(401, 'Invalid refresh token.');
     }
 

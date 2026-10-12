@@ -73,7 +73,7 @@ const clearAuthCookies = (res: Response) => {
   const clearOptions: CookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none' as const,
+    sameSite: 'lax' as const,
     path: '/',
     maxAge: 0,
   };

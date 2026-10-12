@@ -1,18 +1,16 @@
-// Load environment variables first
-// import { config } from 'dotenv';
+// Load environment variables first, then validate them, before anything else
+// reads process.env (CORS origin, rate limits, DB connection, JWT secrets).
 import 'dotenv/config';
+import { env } from './config/env.config';
 
 import app from './app';
 import logger from './config/logger.config';
 import { connectDB, disconnectDB } from './config/db.config';
 
-// Load environment variables first
-// config();
-
 // Connect to database
 connectDB();
 
-const PORT = process.env.PORT || 3000;
+const PORT = env.PORT;
 
 const server = app.listen(PORT, () => {
   logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);

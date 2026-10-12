@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
-# ---- deps: install the locked Bun workspace dependencies ----
+# ---- Stage 1: deps ----
+# install the locked Bun workspace dependencies ----
 FROM oven/bun:1.4.0 AS deps
 
 WORKDIR /app
@@ -11,7 +12,8 @@ COPY apps/web/package.json ./apps/web/package.json
 
 RUN bun install --frozen-lockfile
 
-# ---- builder: compile TS + generate Prisma client ----
+# ---- Stage 2: builder ----
+# compile TS + generate Prisma client ----
 # Also used as the "migrate" target (contains the Prisma CLI + prisma/ dir)
 FROM deps AS builder
 
@@ -19,7 +21,8 @@ COPY . .
 
 RUN cd apps/api && DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder bun run build
 
-# ---- runner: Node.js runtime image ----
+# ---- Stage 3: runner ----
+# Node.js runtime image ----
 FROM node:24-slim AS runner
 
 ENV NODE_ENV=production

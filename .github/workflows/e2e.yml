@@ -28,6 +28,7 @@ jobs:
         run: docker compose -f docker-compose.e2e.yml up --build -d
 
       - name: Install Playwright browsers
+        working-directory: apps/e2e
         run: bunx playwright install --with-deps chromium
 
       - name: Run Playwright specs

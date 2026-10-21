@@ -19,12 +19,44 @@ services:
       NODE_ENV: production
       PORT: 3001
       CORS_ORIGIN: http://localhost:3000
+      # Overrides the Neon URL from env_file so the containerized stack only
+      # touches the local Postgres below.
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/smart_content_manager?schema=public&sslmode=disable
     ports:
       - "3001:3001"
     volumes:
       - api-logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     init: true
     restart: unless-stopped
+    logging: *default-logging
+
+  # Local development database. The API container uses this instead of the
+  # hosted Neon database (see DATABASE_URL overrides below). `bun run dev` on the
+  # host is unaffected and keeps reading apps/api/.env.
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: smart_content_manager
+    ports:
+      # 5433 on the host so it doesn't collide with a local Postgres (5432) or
+      # the e2e database (5434).
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d smart_content_manager"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
     logging: *default-logging
 
   # The client service is built from the Dockerfile located in apps/web. It uses build arguments to set environment variables for the API base URL and an encryption key for server actions. The service exposes port 3000 and depends on the server service being healthy before starting. It also has logging configured and will restart unless stopped.
@@ -46,17 +78,23 @@ services:
     restart: unless-stopped
     logging: *default-logging
 
-  # One-off tool, not started by `up`. Run: docker compose run --rm migrate
+  # Runs on `up` before the server so a fresh local volume gets its schema.
+  # `prisma migrate deploy` is idempotent, so repeat runs are safe.
   migrate:
-    profiles: [ "tools" ]
     build:
       context: .
       dockerfile: apps/api/Dockerfile
       target: builder
     env_file: ./apps/api/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/smart_content_manager?schema=public&sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
     working_dir: /app/apps/api
     command: [ "bun", "x", "prisma", "migrate", "deploy" ]
     restart: "no"
 
 volumes:
   api-logs:
+  postgres-data:

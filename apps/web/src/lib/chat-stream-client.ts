@@ -1,4 +1,5 @@
 import type { ChatMessage } from "@/types/chat.type";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Streams a chat reply from the API using Server-Sent Events (SSE).
@@ -46,7 +47,9 @@ export async function streamChatMessage(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(errorText || "Failed to start chat stream");
+      const error = new Error(errorText || "Failed to start chat stream") as Error & { status: number };
+      error.status = response.status;
+      throw error;
     }
 
     const reader = response.body?.getReader();
@@ -106,6 +109,8 @@ export async function streamChatMessage(
       // Silently return on abort (intentional cancel).
       return;
     }
+    const status = error && typeof error === "object" && "status" in error ? Number((error as { status: unknown }).status) : undefined;
+    if (status === undefined || status >= 500) Sentry.captureMessage("Chat stream failed", { level: "error", tags: { feature: "chat", error_type: error instanceof Error ? error.name : "unknown", ...(status ? { status: String(status) } : {}) } });
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
     handlers.onError(errorMessage);

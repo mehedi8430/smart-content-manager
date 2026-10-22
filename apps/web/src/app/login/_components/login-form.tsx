@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@/validations/auth.shema";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import * as Sentry from "@sentry/nextjs";
 
 export function LoginForm({
   className,
@@ -55,6 +56,7 @@ export function LoginForm({
       }
 
       if (result.success) {
+        if (result.user?.user?.id) Sentry.setUser({ id: result.user.user.id });
         toast.success(result.message || "Login successful");
         router.push("/dashboard");
       }

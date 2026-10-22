@@ -1,6 +1,7 @@
 "use server";
 
 import fetcher from "@/lib/fetcher";
+import * as Sentry from "@sentry/nextjs";
 import {
     BulkUpdateItem,
     BulkUpdatePostsResponse,
@@ -40,6 +41,7 @@ export async function listPostsAction(campaignId: string, query: ListPostsQuery 
             data: response.data,
         };
     } catch (error) {
+        if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "posts" } });
         if (error && typeof error === "object" && "message" in error) {
             return { error: (error as { message: string }).message };
         }
@@ -64,6 +66,7 @@ export async function createPostAction(campaignId: string, payload: CreatePostIn
             data: response.data,
         };
     } catch (error) {
+        if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "posts" } });
         if (error && typeof error === "object" && "message" in error) {
             return { error: (error as { message: string }).message };
         }
@@ -95,6 +98,7 @@ export async function updatePostAction(
             data: response.data,
         };
     } catch (error) {
+        if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "posts" } });
         if (error && typeof error === "object" && "message" in error) {
             return { error: (error as { message: string }).message };
         }
@@ -120,6 +124,7 @@ export async function deletePostAction(campaignId: string, postId: string) {
             message: response.message,
         };
     } catch (error) {
+        if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "posts" } });
         if (error && typeof error === "object" && "message" in error) {
             return { error: (error as { message: string }).message };
         }
@@ -151,6 +156,7 @@ export async function updatePostStatusAction(
             data: response.data,
         };
     } catch (error) {
+        if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "posts" } });
         if (error && typeof error === "object" && "message" in error) {
             return { error: (error as { message: string }).message };
         }
@@ -181,6 +187,7 @@ export async function bulkUpdatePostsAction(
             data: response.data,
         };
     } catch (error) {
+        if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "posts" } });
         if (error && typeof error === "object" && "message" in error) {
             return { error: (error as { message: string }).message };
         }

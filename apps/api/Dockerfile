@@ -19,13 +19,21 @@ FROM deps AS builder
 
 COPY . .
 
-RUN cd apps/api && DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder bun run build
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+ARG SENTRY_RELEASE
+RUN --mount=type=secret,id=sentry_auth_token,required=false \
+    if [ -f /run/secrets/sentry_auth_token ]; then export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; fi && \
+    export SENTRY_ORG SENTRY_PROJECT SENTRY_RELEASE && \
+    cd apps/api && DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder bun run build
 
 # ---- Stage 3: runner ----
 # Node.js runtime image ----
 FROM node:24-slim AS runner
 
+ARG SENTRY_RELEASE
 ENV NODE_ENV=production
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
 
 WORKDIR /app
 
@@ -43,7 +51,7 @@ EXPOSE 3001
 HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=5 \
     CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3001)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-CMD ["node", "apps/api/dist/server.js"]
+CMD ["node", "--enable-source-maps", "--import", "./apps/api/dist/instrument.js", "apps/api/dist/server.js"]
 
 
 

@@ -1,6 +1,7 @@
 "use server";
 
 import fetcher from "@/lib/fetcher";
+import * as Sentry from "@sentry/nextjs";
 import { revalidateTag } from "next/cache";
 import {
   CampaignListResponse,
@@ -31,6 +32,7 @@ export async function createCampaignAction(payload: CreateCampaignPayload) {
       data: response.data,
     };
   } catch (error) {
+    if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "campaigns" } });
     if (error && typeof error === "object" && "message" in error) {
       return { error: (error as { message: string }).message };
     }
@@ -67,6 +69,7 @@ export async function listCampaignsAction(query: ListCampaignsQuery = {}) {
       data: response.data,
     };
   } catch (error) {
+    if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "campaigns" } });
     if (error && typeof error === "object" && "message" in error) {
       return { error: (error as { message: string }).message };
     }
@@ -90,6 +93,7 @@ export async function getCampaignAction(id: string) {
       data: response.data,
     };
   } catch (error) {
+    if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "campaigns" } });
     if (error && typeof error === "object" && "message" in error) {
       return { error: (error as { message: string }).message };
     }
@@ -116,6 +120,7 @@ export async function updateCampaignAction(id: string, payload: UpdateCampaignPa
       data: response.data,
     };
   } catch (error) {
+    if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "campaigns" } });
     if (error && typeof error === "object" && "message" in error) {
       return { error: (error as { message: string }).message };
     }
@@ -140,6 +145,7 @@ export async function deleteCampaignAction(id: string) {
       message: response.message,
     };
   } catch (error) {
+    if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "campaigns" } });
     if (error && typeof error === "object" && "message" in error) {
       return { error: (error as { message: string }).message };
     }

@@ -1,6 +1,9 @@
+import './instrument';
+
 // Load environment variables first, then validate them, before anything else
 // reads process.env (CORS origin, rate limits, DB connection, JWT secrets).
 import 'dotenv/config';
+import * as Sentry from '@sentry/node';
 import { env } from './config/env.config';
 
 import app from './app';
@@ -19,8 +22,10 @@ const server = app.listen(PORT, () => {
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err: Error) => {
   logger.error('Unhandled Rejection:', err);
+  Sentry.captureException(err);
   server.close(async () => {
     await disconnectDB();
+    await Sentry.flush(2000);
     process.exit(1);
   });
 });
@@ -28,7 +33,9 @@ process.on('unhandledRejection', (err: Error) => {
 // Handle uncaught exceptions
 process.on('uncaughtException', async (err: Error) => {
   logger.error('Uncaught Exception:', err);
+  Sentry.captureException(err);
   await disconnectDB();
+  await Sentry.flush(2000);
   process.exit(1);
 });
 
@@ -37,6 +44,8 @@ process.on('SIGTERM', () => {
   logger.info('SIGTERM received');
   server.close(async () => {
     await disconnectDB();
+    await Sentry.flush(2000);
     logger.info('Process terminated');
+    process.exit(0);
   });
 });

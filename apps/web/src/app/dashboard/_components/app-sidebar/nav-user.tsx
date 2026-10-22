@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/actions/auth.action";
 import ReuseableAlertDialog from "@/components/reuseable-alert-dialog";
+import * as Sentry from "@sentry/nextjs";
 
 export function NavUser() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export function NavUser() {
 
     try {
       const result = await logoutAction();
+      Sentry.setUser(null);
 
       if (result.success) {
         toast.success("Logged out successfully");

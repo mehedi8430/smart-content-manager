@@ -10,6 +10,8 @@ import {
 } from '@/services/aiOutput.service';
 import type { GenerateContentInput, RegenerateContentInput, Tone } from '@/validators/aiOutput.validator';
 import logger from '@/config/logger.config';
+import * as Sentry from '@sentry/node';
+import { AI_MODEL } from '@/config/ai.config';
 
 // This implementation uses Async Generators + Server-Sent Events (SSE) to stream AI responses from Anthropic to the browser in real time while saving the final result to the database
 // Frontend
@@ -79,9 +81,8 @@ const generateStream = async (req: Request, res: Response) => {
 
     // Track if client disconnected
     let isDisconnected = false;
-    req.on('close', () => {
-        isDisconnected = true;
-    });
+    req.on('aborted', () => { isDisconnected = true; });
+    res.on('close', () => { isDisconnected = !res.writableEnded; });
 
     try {
         const campaignContext = {
@@ -163,6 +164,13 @@ const generateStream = async (req: Request, res: Response) => {
         res.write(`data: ${JSON.stringify({ type: 'done', output: savedRecord })}\n\n`);
         res.end();
     } catch (error) {
+        if (!res.destroyed && !(error instanceof Error && error.name === 'AbortError')) Sentry.withScope((scope) => {
+            scope.setTag('feature', 'ai-generate');
+            scope.setTag('model', error instanceof Error && 'model' in error ? String(error.model) : AI_MODEL);
+            if (error instanceof Error && 'statusCode' in error && error.statusCode) scope.setTag('provider_status', String(error.statusCode));
+            scope.setUser({ id: userId });
+            Sentry.captureException(error);
+        });
         logger.error('AI generation error', {
             message: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
@@ -204,9 +212,8 @@ const regenerateStream = async (req: Request, res: Response) => {
 
     // Track if client disconnected
     let isDisconnected = false;
-    req.on('close', () => {
-        isDisconnected = true;
-    });
+    req.on('aborted', () => { isDisconnected = true; });
+    res.on('close', () => { isDisconnected = !res.writableEnded; });
 
     try {
         const campaignContext = {
@@ -262,6 +269,13 @@ const regenerateStream = async (req: Request, res: Response) => {
         res.write(`data: ${JSON.stringify({ type: 'done', output: updatedRecord })}\n\n`);
         res.end();
     } catch (error) {
+        if (!res.destroyed && !(error instanceof Error && error.name === 'AbortError')) Sentry.withScope((scope) => {
+            scope.setTag('feature', 'ai-generate');
+            scope.setTag('model', error instanceof Error && 'model' in error ? String(error.model) : AI_MODEL);
+            if (error instanceof Error && 'statusCode' in error && error.statusCode) scope.setTag('provider_status', String(error.statusCode));
+            scope.setUser({ id: userId });
+            Sentry.captureException(error);
+        });
         logger.error('AI regeneration error', { error });
         res.write(`data: ${JSON.stringify({ type: 'error', message: 'Generation failed, please try again.' })}\n\n`);
         res.end();

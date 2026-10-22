@@ -10,6 +10,7 @@ import logger from './config/logger.config';
 import cookieParser from 'cookie-parser';
 import { prisma } from './config/db.config';
 import { env, corsOrigins } from './config/env.config';
+import * as Sentry from '@sentry/node';
 
 const app: Application = express();
 
@@ -103,6 +104,9 @@ app.use((req: Request, res: Response) => {
     message: `Route ${req.originalUrl} not found`,
   });
 });
+
+// Must follow all routes and precede the centralized response handler.
+Sentry.setupExpressErrorHandler(app);
 
 // Error handling middleware
 app.use(errorHandler);

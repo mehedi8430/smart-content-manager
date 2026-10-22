@@ -1,4 +1,5 @@
 import { AiOutput } from "@/types/ai-output.type";
+import * as Sentry from "@sentry/nextjs";
 
 export interface GenerateContentInput {
     type: "ad" | "caption" | "email";
@@ -64,7 +65,9 @@ export async function streamGeneration(
 
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(errorText || "Failed to start generation");
+            const error = new Error(errorText || "Failed to start generation") as Error & { status: number };
+            error.status = response.status;
+            throw error;
         }
 
         // Get the reader from the response body
@@ -136,6 +139,8 @@ export async function streamGeneration(
             // Silently return on abort (intentional cancel)
             return;
         }
+        const status = error && typeof error === "object" && "status" in error ? Number((error as { status: unknown }).status) : undefined;
+        if (status === undefined || status >= 500) Sentry.captureMessage("AI generation stream failed", { level: "error", tags: { feature: "ai-generate", error_type: error instanceof Error ? error.name : "unknown", ...(status ? { status: String(status) } : {}) } });
         const errorMessage =
             error instanceof Error ? error.message : "Unknown error occurred";
         handlers.onError(errorMessage);
@@ -194,7 +199,9 @@ export async function streamRegeneration(
 
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(errorText || "Failed to start regeneration");
+            const error = new Error(errorText || "Failed to start regeneration") as Error & { status: number };
+            error.status = response.status;
+            throw error;
         }
 
         const reader = response.body?.getReader();
@@ -249,6 +256,8 @@ export async function streamRegeneration(
         if (error instanceof Error && error.name === "AbortError") {
             return;
         }
+        const status = error && typeof error === "object" && "status" in error ? Number((error as { status: unknown }).status) : undefined;
+        if (status === undefined || status >= 500) Sentry.captureMessage("AI regeneration stream failed", { level: "error", tags: { feature: "ai-generate", error_type: error instanceof Error ? error.name : "unknown", ...(status ? { status: String(status) } : {}) } });
         const errorMessage =
             error instanceof Error ? error.message : "Unknown error occurred";
         handlers.onError(errorMessage);

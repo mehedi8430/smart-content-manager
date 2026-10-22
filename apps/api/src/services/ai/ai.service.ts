@@ -34,7 +34,10 @@ export async function generateContent(
         };
     } catch (error) {
         logger.error('AI generation error', { error });
-        throw new AiGenerationError('Failed to generate content. Please try again.');
+        throw new AiGenerationError('Failed to generate content. Please try again.', {
+            statusCode: typeof error === 'object' && error !== null && 'status' in error ? Number(error.status) : undefined,
+            model: AI_MODEL,
+        });
     }
 }
 
@@ -94,6 +97,9 @@ export async function* streamGenerateContent(
             message: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
         });
-        throw new AiGenerationError('Failed to generate content. Please try again.');
+        throw new AiGenerationError('Failed to generate content. Please try again.', {
+            statusCode: typeof error === 'object' && error !== null && 'status' in error ? Number(error.status) : undefined,
+            model: AI_MODEL,
+        });
     }
 }

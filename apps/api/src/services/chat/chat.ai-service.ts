@@ -74,6 +74,9 @@ export async function* generateChatReply(
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
-    throw new AiGenerationError('Failed to generate chat reply. Please try again.');
+    throw new AiGenerationError('Failed to generate chat reply. Please try again.', {
+      statusCode: typeof error === 'object' && error !== null && 'status' in error ? Number(error.status) : undefined,
+      model: AI_MODEL,
+    });
   }
 }

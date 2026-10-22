@@ -10,6 +10,7 @@ import {
   TSignupResponse
 } from "@/types/auth.type";
 import { cookies } from "next/headers";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Login action
@@ -48,6 +49,7 @@ export async function loginAction(values: TLoginPayload) {
       success: true
     };
   } catch (error) {
+    if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "login" } });
     // If error is an object with a message property, use that
     if (error && typeof error === "object" && "message" in error) {
       return { error: (error as { message: string }).message };
@@ -73,6 +75,7 @@ export async function signupAction(payload: TSignupPayload) {
       data: response.data,
     };
   } catch (error) {
+    if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "signup" } });
     if (error && typeof error === "object" && "message" in error) {
       return { error: (error as { message: string }).message };
     }
@@ -100,6 +103,7 @@ export async function logoutAction() {
       message: response.message
     };
   } catch (error) {
+    if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "logout" } });
     // Even if API fails, clear local cookies
     const cookieStore = await cookies();
     cookieStore.delete("accessToken");
@@ -137,6 +141,7 @@ export async function getLoggedinUserAction() {
       data: response.data,
     };
   } catch (error) {
+    if (!(error && typeof error === "object" && "status" in error && Number((error as { status: unknown }).status) < 500)) Sentry.captureException(error, { tags: { action: "get-current-user" } });
     if (error && typeof error === "object" && "message" in error) {
       return { error: (error as { message: string }).message };
     }

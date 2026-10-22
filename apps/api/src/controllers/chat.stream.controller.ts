@@ -3,6 +3,8 @@ import { prisma } from '@/config/db.config';
 import { getChatSession } from '@/services/chat.service';
 import { generateChatReply, type ChatMessageTurn } from '@/services/chat/chat.ai-service';
 import logger from '@/config/logger.config';
+import * as Sentry from '@sentry/node';
+import { AI_MODEL } from '@/config/ai.config';
 
 const GENERAL_SYSTEM_PROMPT =
   "You are a helpful marketing copilot. Answer the user's question clearly and concisely.";
@@ -88,9 +90,8 @@ const streamMessageHandler = async (req: Request, res: Response) => {
 
   // Track client disconnects.
   let isDisconnected = false;
-  req.on('close', () => {
-    isDisconnected = true;
-  });
+  req.on('aborted', () => { isDisconnected = true; });
+  res.on('close', () => { isDisconnected = !res.writableEnded; });
 
   try {
     // 6. Call the provider-abstracted generator (reuses the Anthropic client via ai.config).
@@ -139,6 +140,13 @@ const streamMessageHandler = async (req: Request, res: Response) => {
     res.write(`data: ${JSON.stringify({ type: 'done', output: assistantMessage })}\n\n`);
     res.end();
   } catch (error) {
+    if (!res.destroyed && !(error instanceof Error && error.name === 'AbortError')) Sentry.withScope((scope) => {
+      scope.setTag('feature', 'chat');
+      scope.setTag('model', error instanceof Error && 'model' in error ? String(error.model) : AI_MODEL);
+      if (error instanceof Error && 'statusCode' in error && error.statusCode) scope.setTag('provider_status', String(error.statusCode));
+      scope.setUser({ id: userId });
+      Sentry.captureException(error);
+    });
     // 10. Emit a final SSE error event and end cleanly — never crash the connection.
     logger.error('Chat stream error', {
       message: error instanceof Error ? error.message : String(error),

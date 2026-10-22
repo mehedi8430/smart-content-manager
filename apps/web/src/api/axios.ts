@@ -4,6 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 import { config } from "@/config/env-config";
+import * as Sentry from "@sentry/nextjs";
 
 export const api: AxiosInstance = axios.create({
   // Browser requests must stay same-origin so the HttpOnly web cookie is sent
@@ -84,7 +85,21 @@ async function handleUnauthorized(error: AxiosError): Promise<unknown> {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => handleUnauthorized(error),
+  (error: AxiosError) => {
+    const status = error.response?.status;
+    if (typeof status === "number" && status >= 500) {
+      Sentry.captureMessage("API request failed", {
+        level: "error",
+        tags: { status: String(status), endpoint: error.config?.url?.split("?")[0] || "unknown" },
+      });
+    } else if (status === undefined && !error.code?.includes("CANCEL")) {
+      Sentry.captureMessage("API network request failed", {
+        level: "error",
+        tags: { endpoint: error.config?.url?.split("?")[0] || "unknown" },
+      });
+    }
+    return handleUnauthorized(error);
+  },
 );
 
 export default api;

@@ -2,6 +2,7 @@ import { prisma } from '@/config/db.config';
 import { ApiError } from '@/utils/apiResponse';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import * as Sentry from '@sentry/node';
 
 // read the token from the request
 // check if token is valid
@@ -40,6 +41,7 @@ export const protect = async (
     }
 
     req.user = { id: user.id, email: user.email };
+    Sentry.setUser({ id: user.id });
 
     next();
   } catch (error) {

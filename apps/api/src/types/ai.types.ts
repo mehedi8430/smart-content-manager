@@ -15,8 +15,13 @@ export interface GenerationResult {
 }
 
 export class AiGenerationError extends Error {
-    constructor(message: string) {
+    statusCode?: number;
+    model?: string;
+
+    constructor(message: string, options?: { statusCode?: number; model?: string }) {
         super(message);
         this.name = 'AiGenerationError';
+        this.statusCode = options?.statusCode;
+        this.model = options?.model;
     }
 }

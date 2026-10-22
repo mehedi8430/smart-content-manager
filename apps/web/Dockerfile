@@ -22,12 +22,24 @@ COPY . .
 
 # Inlined at build time: also used by next.config.ts rewrites (container-to-container URL)
 ARG NEXT_PUBLIC_API_BASE_URL=http://server:3001/api/v1
+ARG NEXT_PUBLIC_SENTRY_DSN
+ARG SENTRY_ENVIRONMENT=production
+ARG NEXT_PUBLIC_SENTRY_RELEASE
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
 ARG NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
+    NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN} \
+    SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT} \
+    NEXT_PUBLIC_SENTRY_RELEASE=${NEXT_PUBLIC_SENTRY_RELEASE} \
+    SENTRY_ORG=${SENTRY_ORG} \
+    SENTRY_PROJECT=${SENTRY_PROJECT} \
     NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY} \
     NEXT_TELEMETRY_DISABLED=1
 
-RUN cd apps/web && bun run build
+RUN --mount=type=secret,id=sentry_auth_token,required=false \
+    if [ -f /run/secrets/sentry_auth_token ]; then export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; fi && \
+    cd apps/web && bun run build
 
 # Stage 3: runner ----
 # Run the minimal standalone Next.js server image.

@@ -126,7 +126,9 @@ export async function fetcher<T = unknown>(
         } else {
             cookieStore.delete('accessToken');
             cookieStore.delete('refreshToken');
-            throw new Error("Session expired. Please login again.");
+            const error = new Error("Session expired. Please login again.") as Error & { status: number };
+            error.status = 401;
+            throw error;
         }
     }
 
@@ -193,7 +195,8 @@ export async function fetcher<T = unknown>(
                 this.data = data;
             }
         }
-        throw new FetcherError(errorMessage, response.status, errorData);
+        const error = new FetcherError(errorMessage, response.status, errorData);
+        throw error;
     }
 
     // Only parse as JSON if content-type indicates JSON

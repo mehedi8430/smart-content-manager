@@ -1,117 +1,74 @@
 # Smart Content Manager
 
-AI-powered content and campaign management platform.
+An AI-assisted campaign and content workspace for small businesses and marketers. Plan work on a kanban board, generate campaign-aware marketing copy, and get help from a marketing copilot.
 
-## Tech Stack
+## v1 scope
 
-* Next.js
-* Express.js
-* PostgreSQL
-* Prisma
-* TypeScript
-* Docker (Compose v2)
+- Email/password authentication with protected user sessions
+- Campaign management and a three-stage content board
+- Streamed AI generation for ads, social captions, and emails
+- General and campaign-aware AI chat
+- Dashboard, public landing page, and privacy/terms pages
 
-## Prerequisites
+Subscriptions, team collaboration, analytics, and third-party integrations are planned, not part of v1. See [docs/project-brief.md](./docs/project-brief.md) for the product brief and [docs/all-features-v1.md](./docs/all-features-v1.md) for the feature inventory.
 
-For local development:
+## Stack and layout
 
-- Node.js 22+
-- Bun
-- PostgreSQL
+| Path | Purpose |
+| --- | --- |
+| `apps/web` | Next.js 16, React 19, Tailwind CSS 4 |
+| `apps/api` | Express 5 + TypeScript REST API, Prisma, PostgreSQL |
+| `apps/e2e` | Playwright browser tests |
 
-For Docker Compose:
+Bun workspaces and Turborepo manage the monorepo. The API is under `/api/v1`; the API health endpoint is `/health`.
 
-- Docker Engine with the Compose v2 plugin (`docker compose`)
-- No external database is needed: Compose starts its own PostgreSQL container for the app
+## Requirements
 
-## Project Structure
+- Bun 1.4.0 (see `package.json`)
+- PostgreSQL for host-based development, or Docker Engine with Compose v2
+- Node.js 24 is used by the production Docker images
 
-```text
-apps/
-├── web      # Frontend (Next.js)
-└── api      # Backend (Express)
-```
+## Local development
 
-## Getting Started
-
-### Install dependencies
+Install dependencies and create app-specific environment files:
 
 ```bash
-bun install
-```
-
-## Configure environment variables
-
-Create:
-
-- `apps/web/.env`
-- `apps/api/.env`
-
-See `.env.example` files for required variables.
-
-### Run Prisma migrations
-
-```bash
-cd apps/api
-bunx --bun prisma migrate dev
-```
-
-### Start development servers
-
-```bash
-bun run dev
-```
-
-Starts both:
-
-- Frontend: http://localhost:3000
-- Backend: http://localhost:8000
-
-## Run with Docker Compose
-
-The Compose stack runs its own PostgreSQL container (`db`), so it never touches
-the hosted Neon database. `bun run dev` on the host is unchanged and still uses
-whatever `DATABASE_URL` is in `apps/api/.env`.
-
-Copy the env examples and fill in the secrets (`DATABASE_URL` can stay as-is —
-Compose overrides it for the containers):
-
-```bash
+bun install --frozen-lockfile
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
 ```
 
-Also export a `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in the shell (or set it in a root `.env`):
+Configure `apps/api/.env` with a PostgreSQL `DATABASE_URL`, unique strong `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET`, and `CORS_ORIGIN=http://localhost:3000`. For real AI responses, configure an Anthropic API key; without one the API supports its mock mode.
+
+In `apps/web/.env`, set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1`. Set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` to a stable base64-encoded 32-byte key, for example the output of `openssl rand -base64 32`. Do not commit populated `.env` files.
+
+Apply database migrations and start both apps:
 
 ```bash
-export NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=$(openssl rand -base64 32)
+cd apps/api && bun run db:migrate
+cd ../..
+bun run dev
 ```
 
-Build and start (migrations run automatically before the API starts):
-
-```bash
-docker compose build
-docker compose up
-```
-
-| Service | Address |
+| Service | Local URL |
 | --- | --- |
-| Frontend | http://localhost:3000 |
-| Backend | http://localhost:3001 |
-| PostgreSQL | `postgresql://postgres:postgres@localhost:5433/smart_content_manager` |
+| Web | http://localhost:3000 |
+| API | http://localhost:8000 |
+| API health | http://localhost:8000/health |
 
-The database is stored in the `postgres-data` volume, so data survives
-`docker compose down`. To start from an empty database:
+## Docker Compose
 
-```bash
-docker compose down -v
-```
+The root Compose stack starts a local PostgreSQL database, applies migrations automatically, then starts the API and web app. It overrides the API database URL to use its own database; it does not use the host development database URL.
 
-To re-apply migrations manually:
+Create the API env file and set unique strong `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` values in it. Compose supplies the local database URL and web origin for this stack. Generate a server-actions key once and keep it stable across rebuilds. For repeat runs, store it in an untracked root `.env` as `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=<generated-value>`; exporting it is suitable for a one-off run:
 
 ```bash
-docker compose run --rm migrate
+cp apps/api/.env.example apps/api/.env
+export NEXT_SERVER_ACTIONS_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+docker compose up --build
 ```
+
+For this Compose stack, the database is exposed on host port `5433`, the API on `3001`, and the web app on `3000`. The server-actions encryption key is needed at build and runtime and must remain stable across rebuilds/instances. Other app configuration belongs in the relevant app's environment file; the root `.env` is only used for Compose variable interpolation.
 
 Seed data is not loaded automatically (the seed script wipes existing rows). If
 you want the demo accounts in the local database, run:
@@ -120,26 +77,28 @@ you want the demo accounts in the local database, run:
 docker compose run --rm --entrypoint bun migrate run prisma/seed.ts
 ```
 
-```mermaid
-flowchart TD
-    A["Prepare environment variables"] --> B["Build API image"]
-    A --> C["Build frontend image"]
-    B --> M["Start Postgres + apply migrations"]
-    M --> D["Start API container"]
-    D --> E["API health check"]
-    E --> F{"Healthy?"}
-    F -->|Yes| G["Start Next.js container"]
-    F -->|No| H["Frontend startup waits"]
-    G --> I["Access localhost:3000"]
-```
+`docker compose down` stops the stack but preserves its database volume. **`docker compose down -v` deletes that local database volume.** The demo seed is not run automatically; it deletes/replaces data, so only use it against a disposable local database.
 
-## Build
+## E2E tests
+
+The Playwright suite starts an isolated Compose stack with mock AI mode. It uses port `3002` for the web app and a separate database volume:
 
 ```bash
-bun run build
+bun run e2e:up
+PLAYWRIGHT_BASE_URL=http://localhost:3002 bun run --cwd apps/e2e test
+bun run e2e:down
 ```
 
-## Monorepo Tooling
+Run `bun run e2e:down` after the test even when the test command fails; it removes the E2E database volume.
 
-- **Turborepo** (build system) orchestrates and optimizes tasks across applications.
-- **Bun** powers the backend runtime and Prisma commands and package manager for frontend.
+## Before a v1 release
+
+- Set production-only database credentials, unique access/refresh JWT secrets, and an exact `CORS_ORIGIN` allowlist; use HTTPS.
+- Set the web app's `NEXT_PUBLIC_API_BASE_URL` to the production API before building the web bundle. Keep one stable `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` across all web instances and releases.
+- Configure the production Anthropic key if live generation/chat is required; otherwise confirm mock mode is not exposed as a production experience.
+- Verify migrations against a production-like database and confirm backups and restore procedures before launch.
+- Resolve the known v1 review issues documented in [docs/all-features-v1.md](./docs/all-features-v1.md) and add regression coverage for those flows.
+- Run `bun run lint`, `bun run build`, and the E2E suite; smoke-test registration, login, campaign CRUD, board changes, streaming/disconnect behavior, and `/health`.
+- Review the privacy/terms content, user-data handling, monitoring/alerting, and support/contact details before opening registration publicly.
+
+The GitHub E2E workflow runs on pull requests and pushes to `main`. The delivery workflow builds and pushes Docker images on `main`; it does not itself deploy them. Configure deployment and production secrets/variables in the hosting platform separately.

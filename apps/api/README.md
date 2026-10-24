@@ -26,6 +26,7 @@ The API listens on the configured `PORT` (8000 in `.env.example`) and serves ver
 | `bun run type-check` | Run TypeScript without emitting files |
 | `bun run db:migrate` | Create/apply a development migration |
 | `bun run db:deploy` | Apply committed migrations |
+| `bun run db:studio` | Open Prisma Studio for the configured database |
 | `bun run db:seed` | Seed the configured database; use only for disposable development data |
 
 See [apps/api/AGENTS.md](./AGENTS.md) for API architecture and conventions.

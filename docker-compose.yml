@@ -21,7 +21,7 @@ services:
       CORS_ORIGIN: http://localhost:3000
       # Overrides the Neon URL from env_file so the containerized stack only
       # touches the local Postgres below.
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/smart_content_manager?schema=public&sslmode=disable
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/smart_content_manager?schema=public&sslmode=disable"
     ports:
       - "3001:3001"
     volumes:
@@ -30,6 +30,8 @@ services:
       db:
         condition: service_healthy
       migrate:
+        condition: service_completed_successfully
+      seed:
         condition: service_completed_successfully
     init: true
     restart: unless-stopped
@@ -92,12 +94,29 @@ services:
       target: builder
     env_file: ./apps/api/.env
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/smart_content_manager?schema=public&sslmode=disable
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/smart_content_manager?schema=public&sslmode=disable"
     depends_on:
       db:
         condition: service_healthy
     working_dir: /app/apps/api
     command: [ "bun", "x", "prisma", "migrate", "deploy" ]
+    restart: "no"
+
+  # Seeds demo data only when the database has no users.
+  seed:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: builder
+    env_file: ./apps/api/.env
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/smart_content_manager?schema=public&sslmode=disable"
+      SEED_IF_EMPTY: "true"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    working_dir: /app/apps/api
+    command: [ "bun", "x", "prisma", "db", "seed" ]
     restart: "no"
 
 volumes:

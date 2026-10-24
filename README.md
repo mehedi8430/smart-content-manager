@@ -50,6 +50,12 @@ cd ../..
 bun run dev
 ```
 
+Open Prisma Studio against the configured API database with:
+
+```bash
+bun run db:studio
+```
+
 | Service | Local URL |
 | --- | --- |
 | Web | http://localhost:3000 |
@@ -70,14 +76,9 @@ docker compose up --build
 
 For this Compose stack, the database is exposed on host port `5433`, the API on `3001`, and the web app on `3000`. The server-actions encryption key is needed at build and runtime and must remain stable across rebuilds/instances. Other app configuration belongs in the relevant app's environment file; the root `.env` is only used for Compose variable interpolation.
 
-Seed data is not loaded automatically (the seed script wipes existing rows). If
-you want the demo accounts in the local database, run:
+On the first `docker compose up`, Compose applies migrations and then seeds the empty local database with demo data before starting the API. Demo login: `demo@smartcontent.test` or `sarah@freelance.test`; password: `Password123!`. On later starts, the seed step skips databases that already contain users, so it will not overwrite local work. The explicit `bun run db:seed` command in `apps/api` remains destructive and clears existing rows.
 
-```bash
-docker compose run --rm --entrypoint bun migrate run prisma/seed.ts
-```
-
-`docker compose down` stops the stack but preserves its database volume. **`docker compose down -v` deletes that local database volume.** The demo seed is not run automatically; it deletes/replaces data, so only use it against a disposable local database.
+`docker compose down` stops the stack but preserves its database volume. **`docker compose down -v` deletes that local database volume.** The next `docker compose up` then creates a fresh database and seeds it again.
 
 ## E2E tests
 

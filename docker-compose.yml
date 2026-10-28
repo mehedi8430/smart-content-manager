@@ -61,23 +61,28 @@ services:
       start_period: 5s
     logging: *default-logging
 
-  # The client service is built from the Dockerfile located in apps/web. It uses build arguments to set environment variables for the API base URL and an encryption key for server actions. The service exposes port 3000 and depends on the server service being healthy before starting. It also has logging configured and will restart unless stopped.
+  # The client runs Next.js in development mode with source bind mounts for hot reload.
   client:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE_URL: http://server:3001/api/v1
-        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
-        SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
-        NEXT_PUBLIC_SENTRY_RELEASE: ${NEXT_PUBLIC_SENTRY_RELEASE:-}
-        SENTRY_ORG: ${SENTRY_ORG:-}
-        SENTRY_PROJECT: ${SENTRY_PROJECT:-}
-        NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: "${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:?generate with: openssl rand -base64 32}"
+      target: dev
     environment:
-      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY}
+      NODE_ENV: development
+      PORT: 3000
+      NEXT_PUBLIC_API_BASE_URL: http://server:3001/api/v1
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+      NEXT_PUBLIC_SENTRY_RELEASE: ${NEXT_PUBLIC_SENTRY_RELEASE:-}
+      SENTRY_ORG: ${SENTRY_ORG:-}
+      SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: "${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:?generate with: openssl rand -base64 32}"
     ports:
       - "3000:3000"
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/public:/app/apps/web/public
+      - ./apps/web/next.config.ts:/app/apps/web/next.config.ts
     depends_on:
       server:
         condition: service_healthy

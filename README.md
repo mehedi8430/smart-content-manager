@@ -64,15 +64,17 @@ bun run db:studio
 
 ## Docker Compose
 
-The root Compose stack starts a local PostgreSQL database, applies migrations automatically, then starts the API and web app. It overrides the API database URL to use its own database; it does not use the host development database URL.
+The root Compose stack starts a local PostgreSQL database, applies migrations automatically, then starts the API and web app. The web app runs Next.js in development mode and mounts its source, so edits under `apps/web/src` appear through hot reload without rebuilding the image. Changes to dependencies or Docker configuration still require a rebuild. The API database URL is overridden to use the Compose database; it does not use the host development database URL.
 
-Create the API env file and set unique strong `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` values in it. Compose supplies the local database URL and web origin for this stack. Generate a server-actions key once and keep it stable across rebuilds. For repeat runs, store it in an untracked root `.env` as `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=<generated-value>`; exporting it is suitable for a one-off run:
+Create the API env file and set unique strong `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` values in it. Compose supplies the local database URL and web origin for this stack. Generate a server-actions key once and keep it stable across restarts. For repeat runs, store it in an untracked root `.env` as `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=<generated-value>`; exporting it is suitable for a one-off run:
 
 ```bash
 cp apps/api/.env.example apps/api/.env
 export NEXT_SERVER_ACTIONS_ENCRYPTION_KEY="$(openssl rand -base64 32)"
 docker compose up --build
 ```
+
+After the initial startup, run `docker compose up -d` as needed; edits to the mounted web source are picked up automatically. Use `docker compose up --build -d client` after changing dependencies or the Dockerfile.
 
 For this Compose stack, the database is exposed on host port `5433`, the API on `3001`, and the web app on `3000`. The server-actions encryption key is needed at build and runtime and must remain stable across rebuilds/instances. Other app configuration belongs in the relevant app's environment file; the root `.env` is only used for Compose variable interpolation.
 

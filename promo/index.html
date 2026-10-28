@@ -1,0 +1,620 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Geist"; src: url("fonts/geist-latin.woff2") format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: "Geist Mono"; src: url("fonts/geist-mono-latin.woff2") format("woff2"); font-weight: 100 900; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #141414; }
+  body { font-family: "Geist", -apple-system, sans-serif; color: #f5f5f5; -webkit-font-smoothing: antialiased; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+
+  /* ---- ambient background ---- */
+  #bg { position: absolute; inset: 0; background:
+          radial-gradient(1100px 700px at 18% 8%,  oklch(0.42 0.09 170 / 0.14), transparent 65%),
+          radial-gradient(900px 650px at 86% 96%, oklch(0.35 0.07 240 / 0.12), transparent 65%),
+          oklch(0.145 0 0); }
+  #vignette { position: absolute; inset: 0; background: radial-gradient(1400px 900px at 50% 46%, transparent 55%, rgba(0,0,0,0.5) 100%); }
+
+  .scene { position: absolute; inset: 0; opacity: 0; }
+
+  /* ---- scene 1 : hook ---- */
+  #s1 .stack { position: absolute; left: 0; right: 0; top: 400px; text-align: center; }
+  #s1 .line  { font-size: 62px; font-weight: 530; letter-spacing: -0.02em; color: oklch(0.708 0 0); margin: 0 0 34px; }
+  #s1 .line em { font-style: normal; color: oklch(73.8% 0.155 163.7); }
+
+  /* ---- caption block (scenes 2-5) ---- */
+  .cap { position: absolute; left: 110px; top: 400px; width: 540px; }
+  .cap .kicker { font-family: "Geist Mono", monospace; font-size: 19px; letter-spacing: 0.22em; color: oklch(73.8% 0.155 163.7); text-transform: uppercase; margin-bottom: 22px; }
+  .cap h2 { font-size: 58px; font-weight: 640; letter-spacing: -0.025em; line-height: 1.08; margin-bottom: 24px; }
+  .cap p { font-size: 24px; line-height: 1.5; color: oklch(0.708 0 0); font-weight: 420; }
+
+  /* ---- app window ---- */
+  .win { position: absolute; left: 680px; top: 108px; width: 1150px; height: 864px;
+         background: oklch(0.205 0 0); border: 1px solid oklch(1 0 0 / 0.10); border-radius: 20px;
+         box-shadow: 0 60px 140px rgba(0,0,0,0.55), 0 20px 50px rgba(0,0,0,0.4); overflow: hidden; }
+  .glow { position: absolute; width: 900px; height: 900px; border-radius: 50%;
+          background: radial-gradient(circle, oklch(0.55 0.14 165 / 0.16), transparent 60%); pointer-events: none; }
+  .chrome { height: 48px; display: flex; align-items: center; gap: 8px; padding: 0 18px;
+            border-bottom: 1px solid oklch(1 0 0 / 0.07); background: oklch(0.19 0 0); }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .url { margin-left: 14px; height: 30px; padding: 0 46px; display: flex; align-items: center;
+         background: oklch(0.24 0 0); border-radius: 8px; font-family: "Geist Mono", monospace; font-size: 14px; color: oklch(0.708 0 0); }
+  .body { height: 815px; display: flex; }
+
+  /* sidebar */
+  .side { width: 232px; border-right: 1px solid oklch(1 0 0 / 0.07); padding: 22px 14px; display: flex; flex-direction: column; gap: 4px; background: oklch(0.19 0 0); }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 20px; }
+  .brand .name { font-size: 16px; font-weight: 620; letter-spacing: -0.01em; }
+  .navi { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 10px; border-radius: 9px;
+          font-size: 14.5px; color: oklch(0.708 0 0); font-weight: 480; }
+  .navi.on { background: oklch(0.26 0 0); color: oklch(0.985 0 0); font-weight: 550; }
+  .navi svg { width: 16px; height: 16px; }
+  .seclabel { font-family: "Geist Mono", monospace; font-size: 11px; letter-spacing: 0.14em; color: oklch(0.556 0 0); padding: 16px 10px 6px; text-transform: uppercase; }
+  .camp-chip { display: flex; align-items: center; gap: 9px; height: 34px; padding: 0 10px; border-radius: 8px; font-size: 13.5px; color: oklch(0.708 0 0); }
+  .camp-chip .pip { width: 7px; height: 7px; border-radius: 50%; }
+  .userchip { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: oklch(0.24 0 0); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 650; color: oklch(0.205 0 0); }
+
+  /* main area */
+  .main { flex: 1; padding: 26px 30px; }
+  .crumbs { font-size: 13.5px; color: oklch(0.556 0 0); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+  .crumbs b { color: oklch(0.985 0 0); font-weight: 520; }
+  .hrow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .hrow h3 { font-size: 25px; font-weight: 630; letter-spacing: -0.02em; }
+  .search { display: flex; align-items: center; gap: 9px; width: 300px; height: 38px; padding: 0 14px;
+            background: oklch(0.24 0 0); border: 1px solid oklch(1 0 0 / 0.07); border-radius: 10px; font-size: 14px; color: oklch(0.556 0 0); }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+  .kpi { background: oklch(0.235 0 0); border: 1px solid oklch(1 0 0 / 0.07); border-radius: 14px; padding: 18px 18px 16px; }
+  .kpi .lab { font-size: 13px; color: oklch(0.708 0 0); font-weight: 470; margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+  .kpi .lab svg { width: 14px; height: 14px; color: oklch(73.8% 0.155 163.7); }
+  .kpi .val { font-size: 34px; font-weight: 640; letter-spacing: -0.02em; }
+  .kpi .val span { font-size: 16px; color: oklch(0.556 0 0); font-weight: 500; }
+  .duo { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; }
+  .panel { background: oklch(0.235 0 0); border: 1px solid oklch(1 0 0 / 0.07); border-radius: 14px; padding: 18px; }
+  .panel h4 { font-size: 14.5px; font-weight: 600; margin-bottom: 14px; color: oklch(0.985 0 0); }
+  .feed-row { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid oklch(1 0 0 / 0.05); }
+  .feed-row:last-child { border-bottom: none; }
+  .fic { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .fic svg { width: 14px; height: 14px; }
+  .feed-row .t { font-size: 13.5px; font-weight: 490; color: oklch(0.92 0 0); line-height: 1.35; }
+  .feed-row .m { font-size: 12px; color: oklch(0.556 0 0); margin-top: 3px; }
+  .cprog { padding: 8px 0; }
+  .cprog .row1 { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 7px; }
+  .cprog .row1 .pct { color: oklch(0.708 0 0); font-family: "Geist Mono", monospace; font-size: 12.5px; }
+  .bar { height: 6px; border-radius: 3px; background: oklch(0.3 0 0); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 3px; background: oklch(73.8% 0.155 163.7); }
+
+  /* kanban */
+  .board { flex: 1; padding: 24px 26px; position: relative; }
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .col { background: oklch(0.225 0 0); border: 1px solid oklch(1 0 0 / 0.06); border-radius: 14px; padding: 14px; min-height: 700px; }
+  .col.hl { border-color: oklch(73.8% 0.155 163.7 / 0.55); box-shadow: 0 0 0 1px oklch(73.8% 0.155 163.7 / 0.35) inset; }
+  .colh { display: flex; align-items: center; gap: 9px; padding: 2px 4px 14px; font-size: 14.5px; font-weight: 620; }
+  .colh .cnt { margin-left: auto; font-family: "Geist Mono", monospace; font-size: 12px; color: oklch(0.556 0 0);
+               background: oklch(0.28 0 0); border-radius: 20px; padding: 2px 9px; }
+  .cdot { width: 8px; height: 8px; border-radius: 50%; }
+  .card { background: oklch(0.27 0 0); border: 1px solid oklch(1 0 0 / 0.08); border-radius: 11px; padding: 13px 14px; margin-bottom: 12px; }
+  .card .ct { font-size: 14.5px; font-weight: 560; margin-bottom: 6px; letter-spacing: -0.01em; }
+  .card .cd { font-size: 12.5px; color: oklch(0.708 0 0); line-height: 1.4; margin-bottom: 10px; }
+  .card .cf { display: flex; align-items: center; gap: 8px; }
+  .due { font-family: "Geist Mono", monospace; font-size: 11.5px; color: oklch(0.708 0 0); background: oklch(0.32 0 0);
+         border-radius: 6px; padding: 3px 8px; display: flex; align-items: center; gap: 5px; }
+  .due svg { width: 11px; height: 11px; }
+  .st { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; border-radius: 6px; padding: 3px 8px; text-transform: uppercase; }
+  .st.todo { color: oklch(0.75 0.09 85); background: oklch(0.75 0.09 85 / 0.14); }
+  .st.prog { color: oklch(0.78 0.13 250); background: oklch(0.78 0.13 250 / 0.15); }
+  .st.done { color: oklch(73.8% 0.155 163.7); background: oklch(73.8% 0.155 163.7 / 0.14); }
+  .ghost { border: 1.5px dashed oklch(1 0 0 / 0.18); border-radius: 11px; height: 92px; margin-bottom: 12px; }
+  #dragcard { position: absolute; width: 328px; z-index: 40; box-shadow: 0 30px 70px rgba(0,0,0,0.5); }
+
+  /* ai studio */
+  .aiwrap { flex: 1; display: grid; grid-template-columns: 400px 1fr; gap: 18px; padding: 24px 26px; }
+  .aipanel { background: oklch(0.235 0 0); border: 1px solid oklch(1 0 0 / 0.07); border-radius: 14px; padding: 20px; }
+  .aipanel .pt { font-size: 15px; font-weight: 620; margin-bottom: 4px; }
+  .aipanel .ps { font-size: 12.5px; color: oklch(0.556 0 0); margin-bottom: 18px; }
+  .seg { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-bottom: 16px; }
+  .seg div { height: 58px; border-radius: 10px; background: oklch(0.27 0 0); border: 1px solid oklch(1 0 0 / 0.06);
+             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-size: 12.5px; color: oklch(0.708 0 0); }
+  .seg div svg { width: 16px; height: 16px; }
+  .seg div.on { border-color: oklch(73.8% 0.155 163.7 / 0.6); color: oklch(0.985 0 0); background: oklch(0.27 0.03 165); }
+  .flab { font-family: "Geist Mono", monospace; font-size: 11px; letter-spacing: 0.12em; color: oklch(0.556 0 0); text-transform: uppercase; margin: 4px 0 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
+  .chip { font-size: 12.5px; padding: 6px 12px; border-radius: 20px; background: oklch(0.27 0 0); border: 1px solid oklch(1 0 0 / 0.07); color: oklch(0.708 0 0); }
+  .chip.on { background: oklch(73.8% 0.155 163.7 / 0.16); border-color: oklch(73.8% 0.155 163.7 / 0.5); color: oklch(80% 0.13 163); font-weight: 560; }
+  .kw { display: flex; align-items: center; gap: 8px; background: oklch(0.27 0 0); border: 1px solid oklch(1 0 0 / 0.07);
+        border-radius: 10px; height: 40px; padding: 0 13px; font-size: 13.5px; color: oklch(0.708 0 0); margin-bottom: 18px; }
+  .kw b { color: oklch(0.92 0 0); font-weight: 540; }
+  .genbtn { width: 100%; height: 46px; border-radius: 11px; border: none; display: flex; align-items: center; justify-content: center; gap: 9px;
+            background: oklch(0.72 0.16 163); color: oklch(0.205 0 0); font-size: 15px; font-weight: 640; font-family: inherit; }
+  .genbtn svg { width: 16px; height: 16px; }
+  .genbtn.busy { background: oklch(0.62 0.14 163); }
+  .aipanel2 { background: oklch(0.235 0 0); border: 1px solid oklch(1 0 0 / 0.07); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; }
+  .out-h { display: flex; align-items: center; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid oklch(1 0 0 / 0.07); }
+  .obadge { font-family: "Geist Mono", monospace; font-size: 11px; letter-spacing: 0.1em; padding: 4px 9px; border-radius: 6px;
+            background: oklch(73.8% 0.155 163.7 / 0.15); color: oklch(78% 0.13 163); font-weight: 600; }
+  .out-h .tt { font-size: 15px; font-weight: 600; }
+  .out-h .meta { margin-left: auto; font-family: "Geist Mono", monospace; font-size: 12px; color: oklch(0.556 0 0); }
+  .out-body { flex: 1; padding: 18px 2px; font-size: 15.5px; line-height: 1.72; color: oklch(0.92 0 0); white-space: pre-wrap; font-weight: 430; }
+  .out-body .k { color: oklch(73.8% 0.155 163.7); font-weight: 600; }
+  .cursor { display: inline-block; width: 9px; height: 18px; background: oklch(73.8% 0.155 163.7); vertical-align: -3px; border-radius: 2px; }
+  .out-f { display: flex; gap: 9px; padding-top: 14px; border-top: 1px solid oklch(1 0 0 / 0.07); }
+  .obtn { font-size: 12.5px; font-weight: 540; padding: 7px 14px; border-radius: 8px; background: oklch(0.28 0 0);
+          border: 1px solid oklch(1 0 0 / 0.08); color: oklch(0.85 0 0); display: flex; align-items: center; gap: 6px; }
+  .obtn svg { width: 13px; height: 13px; }
+  .obtn.pri { background: oklch(73.8% 0.155 163.7 / 0.15); border-color: oklch(73.8% 0.155 163.7 / 0.45); color: oklch(80% 0.13 163); }
+  .streambadge { position: absolute; right: 28px; top: 76px; display: flex; align-items: center; gap: 8px; font-family: "Geist Mono", monospace;
+                 font-size: 12.5px; color: oklch(78% 0.13 163); background: oklch(0.205 0 0); border: 1px solid oklch(73.8% 0.155 163.7 / 0.35);
+                 border-radius: 20px; padding: 7px 14px; z-index: 50; }
+  .live { width: 8px; height: 8px; border-radius: 50%; background: oklch(73.8% 0.155 163.7); }
+
+  /* chat */
+  .chatwrap { flex: 1; position: relative; background: oklch(0.215 0 0); }
+  .chatbg { position: absolute; inset: 0; padding: 24px 30px; filter: saturate(0.6); opacity: 0.5; }
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 640px; background: oklch(0.225 0 0);
+            border-left: 1px solid oklch(1 0 0 / 0.09); display: flex; flex-direction: column; box-shadow: -30px 0 80px rgba(0,0,0,0.45); }
+  .dhead { display: flex; align-items: center; gap: 11px; padding: 16px 20px; border-bottom: 1px solid oklch(1 0 0 / 0.07); }
+  .dbadge { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .dbadge svg { width: 18px; height: 18px; }
+  .dhead .t { font-size: 15px; font-weight: 620; }
+  .dhead .s { font-size: 12px; color: oklch(0.708 0 0); margin-top: 1px; }
+  .ctxpill { margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; color: oklch(78% 0.13 163);
+             background: oklch(73.8% 0.155 163.7 / 0.13); border: 1px solid oklch(73.8% 0.155 163.7 / 0.35); border-radius: 20px; padding: 4px 10px; }
+  .msgs { flex: 1; padding: 20px; overflow: hidden; }
+  .bub { max-width: 78%; padding: 12px 15px; border-radius: 14px; font-size: 14px; line-height: 1.5; margin-bottom: 12px; }
+  .bub.user { margin-left: auto; background: oklch(0.3 0 0); color: oklch(0.985 0 0); border-bottom-right-radius: 4px; }
+  .bub.ai { background: oklch(0.27 0.02 165); border: 1px solid oklch(73.8% 0.155 163.7 / 0.18); color: oklch(0.94 0 0); border-bottom-left-radius: 4px; }
+  .bub .who { font-size: 11px; font-weight: 620; letter-spacing: 0.08em; color: oklch(0.556 0 0); margin-bottom: 5px; text-transform: uppercase; font-family: "Geist Mono", monospace; }
+  .bub.ai .who { color: oklch(73.8% 0.155 163.7); }
+  .composer { margin: 0 20px 20px; height: 48px; border-radius: 12px; background: oklch(0.27 0 0); border: 1px solid oklch(1 0 0 / 0.08);
+              display: flex; align-items: center; padding: 0 8px 0 16px; font-size: 14px; color: oklch(0.556 0 0); }
+  .send { margin-left: auto; width: 34px; height: 34px; border-radius: 9px; background: oklch(0.72 0.16 163);
+          display: flex; align-items: center; justify-content: center; color: oklch(0.205 0 0); }
+  .send svg { width: 15px; height: 15px; }
+
+  /* ---- scene 6 : end card ---- */
+  #s6 .wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #s6 .logo { width: 108px; height: 108px; border-radius: 28px; display: flex; align-items: center; justify-content: center;
+              box-shadow: 0 30px 80px oklch(0.55 0.14 165 / 0.35), 0 8px 30px rgba(0,0,0,0.4); margin-bottom: 44px; }
+  #s6 .logo svg { width: 58px; height: 58px; }
+  #s6 h1 { font-size: 76px; font-weight: 660; letter-spacing: -0.03em; margin-bottom: 24px; }
+  #s6 .tag { font-size: 27px; color: oklch(0.708 0 0); font-weight: 430; margin-bottom: 58px; }
+  #s6 .tag b { color: oklch(0.985 0 0); font-weight: 560; }
+  #s6 .badges { display: flex; gap: 12px; }
+  #s6 .bd { font-family: "Geist Mono", monospace; font-size: 15px; padding: 10px 20px; border-radius: 12px;
+            border: 1px solid oklch(1 0 0 / 0.12); background: oklch(0.22 0 0); color: oklch(0.85 0 0); }
+  #s6 .byline { position: absolute; bottom: 56px; font-size: 16px; color: oklch(0.556 0 0); }
+  #s6 .byline b { color: oklch(0.75 0 0); font-weight: 550; }
+
+  /* shared badge/logo bits */
+  .lbadge { background: linear-gradient(135deg, oklch(0.72 0.16 163), oklch(0.62 0.15 175)); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg"></div>
+  <div id="vignette"></div>
+
+  <!-- S1 : hook -->
+  <div class="scene" id="s1">
+    <div class="stack">
+      <div class="line" id="s1l1">Campaigns live in one tool.</div>
+      <div class="line" id="s1l2">Content drafts in another.</div>
+      <div class="line" id="s1l3">Your <em>AI</em> in a third tab.</div>
+    </div>
+  </div>
+
+  <!-- S2 : dashboard -->
+  <div class="scene" id="s2">
+    <div class="glow" id="s2glow"></div>
+    <div class="cap">
+      <div class="kicker" id="s2k">The workspace</div>
+      <h2 id="s2h">One dashboard.<br>Everything on track.</h2>
+      <p id="s2p">Campaigns, content and AI &mdash; a single view of what ships next.</p>
+    </div>
+    <div class="win" id="s2win">
+      <div class="chrome">
+        <div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div>
+        <div class="url">smartcontent.app/dashboard</div>
+      </div>
+      <div class="body">
+        <div class="side">
+          <div class="brand"><div class="lbadge" style="width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.205 0 0)" stroke-width="2.2" width="16"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" fill="oklch(0.205 0 0)" stroke="none"/></svg></div><div class="name">Smart Content</div></div>
+          <div class="navi on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+          <div class="navi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>Campaigns</div>
+          <div class="seclabel">Recent</div>
+          <div class="camp-chip"><span class="pip" style="background:oklch(73.8% 0.155 163.7)"></span>Spring Launch</div>
+          <div class="camp-chip"><span class="pip" style="background:oklch(0.78 0.13 250)"></span>Product Hunt Prep</div>
+          <div class="camp-chip"><span class="pip" style="background:oklch(0.75 0.09 85)"></span>Holiday Teaser</div>
+          <div class="userchip"><div class="avatar" style="background:oklch(73.8% 0.155 163.7)">MH</div><div><div style="font-size:13px;font-weight:560">Mehedi Hasan</div><div style="font-size:11px;color:oklch(0.556 0 0)">Solo marketer</div></div></div>
+        </div>
+        <div class="main">
+          <div class="crumbs"><b>Dashboard</b><span style="color:oklch(0.4 0 0)">/</span><span>Overview</span></div>
+          <div class="hrow"><h3>Good morning, Mehedi</h3><div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search campaigns&hellip;</div></div>
+          <div class="kpis">
+            <div class="kpi" id="k1"><div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Active campaigns</div><div class="val" id="k1v">0</div></div>
+            <div class="kpi" id="k2"><div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>Content pieces</div><div class="val" id="k2v">0</div></div>
+            <div class="kpi" id="k3"><div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>AI outputs</div><div class="val" id="k3v">0</div></div>
+            <div class="kpi" id="k4"><div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Completion rate</div><div class="val" id="k4v">0<span>%</span></div></div>
+          </div>
+          <div class="duo">
+            <div class="panel" id="feed">
+              <h4>Recent activity</h4>
+              <div class="feed-row" id="f1"><div class="fic" style="background:oklch(73.8% 0.155 163.7 / 0.15)"><svg viewBox="0 0 24 24" fill="none" stroke="oklch(73.8% 0.155 163.7)" stroke-width="2"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="16" rx="1.5"/><rect x="17" y="4" width="4" height="16" rx="1.5"/></svg></div><div><div class="t">Kanban &middot; moved &ldquo;Landing page copy&rdquo; to In&nbsp;progress</div><div class="m">Spring Launch &middot; 2 min ago</div></div></div>
+              <div class="feed-row" id="f2"><div class="fic" style="background:oklch(0.78 0.13 250 / 0.14)"><svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.78 0.13 250)" stroke-width="2"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></div><div><div class="t">AI Studio &middot; generated an Ad for Spring Launch</div><div class="m">Claude &middot; streamed &middot; 12 min ago</div></div></div>
+              <div class="feed-row" id="f3"><div class="fic" style="background:oklch(0.75 0.09 85 / 0.14)"><svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.75 0.09 85)" stroke-width="2"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/></svg></div><div><div class="t">Copilot &middot; 3 new messages in Spring Launch chat</div><div class="m">Campaign-scoped &middot; 20 min ago</div></div></div>
+              <div class="feed-row" id="f4"><div class="fic" style="background:oklch(0.7 0.1 300 / 0.14)"><svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.7 0.1 300)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2"/></svg></div><div><div class="t">Campaign &middot; created &ldquo;Product Hunt Prep&rdquo;</div><div class="m">1 hour ago</div></div></div>
+            </div>
+            <div class="panel" id="camps">
+              <h4>Campaigns</h4>
+              <div class="cprog" id="c1"><div class="row1"><span>Spring Launch</span><span class="pct">87%</span></div><div class="bar"><i id="c1b" style="width:0%"></i></div></div>
+              <div class="cprog" id="c2"><div class="row1"><span>Product Hunt Prep</span><span class="pct">62%</span></div><div class="bar"><i id="c2b" style="width:0%;background:oklch(0.78 0.13 250)"></i></div></div>
+              <div class="cprog" id="c3"><div class="row1"><span>Holiday Teaser</span><span class="pct">41%</span></div><div class="bar"><i id="c3b" style="width:0%;background:oklch(0.75 0.09 85)"></i></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3 : kanban -->
+  <div class="scene" id="s3">
+    <div class="glow" id="s3glow"></div>
+    <div class="cap">
+      <div class="kicker" id="s3k">Kanban pipeline</div>
+      <h2 id="s3h">Plan it. Move it.<br>Ship it.</h2>
+      <p id="s3p">Drag-and-drop with optimistic updates &mdash; the board never waits on the network.</p>
+    </div>
+    <div class="win" id="s3win">
+      <div class="chrome">
+        <div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div>
+        <div class="url">smartcontent.app/campaigns/spring-launch</div>
+      </div>
+      <div class="body">
+        <div class="board">
+          <div class="cols">
+            <div class="col" id="col1">
+              <div class="colh"><span class="cdot" style="background:oklch(0.75 0.09 85)"></span>To do<span class="cnt" id="c1n">3</span></div>
+              <div id="col1cards">
+                <div class="card" id="srcCard"><div class="ct">Design launch teaser</div><div class="cd">Hero visual + 15s cutdown for paid social</div><div class="cf"><span class="due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Nov 4</span><span class="st todo" id="srcst">To do</span></div></div>
+                <div class="card kcard"><div class="ct">Write launch email draft</div><div class="cd">Announce early-access pricing</div><div class="cf"><span class="due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Nov 7</span><span class="st todo">To do</span></div></div>
+                <div class="card kcard"><div class="ct">Schedule social posts</div><div class="cd">Week one teaser sequence</div><div class="cf"><span class="due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Nov 12</span><span class="st todo">To do</span></div></div>
+              </div>
+            </div>
+            <div class="col" id="col2">
+              <div class="colh"><span class="cdot" style="background:oklch(0.78 0.13 250)"></span>In progress<span class="cnt" id="c2n">2</span></div>
+              <div class="card"><div class="ct">Landing page copy</div><div class="cd">Hero, social proof and CTA sections</div><div class="cf"><span class="due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Nov 5</span><span class="st prog">In progress</span></div></div>
+              <div class="card" id="landed" style="opacity:0"><div class="ct">Design launch teaser</div><div class="cd">Hero visual + 15s cutdown for paid social</div><div class="cf"><span class="due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Nov 4</span><span class="st prog">In progress</span></div></div>
+              <div class="card"><div class="ct">Early-access waitlist</div><div class="cd">Form + thank-you flow</div><div class="cf"><span class="due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Nov 9</span><span class="st prog">In progress</span></div></div>
+            </div>
+            <div class="col" id="col3">
+              <div class="colh"><span class="cdot" style="background:oklch(73.8% 0.155 163.7)"></span>Done<span class="cnt">2</span></div>
+              <div class="card"><div class="ct">Brand refresh brief</div><div class="cf"><span class="st done">Done</span></div></div>
+              <div class="card"><div class="ct">Q3 content audit</div><div class="cf"><span class="st done">Done</span></div></div>
+            </div>
+          </div>
+          <div class="ghost" id="ghostslot" style="position:absolute;opacity:0"></div>
+          <div class="card" id="dragcard" style="display:none"><div class="ct">Design launch teaser</div><div class="cd">Hero visual + 15s cutdown for paid social</div><div class="cf"><span class="due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Nov 4</span><span class="st prog" id="dragst">To do</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4 : ai studio -->
+  <div class="scene" id="s4">
+    <div class="glow" id="s4glow"></div>
+    <div class="cap">
+      <div class="kicker" id="s4k">AI content studio</div>
+      <h2 id="s4h">Brief in.<br>Polished copy out.</h2>
+      <p id="s4p">Ads, captions and emails &mdash; streamed live from Claude, tone-matched to your campaign.</p>
+    </div>
+    <div class="win" id="s4win">
+      <div class="chrome">
+        <div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div>
+        <div class="url">smartcontent.app/campaigns/spring-launch/ai-studio</div>
+      </div>
+      <div class="body">
+        <div class="aiwrap">
+          <div class="aipanel">
+            <div class="pt">New AI output</div>
+            <div class="ps">Campaign context: <b style="color:oklch(0.85 0 0);font-weight:540">Spring Launch</b></div>
+            <div class="flab">Type</div>
+            <div class="seg">
+              <div class="on" id="segAd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-7-7 18-2.5-7.5z"/></svg>Ad</div>
+              <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/></svg>Caption</div>
+              <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Email</div>
+            </div>
+            <div class="flab">Tone</div>
+            <div class="chips" id="tones">
+              <span class="chip">Professional</span><span class="chip">Playful</span><span class="chip">Urgent</span><span class="chip">Friendly</span><span class="chip on">Bold</span>
+            </div>
+            <div class="flab">Length</div>
+            <div class="chips"><span class="chip">Short</span><span class="chip on">Medium</span><span class="chip">Long</span></div>
+            <div class="flab">Keywords</div>
+            <div class="kw"><b>spring</b>, <b>sale</b>, <b>30% off</b></div>
+            <button class="genbtn" id="genbtn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg><span id="genlabel">Generate</span></button>
+          </div>
+          <div class="aipanel2">
+            <div class="out-h"><span class="obadge">AD</span><span class="tt">Spring Flash Sale &mdash; Bold Ad</span><span class="meta" id="outmeta"></span></div>
+            <div class="out-body" id="outbody"></div>
+            <div class="out-f" id="outf">
+              <span class="obtn pri" id="btn1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</span>
+              <span class="obtn" id="btn2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>Export PDF</span>
+              <span class="obtn" id="btn3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>Use in Post</span>
+            </div>
+          </div>
+        </div>
+        <div class="streambadge" id="streambadge"><span class="live" id="livedot"></span>STREAMING</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5 : copilot -->
+  <div class="scene" id="s5">
+    <div class="glow" id="s5glow"></div>
+    <div class="cap">
+      <div class="kicker" id="s5k">Marketing copilot</div>
+      <h2 id="s5h">A copilot that<br>knows your campaign.</h2>
+      <p id="s5p">Chat reads your campaign&rsquo;s tasks and content as context &mdash; replies stream in real time.</p>
+    </div>
+    <div class="win" id="s5win">
+      <div class="chrome">
+        <div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div>
+        <div class="url">smartcontent.app/campaigns/spring-launch</div>
+      </div>
+      <div class="body">
+        <div class="chatwrap">
+          <div class="chatbg" id="chatbg">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+              <div class="col" style="min-height:640px"><div class="colh"><span class="cdot" style="background:oklch(0.75 0.09 85)"></span>To do</div><div class="card" style="opacity:.75"><div class="ct">Schedule social posts</div><div class="cd">Week one teaser sequence</div></div><div class="card" style="opacity:.75"><div class="ct">PR outreach list</div><div class="cd">20 targets, tier-2 media</div></div></div>
+              <div class="col" style="min-height:640px"><div class="colh"><span class="cdot" style="background:oklch(0.78 0.13 250)"></span>In progress</div><div class="card" style="opacity:.75"><div class="ct">Landing page copy</div><div class="cd">Hero, social proof and CTA</div></div></div>
+              <div class="col" style="min-height:640px"><div class="colh"><span class="cdot" style="background:oklch(73.8% 0.155 163.7)"></span>Done</div><div class="card" style="opacity:.75"><div class="ct">Brand refresh brief</div></div><div class="card" style="opacity:.75"><div class="ct">Q3 content audit</div></div></div>
+            </div>
+          </div>
+          <div class="drawer" id="drawer">
+            <div class="dhead">
+              <div class="dbadge lbadge"><svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.205 0 0)" stroke-width="2.1"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5M9.5 13.5h.01M14.5 13.5h.01M9.5 16h5"/></svg></div>
+              <div><div class="t">Copilot</div><div class="s">Spring Launch</div></div>
+              <span class="ctxpill">CAMPAIGN CONTEXT ON</span>
+            </div>
+            <div class="msgs">
+              <div class="bub user" id="u1"><div class="who">You</div><span id="u1t">Draft a launch caption for our spring campaign</span></div>
+              <div class="bub ai" id="a1"><div class="who">Copilot &middot; Claude</div><span id="a1t"></span></div>
+            </div>
+            <div class="composer">Ask anything&hellip;<div class="send" id="sendic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S6 : end card -->
+  <div class="scene" id="s6">
+    <div class="wrap">
+      <div class="logo lbadge" id="s6logo"><svg viewBox="0 0 24 24" fill="none" stroke="oklch(0.205 0 0)" stroke-width="2"><path d="M12 2.5l2.2 5.9 5.9 2.2-5.9 2.2L12 18.7l-2.2-5.9-5.9-2.2 5.9-2.2z" fill="oklch(0.205 0 0)" stroke="none"/></svg></div>
+      <h1 id="s6h">Smart Content Manager</h1>
+      <div class="tag" id="s6t">From brief to <b>publishable content</b> &mdash; in one dashboard.</div>
+      <div class="badges" id="s6b">
+        <span class="bd">Next.js 16</span><span class="bd">React 19</span><span class="bd">Express 5</span><span class="bd">PostgreSQL</span><span class="bd">Prisma</span><span class="bd">Claude AI</span><span class="bd">Playwright E2E</span>
+      </div>
+      <div class="byline" id="s6by">Full-stack SaaS &middot; built by <b>Mehedi Hasan</b></div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.__render = function(t) {
+  const $ = (id) => document.getElementById(id);
+  const cl = (x) => Math.min(1, Math.max(0, x));
+  const E = {
+    o:   p => 1 - Math.pow(1 - p, 3),
+    io:  p => p < 0.5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3) / 2,
+    ex:  p => p === 1 ? 1 : 1 - Math.pow(2, -10 * p),
+    back:p => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); }
+  };
+  const R = (t, a, b, e) => (e || E.o)(cl((t - a) / (b - a)));
+  const S = (el, o, x, y, sc) => { el.style.opacity = o; el.style.transform = `translate(${x||0}px,${y||0}px) scale(${sc===undefined?1:sc})`; };
+  const T = (el, s, p) => { el.textContent = s.slice(0, Math.floor(s.length * cl(p))); };
+
+  /* ambient drift */
+  const gx = 60 * Math.sin(t * 0.21), gy = 40 * Math.cos(t * 0.16);
+  ["s2glow","s3glow","s4glow","s5glow"].forEach(id => {
+    const g = $(id); g.style.left = (260 + gx) + "px"; g.style.top = (60 + gy) + "px";
+  });
+
+  /* scene crossfade timings */
+  const scenes = [
+    { el: $("s1"),    a: 0.0,  b: 5.0 },
+    { el: $("s2"),    a: 5.0,  b: 12.0 },
+    { el: $("s3"),    a: 12.0, b: 19.5 },
+    { el: $("s4"),    a: 19.5, b: 27.5 },
+    { el: $("s5"),    a: 27.5, b: 33.5 },
+    { el: $("s6"),    a: 33.5, b: 40.0 },
+  ];
+  scenes.forEach(sc => {
+    const inP = R(t, sc.a, sc.a + 0.6), outP = R(t, sc.b - 0.5, sc.b);
+    let o = inP * (1 - outP);
+    if (t < sc.a || t > sc.b) o = 0;
+    sc.el.style.opacity = o;
+    sc.el.style.transform = `translateY(${(1 - inP) * 14 - outP * 10}px)`;
+  });
+  /* global fade to black at end */
+  document.getElementById("vignette").style.background =
+    `radial-gradient(1400px 900px at 50% 46%, transparent 55%, rgba(0,0,0,0.5) 100%), rgba(10,10,10,${cl((t - 38.6) / 1.4)})`;
+
+  /* ---------- S1 hook lines ---------- */
+  {
+    const tl = t;
+    S($("s1l1"), R(tl, 0.25, 0.9), 0, (1 - R(tl, 0.25, 0.9, E.ex)) * 34);
+    S($("s1l2"), R(tl, 1.55, 2.2), 0, (1 - R(tl, 1.55, 2.2, E.ex)) * 34);
+    S($("s1l3"), R(tl, 2.85, 3.5), 0, (1 - R(tl, 2.85, 3.5, E.ex)) * 34);
+  }
+
+  /* ---------- S2 dashboard ---------- */
+  {
+    const tl = t - 5.0;
+    const w = $("s2win");
+    w.style.transform = `scale(${0.93 + 0.07 * R(tl, 0, 0.9, E.ex) + 0.012 * tl}) translateY(${-8 * R(tl, 0, 8, E.io)}px)`;
+    S($("s2k"), R(tl, 0.35, 0.8), 0, (1 - R(tl, 0.35, 0.8)) * 18);
+    S($("s2h"), R(tl, 0.5, 1.05), 0, (1 - R(tl, 0.5, 1.05)) * 24);
+    S($("s2p"), R(tl, 0.75, 1.3), 0, (1 - R(tl, 0.75, 1.3)) * 20);
+    const kp = R(tl, 0.9, 2.6, E.ex);
+    $("k1v").textContent = Math.round(6 * kp);
+    $("k2v").innerHTML = Math.round(24 * kp);
+    $("k3v").textContent = Math.round(31 * kp);
+    $("k4v").innerHTML = Math.round(87 * kp) + "<span>%</span>";
+    const bars = [["c1b",87],["c2b",62],["c3b",41]];
+    bars.forEach(([id, v], i) => $(id).style.width = (v * R(tl, 1.5 + i * 0.25, 3.0 + i * 0.25)) + "%");
+    ["f1","f2","f3","f4"].forEach((id, i) => S($(id), R(tl, 1.3 + i * 0.18, 1.9 + i * 0.18), -14 * (1 - R(tl, 1.3 + i * 0.18, 1.9 + i * 0.18)), 0));
+    ["c1","c2","c3"].forEach((id, i) => S($(id), R(tl, 1.7 + i * 0.2, 2.3 + i * 0.2), -12 * (1 - R(tl, 1.7 + i * 0.2, 2.3 + i * 0.2)), 0));
+  }
+
+  /* ---------- S3 kanban drag ---------- */
+  {
+    const tl = t - 12.0;
+    const w = $("s3win");
+    w.style.transform = `scale(${0.93 + 0.07 * R(tl, 0, 0.9, E.ex) + 0.012 * tl}) translateY(${-8 * R(tl, 0, 7.5, E.io)}px)`;
+    S($("s3k"), R(tl, 0.35, 0.8), 0, (1 - R(tl, 0.35, 0.8)) * 18);
+    S($("s3h"), R(tl, 0.5, 1.05), 0, (1 - R(tl, 0.5, 1.05)) * 24);
+    S($("s3p"), R(tl, 0.75, 1.3), 0, (1 - R(tl, 0.75, 1.3)) * 20);
+
+    /* measure layout once (fonts are loaded before first render call) */
+    if (!window.__kb) {
+      const src = $("srcCard"), landed = $("landed");
+      const kh = src.offsetHeight + 12; /* card height + margin gap */
+      window.__kb = {
+        sx: src.offsetLeft, sy: src.offsetTop,
+        dx: landed.offsetLeft, dy: landed.offsetTop,
+        w: src.offsetWidth, h: src.offsetHeight, kh
+      };
+      const g = $("ghostslot");
+      g.style.left = ($("srcCard").offsetLeft - 1) + "px";
+      g.style.top = ($("srcCard").offsetTop - 1) + "px";
+      g.style.width = (src.offsetWidth + 2) + "px";
+      g.style.height = (src.offsetHeight + 2) + "px";
+    }
+    const kb = window.__kb;
+
+    /* columns cascade */
+    ["col1","col2","col3"].forEach((id, i) => S($(id), R(tl, 0.6 + i * 0.18, 1.15 + i * 0.18), 0, (1 - R(tl, 0.6 + i * 0.18, 1.15 + i * 0.18)) * 26));
+    /* remaining cards enter; then slide up to fill the hole after drop */
+    const cards = $("col1cards").querySelectorAll(".kcard");
+    cards.forEach((c, i) => {
+      const pIn = R(tl, 1.15 + (i + 1) * 0.15, 1.6 + (i + 1) * 0.15);
+      const up = R(tl, 4.0, 4.9) * kb.kh;
+      c.style.opacity = pIn;
+      c.style.transform = `translateY(${(1 - pIn) * 18 - up}px)`;
+    });
+    $("srcCard").style.opacity = R(tl, 0, 1.15) * (1 - R(tl, 1.85, 2.15));
+
+    /* drag sequence: lift 1.85-2.2, move 2.2-3.95, land 3.95-4.4 */
+    const drag = $("dragcard"), ghost = $("ghostslot");
+    const lift = R(tl, 1.85, 2.2), move = R(tl, 2.2, 3.95, E.io), drop = R(tl, 3.95, 4.4);
+    const dragging = lift > 0 && drop < 1;
+    drag.style.display = lift > 0 ? "block" : "none";
+    ghost.style.opacity = dragging ? lift : 0;
+    if (lift > 0) {
+      const px = kb.sx + (kb.dx - kb.sx) * move, py = kb.sy + (kb.dy - kb.sy) * move - Math.sin(move * Math.PI) * 26;
+      drag.style.left = "0px"; drag.style.top = "0px";
+      drag.style.width = kb.w + "px";
+      drag.style.transform = `translate(${px}px,${py}px) scale(${1 + 0.05 * lift}) rotate(${Math.sin(move * Math.PI) * -1.2}deg)`;
+      drag.style.opacity = 1;
+      drag.style.borderRadius = "11px";
+      $("dragst").className = move > 0.55 ? "st prog" : "st todo";
+      $("dragst").textContent = move > 0.55 ? "In progress" : "To do";
+      $("col2").className = "col" + (move > 0.5 && drop < 1 ? " hl" : "");
+    } else {
+      $("col2").className = "col";
+    }
+    /* landed card pops in col2 */
+    const land = R(tl, 4.05, 4.6, E.back);
+    $("landed").style.opacity = cl(land);
+    $("landed").style.transform = `scale(${0.94 + 0.06 * cl(land)})`;
+    $("landed").style.boxShadow = drop > 0 && drop < 1 ? "0 0 0 2px oklch(73.8% 0.155 163.7 / 0.4)" : "none";
+    if (tl >= 4.4) { $("c1n").textContent = "2"; $("c2n").textContent = "3"; }
+  }
+
+  /* ---------- S4 ai studio ---------- */
+  {
+    const tl = t - 19.5;
+    const w = $("s4win");
+    w.style.transform = `scale(${0.93 + 0.07 * R(tl, 0, 0.9, E.ex) + 0.012 * tl}) translateY(${-8 * R(tl, 0, 8, E.io)}px)`;
+    S($("s4k"), R(tl, 0.35, 0.8), 0, (1 - R(tl, 0.35, 0.8)) * 18);
+    S($("s4h"), R(tl, 0.5, 1.05), 0, (1 - R(tl, 0.5, 1.05)) * 24);
+    S($("s4p"), R(tl, 0.75, 1.3), 0, (1 - R(tl, 0.75, 1.3)) * 20);
+
+    const AP = "\n  ";
+    const full =
+      '<span class="k">Headline</span>  30% off everything. Three days only.\n' +
+      '<span class="k">Body</span>  Your spring refresh starts here — bold new\narrivals, zero clutter, prices that don\u2019t ask twice.\n' +
+      '<span class="k">CTA</span>  Claim your bundle before Sunday night.\n' +
+      '<span class="k">Tags</span>  #SpringLaunch  ·  #FlashSale  ·  #NewSeason';
+    /* type-out over the visible text (strip tags for counting) */
+    const plain = full.replace(/<[^>]+>/g, "");
+    const n = Math.floor(plain.length * R(tl, 2.1, 5.9, p => p));
+    /* map char count back into html */
+    let html = "", cnt = 0, i = 0;
+    while (i < full.length && cnt < n) {
+      if (full[i] === "<") { const j = full.indexOf(">", i); html += full.slice(i, j + 1); i = j + 1; }
+      else { html += full[i]; cnt++; i++; }
+    }
+    const started = tl >= 2.1;
+    $("outbody").innerHTML = started ? html + (R(tl, 2.1, 5.9) < 1 ? '<span class="cursor"></span>' : "") : "";
+    $("outmeta").textContent = started && R(tl, 2.1, 5.9) > 0.99 ? "claude-sonnet-4 · 612 tokens" : "";
+    $("genbtn").className = "genbtn" + (tl >= 1.6 && tl < 6.2 ? " busy" : "");
+    $("genlabel").textContent = tl >= 1.6 && tl < 6.2 ? "Generating…" : "Generate";
+    const sb = $("streambadge");
+    S(sb, R(tl, 1.7, 2.2) * (1 - R(tl, 6.4, 6.9)), 0, 0);
+    $("livedot").style.opacity = (Math.sin(t * 9) > -0.2) ? 1 : 0.25;
+    $("outf").style.opacity = R(tl, 6.0, 6.5);
+    $("outf").style.transform = `translateY(${(1 - R(tl, 6.0, 6.5)) * 10}px)`;
+  }
+
+  /* ---------- S5 copilot ---------- */
+  {
+    const tl = t - 27.5;
+    const w = $("s5win");
+    w.style.transform = `scale(${0.93 + 0.07 * R(tl, 0, 0.9, E.ex) + 0.012 * tl}) translateY(${-8 * R(tl, 0, 6, E.io)}px)`;
+    S($("s5k"), R(tl, 0.35, 0.8), 0, (1 - R(tl, 0.35, 0.8)) * 18);
+    S($("s5h"), R(tl, 0.5, 1.05), 0, (1 - R(tl, 0.5, 1.05)) * 24);
+    S($("s5p"), R(tl, 0.75, 1.3), 0, (1 - R(tl, 0.75, 1.3)) * 20);
+    /* drawer slides from right */
+    const dIn = R(tl, 0.5, 1.2, E.ex);
+    $("drawer").style.transform = `translateX(${(1 - dIn) * 120}px)`;
+    $("drawer").style.opacity = dIn;
+    $("chatbg").style.opacity = 0.5 * R(tl, 0.7, 1.4);
+    /* user bubble */
+    const ub = R(tl, 1.3, 1.75, E.back);
+    S($("u1"), cl(ub), 0, (1 - cl(ub)) * 16, 0.9 + 0.1 * cl(ub));
+    T($("u1t"), "Draft a launch caption for our spring campaign", R(tl, 1.45, 2.0));
+    /* assistant reply streams */
+    const reply =
+      'Here\u2019s a first pass in your Bold tone:\n\n\u201CNew season. New colors. 30% off until\nSunday — refresh without the second guess.\u201D\n\nWant a playful variant for Instagram?';
+    const started = tl >= 2.6;
+    $("a1").style.opacity = started ? 1 : 0;
+    T($("a1t"), started ? reply : "", R(tl, 2.6, 5.3));
+    if (started && R(tl, 2.6, 5.3) < 1) $("a1t").innerHTML = $("a1t").textContent.replace(/\n/g, "<br>") + '<span class="cursor" style="height:13px;width:7px;vertical-align:-2px"></span>';
+    else $("a1t").innerHTML = (started ? reply : "").replace(/\n/g, "<br>");
+  }
+
+  /* ---------- S6 end card ---------- */
+  {
+    const tl = t - 33.5;
+    S($("s6logo"), R(tl, 0.3, 0.95, E.back), 0, (1 - R(tl, 0.3, 0.95, E.ex)) * 30, 0.6 + 0.4 * R(tl, 0.3, 0.95, E.back));
+    S($("s6h"), R(tl, 0.65, 1.25), 0, (1 - R(tl, 0.65, 1.25)) * 26);
+    S($("s6t"), R(tl, 0.95, 1.55), 0, (1 - R(tl, 0.95, 1.55)) * 20);
+    const badges = $("s6b").children;
+    for (let i = 0; i < badges.length; i++) {
+      const p = R(tl, 1.5 + i * 0.12, 2.0 + i * 0.12);
+      S(badges[i], p, 0, (1 - p) * 16);
+    }
+    S($("s6by"), R(tl, 2.6, 3.2), 0, (1 - R(tl, 2.6, 3.2)) * 12);
+  }
+};
+window.__render(0);
+</script>
+</body>
+</html>

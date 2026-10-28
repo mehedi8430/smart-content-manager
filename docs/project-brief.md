@@ -30,8 +30,8 @@ Small businesses and solo marketers struggle with content creation and campaign 
 
 - Full CRUD for campaigns with owner-scoped access (ownership checks return 404 to avoid leaking resource existence)
 - Searchable (case-insensitive), sortable (`name`/`createdAt`), and paginated listing with an `all` mode
-- Per-user in-memory TTL cache with explicit invalidation on writes for fast, read-heavy dashboards
-- Post/output counts and recent posts included in list responses to eliminate N+1 queries
+- Per-user in-memory TTL cache for campaign lists; campaign create/update/delete invalidate it. Post and AI-output mutations do not currently invalidate the cached summaries, so counts/previews may be stale until expiry.
+- Post/output counts and up to five posts per campaign included in list responses to avoid per-campaign dashboard queries. The dashboard's current content-piece and completion KPIs are calculated from those limited previews, so they undercount campaigns with more than five posts.
 - UI: data table with create/edit modals and delete confirmation
 
 ### 3. Kanban Content Board
@@ -46,7 +46,7 @@ Small businesses and solo marketers struggle with content creation and campaign 
 - Generate **ads, social captions, and emails**, each with a tailored prompt builder (CTAs, subject lines, hashtags, platform best practices)
 - Control **tone** (Professional, Playful, Urgent, Friendly, Bold), **length** (Short/Medium/Long), and optional **keywords**; campaign name + description are injected as context
 - **Real-time SSE streaming** — content renders token-by-token with cancel support and disconnect-safe handling
-- Results auto-titled, persisted with model + token usage, and available in history
+- Results are auto-titled, persisted, and available in history. Model/token-usage metadata is intended to be saved, but the current streaming controller does not capture the async generator's return value after `for await`, so saved metadata can be empty/zero.
 - **Regenerate** an existing output with the same (or overridden) parameters
 - **Output history**: grouped by type, with actions to copy, export as **PDF** (lazy-loaded jsPDF, multi-page, metadata header), push into a board post ("Use in Post"), or delete optimistically
 
@@ -54,7 +54,7 @@ Small businesses and solo marketers struggle with content creation and campaign 
 
 - Chat drawer with session list ordered most-recent-first, auto-derived titles, manual rename, and delete
 - **General chat** (generic marketing copilot) and **campaign-scoped chat** that injects the campaign's current tasks and recent generated content directly into the AI's context
-- **SSE streaming** replies; user messages persisted before streaming and assistant replies committed in a transaction after completion, so nothing is lost on disconnects
+- **SSE streaming** replies; user messages are persisted before streaming and assistant replies are committed in a transaction after completion. On disconnect, the user message remains but the incomplete assistant reply is not saved.
 - Optimistic message rendering, retry on failure, and per-session message history
 
 ### 6. Dashboard & UX Polish
@@ -76,7 +76,20 @@ Small businesses and solo marketers struggle with content creation and campaign 
 - **Hardening**: helmet, CORS, request validation (zod), global + AI-specific rate limiting, compression, winston rotating logs, centralized error handling, and a DB-pinging `/health` endpoint
 - **Production**: API deployed on Render (auto-migrates on startup); frontend connects via `NEXT_PUBLIC_API_BASE_URL`
 
+## Known v1 readiness gaps
+
+The following implementation gaps were confirmed in a source review on 2026-10-24. Treat the feature descriptions above as product scope, not a claim that each edge case is release-ready:
+
+- AI generation/regeneration can save empty model and zero token-usage metadata.
+- Clearing a post's due date in the form sends no update, so the existing date remains.
+- Post and AI-output writes do not invalidate the per-user campaign-list cache; summary counts/previews can remain stale until the 60-second TTL expires.
+- Dashboard post KPIs are computed from at most five included posts per campaign and can undercount.
+- A failed post save that returns an error result is not surfaced by the form.
+- E2E coverage does not currently exercise these cases, AI/chat streaming, or PDF export. Add regression coverage as part of v1 readiness work.
+
 ## Milestones
+
+“Done” indicates the planned feature scope was implemented; it is not a v1 release sign-off. See the readiness gaps above for remaining correctness and test work.
 
 | Phase | Scope | Status |
 | --- | --- | --- |

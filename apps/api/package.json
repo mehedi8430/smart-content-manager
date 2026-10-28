@@ -16,7 +16,8 @@
     "db:seed": "bunx --bun prisma db seed",
     "db:generate": "bunx --bun prisma generate",
     "db:migrate": "bunx --bun prisma migrate dev",
-    "db:deploy": "bunx --bun prisma migrate deploy"
+    "db:deploy": "bunx --bun prisma migrate deploy",
+    "db:studio": "bunx --bun prisma studio"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

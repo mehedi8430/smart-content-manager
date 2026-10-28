@@ -9,6 +9,7 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
+    "db:studio": "bun run --cwd apps/api db:studio",
     "e2e:up": "docker compose -f docker-compose.e2e.yml up --build -d",
     "e2e:down": "docker compose -f docker-compose.e2e.yml down -v --remove-orphans",
     "e2e:test": "PLAYWRIGHT_BASE_URL=http://localhost:3002 bun run e2e:up && PLAYWRIGHT_BASE_URL=http://localhost:3002 bun run --cwd apps/e2e test && bun run e2e:down",

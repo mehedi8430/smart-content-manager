@@ -12,7 +12,25 @@ COPY apps/web/package.json ./apps/web/package.json
 
 RUN bun install --frozen-lockfile
 
-# Stage 2: builder ----
+# Stage 2: dev ----
+# Keep the Compose development server on the same Bun workspace dependencies
+# while source files are bind-mounted for Next.js hot reload.
+FROM deps AS dev
+
+WORKDIR /app
+
+COPY . .
+
+ENV NODE_ENV=development \
+    HOSTNAME=0.0.0.0 \
+    PORT=3000 \
+    NEXT_TELEMETRY_DISABLED=1
+
+EXPOSE 3000
+
+CMD ["bun", "run", "--cwd", "apps/web", "dev", "--hostname", "0.0.0.0"]
+
+# Stage 3: builder ----
 # Build the Next.js app and generate its standalone output.
 FROM deps AS builder
 
@@ -41,7 +59,7 @@ RUN --mount=type=secret,id=sentry_auth_token,required=false \
     if [ -f /run/secrets/sentry_auth_token ]; then export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; fi && \
     cd apps/web && bun run build
 
-# Stage 3: runner ----
+# Stage 4: runner ----
 # Run the minimal standalone Next.js server image.
 FROM node:24-slim AS runner
 
@@ -63,5 +81,4 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=5 \
     CMD node -e "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "apps/web/server.js"]
-
 

@@ -1,55 +1,54 @@
 <!-- BEGIN:smart-content-manager-root -->
 # Smart Content Manager
 
-AI content and campaign management platform: brief → publishable content via a kanban workflow, a Claude-backed content studio, and a campaign-aware marketing copilot.
-
-Product scope, roadmap, and what's explicitly out of scope: `docs/project-brief.md`.
-
-## Packages
+Monorepo for the Smart Content Manager v1: a Next.js app, Express API, and Playwright E2E suite.
 
 ```text
-apps/web    Next.js 16 (App Router, React 19, Tailwind 4, shadcn/ui) frontend
-apps/api    Express 5 + TypeScript REST API under /api/v1
-apps/e2e    Playwright browser tests
+apps/web  Next.js 16 / React 19 frontend
+apps/api  Express 5 / TypeScript API; Prisma + PostgreSQL
+apps/e2e  Playwright browser tests
 ```
 
-Bun + Turborepo workspaces. There is no shared `packages/` — if you add one, document it here.
+Use Bun 1.4 and Turborepo workspaces. No shared package currently exists.
+
+## Before editing
+
+- Read `apps/web/AGENTS.md` for frontend changes and `apps/api/AGENTS.md` for API changes.
+- `apps/api/prisma/schema.prisma` is the data-model source of truth; keep frontend types aligned.
+- Product scope and roadmap: [docs/project-brief.md](./docs/project-brief.md).
+
+## Implementation practices
+
+- Understand the existing pattern and relevant callers before changing code. State material assumptions; ask when ambiguity changes behavior or scope.
+- Prefer the simplest complete solution. Avoid speculative features, unnecessary abstractions, unrelated refactors, or cleanup.
+- Keep changes surgical and consistent with repository conventions. Every changed line should serve the request or fix an issue introduced by the change.
+- Define how the requested behavior will be verified before implementation. Add or update focused tests for behavior changes and run the smallest relevant checks, escalating only when needed.
+- Preserve existing behavior outside the requested scope. Report unrelated issues rather than changing them.
 
 ## Commands
 
-Run from the repo root, not from inside a package:
+Run workspace commands from the repository root:
 
 ```bash
-bun run dev              # both apps
-bun run build            # both apps, respects build dependency order
+bun install --frozen-lockfile
+bun run dev
+bun run build
 bun run lint
-bun run dev --filter=web # or --filter=api
 ```
 
-Prisma commands (`generate`, `migrate dev`, `db seed`) run from `apps/api`, where `schema.prisma` and the seed script live.
-
-E2E runs against an isolated Docker stack with mock AI mode:
+Run Prisma commands from `apps/api`. E2E runs against its isolated Docker stack:
 
 ```bash
 bun run e2e:up
-bun run --cwd apps/e2e test
+PLAYWRIGHT_BASE_URL=http://localhost:3002 bun run --cwd apps/e2e test
 bun run e2e:down
 ```
 
-## Before you edit
-
-- `apps/web` → read `apps/web/AGENTS.md`
-- `apps/api` → read `apps/api/AGENTS.md`
-- Data shapes come from `apps/api/prisma/schema.prisma`. Frontend types mirror it rather than redefining it; type drift is a bug.
-- How to work in this repo (think before coding, simplicity, surgical changes, verify) → `GUIDE_AGENTs.md`
-
 ## Invariants across both apps
 
-- Every API response is `{ success, message?, data? }`, errors included. The axios layer, Server Actions, and SSE parsers all assume it.
-- Owner-scoped resources the caller doesn't own return 404, not 403. The frontend should read that as "not accessible."
-- Auth tokens live in `httpOnly` cookies. Never read or write them from client code.
-- The two SSE streaming endpoints must stay in sync on framing and disconnect behavior: persist only after the stream completes, never incrementally, on either side. If you change the event format on one side, update the client parser on the other.
-- Env vars are per app, not shared: `NEXT_PUBLIC_*` belongs to `apps/web`, DB/JWT/Anthropic/rate-limit vars to `apps/api`. Don't consolidate them into a root `.env`.
-
-`apps/api` deploys to Render; its prod start runs `prisma migrate deploy` automatically.
+- API JSON responses use `{ success, message?, data? }`, including errors.
+- Owner-scoped resources return 404 when inaccessible; preserve this behavior.
+- Auth tokens are `httpOnly` cookies; never read or write them in client code.
+- Keep the AI-generation and chat SSE server/client framing and disconnect handling in sync. Persist streamed results only after completion.
+- Keep environment variables with their owning app (`NEXT_PUBLIC_*` in web; database, JWT, AI, and rate-limit settings in API). Root `.env` is only for Docker Compose interpolation, not shared app configuration.
 <!-- END:smart-content-manager-root -->

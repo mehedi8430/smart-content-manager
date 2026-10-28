@@ -8,8 +8,8 @@ test('guest user can create a new account', async ({ page }) => {
 
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
-  await page.getByLabel('Confirm Password', { exact: true }).fill(password);
-  await page.getByRole('button', { name: /^Create Account$/ }).click();
+  await page.getByLabel('Confirm password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: /^Create account$/ }).click();
 
   await expect(page).toHaveURL(/\/login$/);
 });

@@ -52,14 +52,18 @@ export function HeroSection() {
           No credit card required. Start creating in seconds.
         </p>
 
-        {/* Hero Image Placeholder */}
+        {/* Product preview — looping promo video */}
         <div className="mt-16 relative rounded-xl border border-border/40 bg-muted/30 overflow-hidden">
-          <div className="aspect-video bg-linear-to-br from-primary/5 to-primary/10 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-6xl mb-4">📊</div>
-              <p className="text-foreground/50 font-medium">Smart Content Dashboard Preview</p>
-              <p className="text-sm text-foreground/40 mt-2">Campaigns • Kanban • AI Content • Chat • Export</p>
-            </div>
+          <div className="aspect-video">
+            <video
+              src="/promo/smart-content-manager-promo.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              aria-label="Smart Content Manager product preview"
+              className="w-full h-full"
+            />
           </div>
         </div>
       </div>

@@ -119,6 +119,19 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Landing page: use the product's teal brand instead of the monochrome app primary. */
+.landing {
+  --primary: #087d79;
+  --primary-foreground: #ffffff;
+  --ring: #087d79;
+}
+
+.dark .landing {
+  --primary: #54c9c1;
+  --primary-foreground: #04201f;
+  --ring: #54c9c1;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

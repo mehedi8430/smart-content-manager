@@ -40,19 +40,19 @@ export function LandingNavigation() {
           <div className="hidden md:flex items-center gap-8">
             <Link
               href="#features"
-              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+              className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
             >
               Features
             </Link>
             <Link
               href="#about"
-              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+              className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
             >
               About
             </Link>
             <Link
               href="#pricing"
-              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+              className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
             >
               Pricing
             </Link>
@@ -85,12 +85,14 @@ export function LandingNavigation() {
               variant="outline"
               size="sm"
               onClick={handleCtaClick}
+              className="hover:border-primary/40 hover:text-primary"
             >
               Login
             </Button>
             <Button
               size="sm"
               onClick={() => router.push('/signup')}
+              className="shadow-sm shadow-primary/20"
             >
               Get Started
             </Button>
@@ -100,7 +102,7 @@ export function LandingNavigation() {
           <div className="md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-foreground hover:bg-muted"
+              className="inline-flex items-center justify-center p-2 rounded-md text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
             >
               {mobileMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -116,19 +118,19 @@ export function LandingNavigation() {
           <div className="md:hidden pb-4 space-y-2">
             <Link
               href="#features"
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
+              className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors"
             >
               Features
             </Link>
             <Link
               href="#about"
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
+              className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors"
             >
               About
             </Link>
             <Link
               href="#pricing"
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:text-foreground hover:bg-muted transition-colors"
+              className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors"
             >
               Pricing
             </Link>
@@ -156,14 +158,14 @@ export function LandingNavigation() {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full"
+                className="w-full hover:border-primary/40 hover:text-primary"
                 onClick={handleCtaClick}
               >
                 Login
               </Button>
               <Button
                 size="sm"
-                className="w-full"
+                className="w-full shadow-sm shadow-primary/20"
                 onClick={() => router.push('/signup')}
               >
                 Get Started

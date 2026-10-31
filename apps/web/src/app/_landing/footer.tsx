@@ -27,7 +27,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-border/40 bg-muted/30">
+    <footer className="border-t border-border/40 bg-primary/[0.03]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
         <div className="grid md:grid-cols-4 gap-8 mb-12">
@@ -52,7 +52,7 @@ export function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-foreground/60 hover:text-foreground transition-colors"
+                    className="text-sm text-foreground/60 hover:text-primary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -69,7 +69,7 @@ export function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-foreground/60 hover:text-foreground transition-colors"
+                    className="text-sm text-foreground/60 hover:text-primary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -86,7 +86,7 @@ export function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-foreground/60 hover:text-foreground transition-colors"
+                    className="text-sm text-foreground/60 hover:text-primary transition-colors"
                   >
                     {link.label}
                   </Link>

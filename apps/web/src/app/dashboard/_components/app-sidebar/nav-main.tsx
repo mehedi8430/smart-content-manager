@@ -3,17 +3,14 @@
 import {
   SidebarContent,
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileText, ChevronRight } from "lucide-react";
+import { LayoutDashboard, FileText } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { Campaign } from "@/types/campaign.type";
 
 const data = {
@@ -28,17 +25,11 @@ const data = {
       url: "/dashboard/campaigns",
       icon: FileText,
     },
-    {
-      title: "Recent Campaigns",
-      icon: FileText,
-      hasSubmenu: true,
-    },
   ],
 };
 
 export function NavMain({ recentCampaigns }: { recentCampaigns: Campaign[] }) {
   const pathname = usePathname();
-  const [isCampaignsOpen, setIsCampaignsOpen] = useState(true);
 
   return (
     <SidebarContent>
@@ -46,64 +37,42 @@ export function NavMain({ recentCampaigns }: { recentCampaigns: Campaign[] }) {
         <SidebarMenu className="gap-2">
           {data.navMain.map((item) => (
             <SidebarMenuItem key={item.title}>
-              {item.hasSubmenu ? (
-                <>
-                  <SidebarMenuButton
-                    onClick={() => setIsCampaignsOpen(!isCampaignsOpen)}
-                    className={` ${
-                      pathname === item.url ? "bg-sidebar-accent" : ""
-                    }`}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                    <ChevronRight
-                      className={`ml-auto h-4 w-4 transition-transform ${
-                        isCampaignsOpen ? "rotate-90" : ""
-                      }`}
-                    />
-                  </SidebarMenuButton>
-                  {isCampaignsOpen && (
-                    <SidebarMenuSub className="border-l-2 border-accent">
-                      {recentCampaigns.map((campaign) => (
-                        <SidebarMenuSubItem key={campaign.id}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={pathname.startsWith(
-                              `/dashboard/campaigns/${campaign.id}`,
-                            )}
-                            className="truncate"
-                          >
-                            <Link
-                              href={`/dashboard/campaigns/${campaign.id}/board`}
-                            >
-                              {campaign.name}
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  )}
-                </>
-              ) : (
-                <SidebarMenuButton
-                  asChild
-                  className={` ${
-                    pathname === item.url ? "bg-sidebar-accent" : ""
-                  }`}
-                >
-                  <Link
-                    href={item?.url || "/dashboard"}
-                    className="font-medium"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              )}
+              <SidebarMenuButton
+                asChild
+                className={pathname === item.url ? "bg-sidebar-accent" : ""}
+              >
+                <Link href={item.url} className="font-medium">
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
       </SidebarGroup>
+
+      {recentCampaigns.length > 0 && (
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupLabel>Recents</SidebarGroupLabel>
+          <SidebarMenu>
+            {recentCampaigns.map((campaign) => (
+              <SidebarMenuItem key={campaign.id}>
+                <SidebarMenuButton
+                  asChild
+                  size="sm"
+                  isActive={pathname.startsWith(
+                    `/dashboard/campaigns/${campaign.id}`,
+                  )}
+                >
+                  <Link href={`/dashboard/campaigns/${campaign.id}/board`}>
+                    <span>{campaign.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+      )}
     </SidebarContent>
   );
 }

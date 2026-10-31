@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <main className="flex flex-col min-h-screen">
+    <main className="landing flex flex-col min-h-screen">
       <LandingNavigation />
       <HeroSection />
       <FeaturesSection />

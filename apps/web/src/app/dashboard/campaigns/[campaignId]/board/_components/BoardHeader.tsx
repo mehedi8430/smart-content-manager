@@ -35,6 +35,7 @@ export function BoardHeader({
           {/* open add post sheet */}
           <OnboardingHint
             id="kanban-board"
+            order={0}
             message="Use the board to add tasks and move posts from to-do to done."
           >
             <Button
@@ -48,6 +49,7 @@ export function BoardHeader({
           </OnboardingHint>
           <OnboardingHint
             id="generate-ai-content"
+            order={1}
             message="Generate a draft with AI, then move it into your board as a post."
           >
             <Link href={`/dashboard/campaigns/${campaignId}/generate`}>
@@ -62,6 +64,7 @@ export function BoardHeader({
           </OnboardingHint>
           <OnboardingHint
             id="ai-chat-assistant"
+            order={2}
             message="Ask the copilot for ideas, rewrites, or campaign-specific help."
           >
             <Button

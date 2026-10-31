@@ -57,6 +57,7 @@ export function AppSidebar({
           <SidebarMenuItem>
             <OnboardingHint
               id="chat-assistant"
+              order={100}
               message="Open the AI assistant anytime to brainstorm or get help with your content."
               side="top"
               align="start"

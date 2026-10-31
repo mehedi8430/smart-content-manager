@@ -62,7 +62,7 @@ Small businesses and solo marketers struggle with content creation and campaign 
 - KPI cards — active campaigns, content pieces, AI outputs, completion rate — plus a recent-activity feed
 - Collapsible sidebar, dynamic breadcrumbs, global campaign search, and light/dark/system theme toggle
 - Dismissable onboarding hints, responsive/mobile layouts, and toast notifications
-- Public marketing site (hero, features, pricing, screenshot gallery) plus privacy and terms pages
+- Public marketing site (hero, features, CTA, pricing) plus privacy and terms pages
 
 ---
 

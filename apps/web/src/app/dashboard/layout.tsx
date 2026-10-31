@@ -12,7 +12,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const result = await listCampaignsAction({
-    limit: 10,
+    limit: 5,
     sortBy: "createdAt",
     sortOrder: "desc",
   });

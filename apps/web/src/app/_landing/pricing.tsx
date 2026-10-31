@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Check } from 'lucide-react';
 
+import { ScrollReveal } from './scroll-reveal';
+
 interface PricingPlan {
   name: string;
   price: number;
@@ -75,33 +77,36 @@ export function PricingSection() {
   };
 
   return (
-    <section id="pricing" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+    <section id="pricing" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-primary/[0.03]">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
-            Choose the perfect plan for your team. All plans include a 14-day free trial — no credit card required.
-          </p>
-        </div>
+        <ScrollReveal>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-lg text-foreground/70 max-w-2xl mx-auto">
+              Choose the perfect plan for your team. All plans include a 14-day free trial — no credit card required.
+            </p>
+          </div>
+        </ScrollReveal>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {plans.map((plan) => (
-            <div
+          {plans.map((plan, index) => (
+            <ScrollReveal
               key={plan.name}
-              className={`relative ${plan.highlighted ? 'md:scale-105' : ''}`}
+              delay={100 + index * 100}
+              className={`relative h-full ${plan.highlighted ? 'md:scale-105' : ''}`}
             >
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                  <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium shadow-md shadow-primary/20">
                     Most Popular
                   </span>
                 </div>
               )}
               <Card
-                className={`h-full flex flex-col ${
-                  plan.highlighted ? 'border-primary shadow-lg' : ''
+                className={`h-full flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 ${
+                  plan.highlighted ? 'border-primary shadow-lg shadow-primary/10' : ''
                 }`}
               >
                 <CardHeader>
@@ -140,18 +145,20 @@ export function PricingSection() {
                   </Button>
                 </CardContent>
               </Card>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
 
-        <div className="mt-16 bg-primary/5 border border-primary/20 rounded-xl p-8 text-center">
-          <p className="text-foreground/70 mb-4">
-            All plans include essential features like campaign management, AI content generation, Kanban board, and team collaboration.
-          </p>
-          <p className="text-sm text-foreground/60">
-            Questions about pricing? <button className="text-primary hover:underline font-medium">Contact our sales team</button>
-          </p>
-        </div>
+        <ScrollReveal delay={400}>
+          <div className="mt-16 bg-primary/5 border border-primary/20 rounded-xl p-8 text-center">
+            <p className="text-foreground/70 mb-4">
+              All plans include essential features like campaign management, AI content generation, Kanban board, and team collaboration.
+            </p>
+            <p className="text-sm text-foreground/60">
+              Questions about pricing? <button className="text-primary hover:underline font-medium">Contact our sales team</button>
+            </p>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );

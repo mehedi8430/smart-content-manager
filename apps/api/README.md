@@ -19,7 +19,7 @@ The API listens on the configured `PORT` (8000 in `.env.example`) and serves ver
 | Command | Description |
 | --- | --- |
 | `bun run dev` | Start the API with Bun watch mode |
-| `bun run build` | Generate Prisma client and compile TypeScript |
+| `bun run build` | Generate Prisma client, compile TypeScript, and upload Sentry source maps when configured |
 | `bun run start` | Start the built API without applying migrations |
 | `bun run start:prod` | Apply deployed migrations, then start the API |
 | `bun run lint` | Run ESLint |

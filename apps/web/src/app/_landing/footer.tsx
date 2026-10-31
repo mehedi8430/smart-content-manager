@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
+import { ScrollReveal } from './scroll-reveal';
+
 export function Footer() {
   const router = useRouter();
 
@@ -28,7 +30,7 @@ export function Footer() {
 
   return (
     <footer className="border-t border-border/40 bg-primary/[0.03]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
@@ -119,7 +121,7 @@ export function Footer() {
             </Button>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
     </footer>
   );
 }

@@ -141,5 +141,30 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+}
+
+/* Keep reveal content visible when motion is reduced or JavaScript is unavailable. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .scroll-reveal {
+    opacity: 1 !important;
+    --tw-translate-y: 0 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+@media (scripting: none) {
+  .scroll-reveal {
+    opacity: 1 !important;
+    --tw-translate-y: 0 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }

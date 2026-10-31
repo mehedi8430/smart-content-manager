@@ -4,12 +4,15 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 
+import { ScrollReveal } from './scroll-reveal';
+
 export function CtaSection() {
   const router = useRouter();
 
   return (
     <section id="about" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
+        <ScrollReveal>
           <div className="bg-linear-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-8 sm:p-12 text-center shadow-xl shadow-primary/5">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Why Choose Smart Content Manager?
@@ -40,6 +43,7 @@ export function CtaSection() {
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
+        </ScrollReveal>
       </div>
     </section>
   );

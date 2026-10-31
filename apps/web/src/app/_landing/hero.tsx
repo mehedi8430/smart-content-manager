@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 
+import { ScrollReveal } from './scroll-reveal';
+
 export function HeroSection() {
   const router = useRouter();
 
@@ -18,20 +20,27 @@ export function HeroSection() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 text-center">
+        <ScrollReveal delay={0}>
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 rounded-full border border-primary/20 bg-primary/5">
-            <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" />
+            <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse motion-reduce:animate-none" />
             <span className="text-sm font-medium">AI-Powered Marketing Tools</span>
           </div>
+        </ScrollReveal>
 
+        <ScrollReveal delay={100}>
           <h1 className="text-5xl sm:text-6xl font-bold tracking-tight mb-6">
             Manage Campaigns & Create Content
             <span className="block text-primary mt-2">Powered by AI</span>
           </h1>
+        </ScrollReveal>
 
+        <ScrollReveal delay={200}>
           <p className="text-xl text-foreground/70 mb-8 max-w-2xl mx-auto leading-relaxed">
             Smart Content & Campaign Manager is an all-in-one platform for marketing teams and small businesses. Create campaigns, generate AI content, organize tasks on a Kanban board, chat with your AI assistant, and export to PDF — all in one place.
           </p>
+        </ScrollReveal>
 
+        <ScrollReveal delay={300}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button
               size="lg"
@@ -50,12 +59,16 @@ export function HeroSection() {
               Sign In
             </Button>
           </div>
+        </ScrollReveal>
 
+        <ScrollReveal delay={400}>
           <p className="text-sm text-foreground/60">
             No credit card required. Start creating in seconds.
           </p>
+        </ScrollReveal>
 
         {/* Product preview — looping promo video */}
+        <ScrollReveal delay={500}>
           <div className="mt-16 relative rounded-xl border border-primary/15 bg-primary/5 overflow-hidden shadow-2xl shadow-primary/10 ring-1 ring-primary/10">
             <div className="aspect-video">
               <video
@@ -69,6 +82,7 @@ export function HeroSection() {
               />
             </div>
           </div>
+        </ScrollReveal>
       </div>
     </section>
   );

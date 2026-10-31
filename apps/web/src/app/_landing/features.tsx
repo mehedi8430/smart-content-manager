@@ -10,6 +10,8 @@ import {
   Zap,
 } from 'lucide-react';
 
+import { ScrollReveal } from './scroll-reveal';
+
 interface Feature {
   icon: React.ReactNode;
   title: string;
@@ -59,6 +61,7 @@ export function FeaturesSection() {
   return (
     <section id="features" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+        <ScrollReveal>
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4">
               Everything You Need to Succeed
@@ -67,10 +70,16 @@ export function FeaturesSection() {
               All the tools a modern marketing team needs to create campaigns, generate content, and manage workflow — in one integrated platform.
             </p>
           </div>
+        </ScrollReveal>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature) => (
-              <Card key={feature.title} className="group/feature h-full transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
+          {features.map((feature, index) => (
+            <ScrollReveal
+              key={feature.title}
+              delay={100 + index * 80}
+              className="h-full"
+            >
+              <Card className="group/feature h-full transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4 transition-transform duration-300 group-hover/feature:scale-110">
                     {feature.icon}
@@ -81,6 +90,7 @@ export function FeaturesSection() {
                   <p className="text-foreground/70">{feature.description}</p>
                 </CardContent>
               </Card>
+            </ScrollReveal>
           ))}
         </div>
       </div>

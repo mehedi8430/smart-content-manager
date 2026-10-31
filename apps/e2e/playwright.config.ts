@@ -40,7 +40,12 @@ export default defineConfig({
         storageState: 'tests/.auth/user.json',
       },
       dependencies: ['setup'],
-      testMatch: ['**/03-campaigns.spec.ts', '**/04-dashboard.spec.ts', '**/05-kanban.spec.ts'],
+      testMatch: [
+        '**/03-campaigns.spec.ts',
+        '**/04-dashboard.spec.ts',
+        '**/05-kanban.spec.ts',
+        '**/06-onboarding.spec.ts',
+      ],
     },
   ],
   outputDir: './test-results',

@@ -1,36 +1,96 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 const storageKey = "smart-content-manager-onboarding";
+
+interface RegisteredHint {
+  id: string;
+  order: number;
+}
 
 interface OnboardingContextValue {
   hasSeen: (hintId: string) => boolean;
   dismiss: (hintId: string) => void;
+  isActive: (hintId: string) => boolean;
+  registerHint: (hintId: string, order?: number) => void;
+  unregisterHint: (hintId: string) => void;
+  remaining: number;
+  isLast: boolean;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(
   undefined,
 );
 
+function parseStoredHints(value: string | null): string[] {
+  if (!value) return [];
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.filter((hint): hint is string => typeof hint === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [seenHints, setSeenHints] = useState<string[]>([]);
+  const [registeredHints, setRegisteredHints] = useState<RegisteredHint[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          window.setTimeout(() => setSeenHints(parsed), 0);
-        }
+    const timer = window.setTimeout(() => {
+      try {
+        setSeenHints(parseStoredHints(window.localStorage.getItem(storageKey)));
+      } catch {
+        // Onboarding is optional; blocked storage falls back to an in-memory tour.
+      } finally {
+        setHydrated(true);
       }
-    } catch {
-      // Onboarding is optional; a blocked or malformed storage value is harmless.
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
-  const dismiss = (hintId: string) => {
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== storageKey && event.key !== null) return;
+      setSeenHints(parseStoredHints(event.newValue));
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  const registerHint = useCallback((hintId: string, order = 0) => {
+    setRegisteredHints((current) => {
+      const existing = current.find((hint) => hint.id === hintId);
+      if (!existing) return [...current, { id: hintId, order }];
+      if (existing.order === order) return current;
+      return current.map((hint) =>
+        hint.id === hintId ? { ...hint, order } : hint,
+      );
+    });
+  }, []);
+
+  const unregisterHint = useCallback((hintId: string) => {
+    setRegisteredHints((current) =>
+      current.filter((hint) => hint.id !== hintId),
+    );
+  }, []);
+
+  const dismiss = useCallback((hintId: string) => {
     setSeenHints((current) => {
       if (current.includes(hintId)) return current;
       const next = [...current, hintId];
@@ -41,12 +101,55 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       }
       return next;
     });
-  };
+  }, []);
+
+  const orderedHints = useMemo(
+    () => [...registeredHints].sort((a, b) => a.order - b.order),
+    [registeredHints],
+  );
+
+  const unseenHints = useMemo(
+    () => orderedHints.filter((hint) => !seenHints.includes(hint.id)),
+    [orderedHints, seenHints],
+  );
+
+  const activeHintId = hydrated ? (unseenHints[0]?.id ?? null) : null;
+  const remaining = unseenHints.length;
+  const isLast = activeHintId !== null && remaining === 1;
+
+  const hasSeen = useCallback(
+    (hintId: string) => seenHints.includes(hintId),
+    [seenHints],
+  );
+
+  const isActive = useCallback(
+    (hintId: string) => activeHintId === hintId,
+    [activeHintId],
+  );
+
+  const value = useMemo<OnboardingContextValue>(
+    () => ({
+      hasSeen,
+      dismiss,
+      isActive,
+      registerHint,
+      unregisterHint,
+      remaining,
+      isLast,
+    }),
+    [
+      hasSeen,
+      dismiss,
+      isActive,
+      registerHint,
+      unregisterHint,
+      remaining,
+      isLast,
+    ],
+  );
 
   return (
-    <OnboardingContext.Provider
-      value={{ hasSeen: (hintId) => seenHints.includes(hintId), dismiss }}
-    >
+    <OnboardingContext.Provider value={value}>
       {children}
     </OnboardingContext.Provider>
   );

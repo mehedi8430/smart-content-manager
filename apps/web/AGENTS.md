@@ -14,7 +14,7 @@ AI-powered content and campaign management platform. Next.js 16 (App Router) + R
 Three distinct patterns are used **on purpose** — match the existing pattern for the kind of call you're adding, don't invent a fourth:
 
 1. **Server Actions** — campaigns/posts/auth mutations that benefit from server-side execution and cookie access.
-2. **axios** — general REST calls (`proxy.ts` sets the base URL / auth proxying).
+2. **axios** — general REST calls (`api/axios.ts` sets the base URL and refresh handling; `next.config.ts` proxies browser requests).
 3. **Raw `fetch` + SSE readers** — `ai-stream-client` and `chat-stream-client` handle the two streaming endpoints:
    - `POST /campaigns/:campaignId/ai-outputs/generate` (and `/regenerate`)
    - `POST /chat/sessions/messages/stream`
@@ -51,7 +51,7 @@ Mirror the API's Prisma schema when shaping frontend types/queries — don't inv
 
 ## Public / marketing pages
 
-- Landing page: hero, features, pricing, CTA, screenshots gallery — plus `/privacy` and `/terms` legal pages. These are public routes, not behind `proxy.ts` auth redirects (other than the logged-in-user → dashboard redirect on `/`).
+- Landing page: hero, features, CTA, pricing, footer — plus `/privacy` and `/terms` legal pages. These are public routes, not behind `proxy.ts` auth redirects (other than the logged-in-user → dashboard redirect on `/`).
 - Keep marketing copy/legal pages self-contained (no dashboard-only components/hooks) since they need to render for logged-out visitors.
 
 ## Styling & UI

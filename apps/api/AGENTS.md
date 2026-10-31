@@ -6,7 +6,7 @@ Express 5 + TypeScript REST API under `/api/v1`, backed by PostgreSQL via Prisma
 ## Monorepo context
 
 - Turborepo + Bun workspaces. This package is `apps/api`; the frontend is `apps/web`.
-- Build = `prisma generate && tsc && tsc-alias`. Prod start runs `prisma migrate deploy` — migrations are applied automatically on deploy, don't assume a manual migration step.
+- Build = `prisma generate && tsc && tsc-alias`, then uploads Sentry source maps when configured. Prod start runs `prisma migrate deploy` — migrations are applied automatically on deploy, don't assume a manual migration step.
 - Deployed on Render behind `https://smart-content-manager.onrender.com`.
 
 ## Request lifecycle (`app.ts`)
@@ -94,6 +94,6 @@ Creates demo users (`demo@smartcontent.test`, `sarah@freelance.test`) with campa
 ## Deployment
 
 - Render, behind `https://smart-content-manager.onrender.com`.
-- Build: `prisma generate && tsc && tsc-alias`.
+- Build: `prisma generate && tsc && tsc-alias`, then upload Sentry source maps when configured.
 - Prod start: runs `prisma migrate deploy` automatically — don't add a separate manual migration step to deploy docs/scripts.
 <!-- END:smart-content-manager-api -->
